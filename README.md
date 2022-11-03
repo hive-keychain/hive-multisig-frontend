@@ -1,2 +1,3 @@
-# hive-qrcode-generator
-Use hive-qrcode to generate qr codes
+# Hive Multisig
+
+One-stop frontend for all multisig needs
