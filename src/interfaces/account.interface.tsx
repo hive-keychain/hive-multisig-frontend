@@ -9,7 +9,7 @@ export type Keys = {
     owner?:  KeyAuth[];
     active?:  KeyAuth[];
     posting?: KeyAuth[];
-    memo: string;
+    // memo: string;
 }
 
 export type Account = {
