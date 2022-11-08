@@ -14,20 +14,20 @@ const getAccountAuthorities = async(username: string) => {
       //TODO: return an error here
       return null;
    }
-   const ownerAuth: KeyAuth[]|KeyAuth = _getAuthorityInfo(account[0].owner)
-   const activeAuth: KeyAuth[]|KeyAuth = _getAuthorityInfo(account[0].active)
-   const postingAuth: KeyAuth[]|KeyAuth = _getAuthorityInfo(account[0].posting)
+   const ownerAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].owner)
+   const activeAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].active)
+   const postingAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].posting)
   
    const keys: Keys = {
       owner: ownerAuth,
       active: activeAuth,
       posting: postingAuth,   
-      memo: account[0].memo_key
+      // memo: account[0].memo_key
    }
    return keys;
 }
 
-const _getAuthorityInfo = (auth: Hive.Authority) => {
+const _getAuthorityInfo = async (auth: Hive.Authority) => {
    
    const authoriyInfos: KeyAuth[] = [] ;
   
