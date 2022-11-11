@@ -13,7 +13,7 @@ class AuthorityList extends Component<Iprops>{
     render(){
         return(
             <div>
-                <h2 >Owner</h2>
+                <div>{this.props.authkey.owner.length>0? <h2 >Owner</h2>:''}</div>
                 <div>
                     <ListGroup variant="flush">
                         { 
@@ -23,7 +23,7 @@ class AuthorityList extends Component<Iprops>{
                         }
                     </ListGroup>
                 </div>
-                <h2>Active</h2>
+                <div>{this.props.authkey.active.length>0? <h2 >Active</h2>:''}</div>
                 <div>
                     <ListGroup variant="flush">
                         { 
@@ -33,7 +33,7 @@ class AuthorityList extends Component<Iprops>{
                         }
                     </ListGroup>
                 </div>
-                <h2>Posting</h2>
+                <div>{this.props.authkey.posting.length>0? <h2 >Posting</h2>:''}</div>
                 <div>
                     <ListGroup variant="flush">
                         { 
