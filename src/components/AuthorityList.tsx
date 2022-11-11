@@ -1,19 +1,18 @@
 import React, { Component } from "react";
 import { Badge } from "react-bootstrap";
 import ListGroup from 'react-bootstrap/ListGroup';
-import {Authority, KeyAuth, Keys} from '../interfaces/account.interface';
-
+import * as Hive from '@hiveio/dhive';
+import { Authorities } from "../interfaces/account.interface";
 interface Iprops {
-    authkey: Keys;
+    authorities: Authorities;
 }
-
 
 class AuthorityList extends Component<Iprops>{
     constructor(props:Iprops){
         super(props);
     }
 
-    addList = (name:string, authority:KeyAuth[])=>{
+    addList = (name:string, authority:Hive.Authority)=>{
         return (
                     <ListGroup.Item
                         as="li"
@@ -23,19 +22,34 @@ class AuthorityList extends Component<Iprops>{
                             <div className="fw-bold">{name}</div>
                             <div className="ms-2 me-auto">
                                 { 
-                                    authority.length>0?
+                                    authority?
+                                    <div>
+                                    <div>
                                     <ListGroup variant="flush">
                                         {   
-                                            authority.map((k):  React.ReactNode=>
-                                            <ListGroup.Item key={k.key.toString()}>
-                                                <div>
-                                                    {k.key.toString()}
-                                                    <Badge bg="secondary" pill >{k.weight}</Badge>
-                                                </div>
-                                            </ListGroup.Item>
-                                            )
+                                                authority.account_auths.map((k):  React.ReactNode=>
+                                                <ListGroup.Item key={k[0].toString()}>
+                                                    <div>
+                                                        <b className="text-secondary">Key: </b>{k[0].toString()} <br/>
+                                                        <b className="text-secondary">Weight: </b>{k[1]}
+                                                    </div>
+                                                </ListGroup.Item>
+                                                )
                                         }
-                                    </ListGroup>
+                                        {   
+                                                authority.key_auths.map((k):  React.ReactNode=>
+                                                <ListGroup.Item key={k[0].toString()}>
+                                                    <div>
+                                                        <b className="text-secondary">Key: </b>{k[0].toString()} <br/>
+                                                        <b className="text-secondary">Weight: </b>{k[1]}
+                                                    </div>
+                                                </ListGroup.Item>
+                                                )
+                                        }
+                                </ListGroup>
+                                </div>
+                                    </div>
+
                                     :''
                                 }
                             </div>
@@ -48,9 +62,9 @@ class AuthorityList extends Component<Iprops>{
             
                 <ListGroup as="ol">            
                     <div>
-                        {this.addList('Owner',this.props.authkey.owner)}
-                        {this.addList('Active',this.props.authkey.active)}
-                        {this.addList('Posting',this.props.authkey.posting)}    
+                        {this.addList('Owner',this.props.authorities.owner)}
+                        {this.addList('Active',this.props.authorities.active)}
+                        {this.addList('Posting',this.props.authorities.posting)}    
                     </div>
                     
                 </ListGroup>
