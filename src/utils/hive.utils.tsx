@@ -34,7 +34,7 @@ const _getAuthorityInfo = async (auth: Hive.Authority) => {
    auth.account_auths.forEach((account) => {
       const auth: KeyAuth = {
          key: account[0],
-         weightThreshold: account[1]
+         weight: account[1]
       } 
       authoriyInfos.push(auth)
    })
@@ -42,7 +42,7 @@ const _getAuthorityInfo = async (auth: Hive.Authority) => {
    auth.key_auths.forEach((key) => {
       const auth: KeyAuth = {
          key: key[0],
-         weightThreshold: key[1]
+         weight: key[1]
       }
       authoriyInfos.push(auth)
    })
