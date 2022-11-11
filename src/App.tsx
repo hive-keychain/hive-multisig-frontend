@@ -7,7 +7,7 @@ import SearchBar from "./components/SearchBar";
 import AuthorityList from "./components/AuthorityList";
 import "./utils/hive.utils"
 import AccountUtils from "./utils/hive.utils";
-import { KeyAuth, Keys } from "./interfaces/account.interface";
+import {Authorities } from "./interfaces/account.interface";
 import React, { Component } from "react";
 
 interface IProps{
@@ -16,7 +16,8 @@ interface IProps{
 
 interface IStates {
   op: Op;
-  authKeys: Keys;
+  isValidUser: boolean;
+  authorities: Authorities;
 }
 
 class App extends React.Component<IProps,IStates> {
@@ -24,10 +25,11 @@ class App extends React.Component<IProps,IStates> {
     super(props);
     this.state = {
       op: null,
-      authKeys: {
-        owner: [],
-        active: [],
-        posting:[]
+      isValidUser: true,
+      authorities: {
+        owner:null,
+        active:null,
+        posting:null
       }
     }
   }
@@ -37,7 +39,8 @@ class App extends React.Component<IProps,IStates> {
   };
   onUserSearch = async (username:string) => {
     const response = await AccountUtils.getAccountAuthorities(username);
-    this.setState({authKeys:response});
+    console.log(response);
+    this.setState({authorities:response, isValidUser:response.owner?true:false});
   }
 
   render(){ 
@@ -51,10 +54,10 @@ class App extends React.Component<IProps,IStates> {
             }}  
           >
             <div>
-              <SearchBar handleClick={this.onUserSearch}/>
+              <SearchBar handleClick={this.onUserSearch} isValidUser={this.state.isValidUser}/>
             </div>
             <div>
-              <AuthorityList authkey={this.state.authKeys}/>
+              <AuthorityList authorities={this.state.authorities}/>
             </div>
           </Container>
         </div>
