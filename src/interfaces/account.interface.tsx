@@ -2,12 +2,15 @@ import * as Hive from '@hiveio/dhive';
 
 export type KeyAuth = {
   key: string  | Hive.PublicKey;
-  weightThreshold: number | null;
+  weight: number | null;
 }
+
+export type Authority ={ KeyAuth: KeyAuth[], WeighThreshold: number }
+
 
 export type Keys = {
     owner?:  KeyAuth[];
-    active?:  KeyAuth[];
+    active?: KeyAuth[];
     posting?: KeyAuth[];
 }
 
