@@ -18,7 +18,6 @@ const getAccountAuthorities = async(username: string) => {
    }
    const account = await getAccount(username);
    if(account.length === 0){
-      //TODO: return an error here
       return keys;
    }
    const ownerAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].owner)
