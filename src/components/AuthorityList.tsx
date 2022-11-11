@@ -12,8 +12,6 @@ class AuthorityList extends Component<Iprops>{
         super(props);
     }
     render(){
-        if(this.props.authkey === null){}
-        else{
             return(
             
                 <ListGroup as="ol">            
@@ -21,23 +19,25 @@ class AuthorityList extends Component<Iprops>{
                         as="li"
                         className="d-flex"
                     >
-    
                         <div className="ms-2 text-start">
                             <div className="fw-bold">Owner</div>
                             <div className="ms-2 me-auto">
                                 { 
+                                    this.props.authkey.owner.length>0?
                                     <ListGroup variant="flush">
-                                        {
+                                        {   
                                             this.props.authkey.owner.map((k):  React.ReactNode=>
                                             <ListGroup.Item key={k.key.toString()} className='d-flex justify-content-between align-items-center'>
                                                 <div>
                                                     {k.key.toString()}
+                                      
                                                     <Badge bg="secondary" pill >{k.weight}</Badge>
                                                 </div>
                                             </ListGroup.Item>
                                             )
                                         }
                                     </ListGroup>
+                                    :''
                                 }
                             </div>
                         </div>
@@ -51,16 +51,20 @@ class AuthorityList extends Component<Iprops>{
                         <div className="ms-2 text-start">
                             <div className="fw-bold">Active</div>
                             <div className="ms-2 me-auto">
-                                <ListGroup variant="flush">
-                                    { 
-                                        this.props.authkey.active.map((k):  React.ReactNode=>
-                                                    <ListGroup.Item key={k.key.toString()} className='d-flex justify-content-between align-items-center'>
-                                                        {k.key.toString()}
-                                                        <Badge bg="secondary" pill className="float-left">{k.weight}</Badge>
-                                                    </ListGroup.Item>
-                                            )
-                                    }
-                                </ListGroup>
+                                {
+                                    this.props.authkey.active.length>0?
+                                    <ListGroup variant="flush">
+                                        { 
+                                            this.props.authkey.active.map((k):  React.ReactNode=>
+                                                        <ListGroup.Item key={k.key.toString()} className='d-flex justify-content-between align-items-center'>
+                                                            {k.key.toString()}
+                                                            <Badge bg="secondary" pill className="float-left">{k.weight}</Badge>
+                                                        </ListGroup.Item>
+                                                )
+                                        }
+                                    </ListGroup>
+                                    :''
+                                }
                             </div>
                                     
                         </div>
@@ -73,17 +77,21 @@ class AuthorityList extends Component<Iprops>{
     
                         <div className="ms-2 text-start">
                             <div className="fw-bold">Posting</div>
-                            <div>
-                                <ListGroup variant="flush">
-                                    { 
-                                        this.props.authkey.posting.map((k):  React.ReactNode=>
-                                                    <ListGroup.Item key={k.key.toString()} className='d-flex justify-content-between align-items-center'>
-                                                        {k.key.toString()}
-                                                        <Badge bg="secondary" pill className="float-left">{k.weight.toString()}</Badge>
-                                                    </ListGroup.Item>
-                                            )
-                                    }
-                                </ListGroup>
+                            <div className="ms-2 me-auto">
+                                {
+                                    this.props.authkey.posting.length>0?
+                                    <ListGroup variant="flush">
+                                        { 
+                                            this.props.authkey.posting.map((k):  React.ReactNode=>
+                                                        <ListGroup.Item key={k.key.toString()} className='d-flex justify-content-between align-items-center'>
+                                                            {k.key.toString()}
+                                                            <Badge bg="secondary" pill className="float-left">{k.weight.toString()}</Badge>
+                                                        </ListGroup.Item>
+                                                )
+                                        }
+                                    </ListGroup>
+                                    :''
+                                }
                             </div>
                         </div>
                     </ListGroup.Item>
@@ -92,5 +100,4 @@ class AuthorityList extends Component<Iprops>{
             )
         }
     }
-}
 export default AuthorityList;

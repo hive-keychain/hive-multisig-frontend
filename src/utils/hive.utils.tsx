@@ -1,9 +1,15 @@
 import { Client } from "@hiveio/dhive";
 import * as Hive from '@hiveio/dhive';
 import { KeyAuth, Keys } from "../interfaces/account.interface";
+import Toast from "react-bootstrap/esm/Toast";
 
 const client = new Client(["https://api.hive.blog", "https://api.hivekings.com", "https://anyx.io", "https://api.openhive.network"]);
 
+let  keys: Keys = {
+   owner: [],
+   active: [],
+   posting: [], 
+}
 const getAccount = async(username: string) => {
     return client.database.getAccounts([username]);
 }
@@ -12,13 +18,13 @@ const getAccountAuthorities = async(username: string) => {
    const account = await getAccount(username);
    if(account.length === 0){
       //TODO: return an error here
-      return null;
+      return keys;
    }
    const ownerAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].owner)
    const activeAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].active)
    const postingAuth: KeyAuth[]|KeyAuth = await _getAuthorityInfo(account[0].posting)
   
-   const keys: Keys = {
+   keys = {
       owner: ownerAuth,
       active: activeAuth,
       posting: postingAuth,   
