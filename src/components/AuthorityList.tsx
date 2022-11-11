@@ -28,13 +28,14 @@ class AuthorityList extends Component<Iprops>{
                                     <ListGroup variant="flush">
                                         {   
                                                 authority.account_auths.map((k):  React.ReactNode=>
-                                                <ListGroup.Item key={k[0].toString()}>
-                                                    <div>
-                                                        <b className="text-secondary">Key: </b>{k[0].toString()} <br/>
-                                                        <b className="text-secondary">Weight: </b>{k[1]}
-                                                    </div>
-                                                </ListGroup.Item>
+                                                    <ListGroup.Item key={k[0].toString()}>
+                                                        <div>
+                                                            <b className="text-secondary">Account: </b>{k[0].toString()} <br/>
+                                                            <b className="text-secondary">Weight: </b>{k[1]}
+                                                        </div>
+                                                    </ListGroup.Item>
                                                 )
+                                                
                                         }
                                         {   
                                                 authority.key_auths.map((k):  React.ReactNode=>
@@ -46,10 +47,22 @@ class AuthorityList extends Component<Iprops>{
                                                 </ListGroup.Item>
                                                 )
                                         }
-                                </ListGroup>
-                                </div>
+                                        { 
+                                                authority.account_auths.length>0?
+                                                <div>
+                                                    {
+                                                        <div>
+                                                        <ListGroup.Item key={name+'WeighThreshold'}>
+                                                            <b className="text-secondary">Threshold: </b>{authority.weight_threshold}
+                                                        </ListGroup.Item>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                :''
+                                        }
+                                    </ListGroup>
                                     </div>
-
+                                    </div>
                                     :''
                                 }
                             </div>
