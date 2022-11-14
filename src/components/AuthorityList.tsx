@@ -15,9 +15,7 @@ class AuthorityList extends Component<Iprops>{
     addList = (name:string, authority:Hive.Authority)=>{
         return (
                     authority?
-
                     <div>
-
                         <ListGroup.Item
                             as="li"
                             className="d-flex"
@@ -51,7 +49,6 @@ class AuthorityList extends Component<Iprops>{
                                                     )
                                             }
                                             { 
-                                                    authority.account_auths.length>0?
                                                     <div>
                                                         {
                                                             <div>
@@ -61,12 +58,10 @@ class AuthorityList extends Component<Iprops>{
                                                             </div>
                                                         }
                                                     </div>
-                                                    :''
                                             }
                                         </ListGroup>
                                         </div>
                                         </div>
-                                        
                                     }
                                 </div>
                             </div>
