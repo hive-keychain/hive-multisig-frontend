@@ -1,14 +1,13 @@
-import { Op } from "hive-qrcode";
-import { useState } from "react";
-import { Container } from "react-bootstrap";
 import "./App.css";
+import "./utils/hive.utils"
+import React, { Component } from "react";
+import { Op } from "hive-qrcode";
+import { Container } from "react-bootstrap";
+import {Authorities } from "./interfaces/account.interface";
 import NavBar from "./components/NavBar";
 import SearchBar from "./components/SearchBar";
 import AuthorityList from "./components/AuthorityList";
-import "./utils/hive.utils"
 import AccountUtils from "./utils/hive.utils";
-import {Authorities } from "./interfaces/account.interface";
-import React, { Component } from "react";
 
 interface IProps{
 

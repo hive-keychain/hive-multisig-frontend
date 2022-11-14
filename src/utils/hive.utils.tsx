@@ -1,14 +1,9 @@
 import { Client } from "@hiveio/dhive";
 import * as Hive from '@hiveio/dhive';
 import Toast from "react-bootstrap/esm/Toast";
-
+import { Authorities } from "../interfaces/account.interface";
 const client = new Client(["https://api.hive.blog", "https://api.hivekings.com", "https://anyx.io", "https://api.openhive.network"]);
 
-export type Authorities = {
-   owner?:  Hive.Authority;
-   active?: Hive.Authority;
-   posting?: Hive.Authority;
-}
 
 const getAccount = async(username: string) => {
     return client.database.getAccounts([username]);
