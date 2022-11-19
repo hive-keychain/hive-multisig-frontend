@@ -1,70 +1,68 @@
-import "./App.css";
-import "./utils/hive.utils"
-import React, { Component } from "react";
 import { Op } from "hive-qrcode";
+import { ReactElement, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
-import {Authorities } from "./interfaces/account.interface";
+import "./App.css";
 import NavBar from "./components/NavBar";
+import {Routes, Route, useNavigate} from 'react-router-dom'
+import { Authorities } from "./interfaces/account.interface";
+import AccountUtils from './utils/hive.utils';
+import AuthorityList from './components/AuthorityList';
 import SearchBar from "./components/SearchBar";
-import AuthorityList from "./components/AuthorityList";
-import AccountUtils from "./utils/hive.utils";
-
-interface IProps{
-
-}
-
-interface IStates {
-  op: Op;
-  isValidUser: boolean;
-  authorities: Authorities;
-}
-
-class App extends React.Component<IProps,IStates> {
-  constructor(props:IProps){
-    super(props);
-    this.state = {
-      op: null,
-      isValidUser: true,
-      authorities: {
-        owner:null,
-        active:null,
-        posting:null
-      }
+function App() {
+  const [op, setOp] = useState<Op>();
+  const [username,setUsername] = useState<string>('');
+  const [validUsername, setValidUsername] = useState<boolean>(true);
+  const [authorities, setAuthorities] = useState<Authorities>();
+  const onSubmitOp = (op: Op) => {
+    setOp(op);
+  };
+ 
+  const navigate = useNavigate();
+  
+  useEffect(() =>{
+    if(username){
+        navigate(`/${username}`);
+    }else{
+        navigate(`/`);
     }
+    getAuthorities(username);
+  },[username]);
+
+
+  const getAuthorities = async(id:string) => {
+    const response = await AccountUtils.getAccountAuthorities(id);
+    setAuthorities(response);
+    if(response.active || response.owner || response.posting || username ===''){
+        setValidUsername(true);
+    }else{
+        setValidUsername(false);
+    }
+    
+  }
+
+  const handleOnSearchSubmit = (input:string) => {
+    setUsername(input);
   }
  
-  onSubmitOp = (op: Op) => {
-    this.setState({op:op});
-  };
-  onUserSearch = async (username:string) => {
-    const response = await AccountUtils.getAccountAuthorities(username);
-    console.log(response);
-    this.setState({authorities:response, isValidUser:response.owner?true:false});
-  }
-
-  render(){ 
-    return (
-        <div className="App">
-        <NavBar />
-        <div style={{ flex: 1 }}>
-          <Container
-            style={{
-              marginTop: 50,
-            }}  
-          >
-            <div>
-              <SearchBar handleClick={this.onUserSearch} isValidUser={this.state.isValidUser}/>
-            </div>
-            <div>
-              <AuthorityList authorities={this.state.authorities}/>
-            </div>
-          </Container>
-        </div>
-        
-        <div className="footer-text">@2022 Hive Keychain</div>
+  return (
+    <div className="App">
+      <NavBar />
+      <div style={{ flex: 1 }}>
+        <Container
+          style={{
+            marginTop: 50,
+          }}
+        >
+          <SearchBar handleOnSearchSubmit={handleOnSearchSubmit} isValidUserName={validUsername}/>
+          <Routes>
+                <Route path='/' element={<div></div>}/>
+                <Route path='/:id' element={<AuthorityList authorities={authorities}/>}/>
+        </Routes>
+        </Container>
       </div>
-    )
-        }
+      <div className="footer-text">@2022 Hive Keychain</div>
+    </div>
+  );
 }
 
 export default App;
