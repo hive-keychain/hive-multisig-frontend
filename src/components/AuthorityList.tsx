@@ -72,7 +72,8 @@ class AuthorityList extends Component<Iprops>{
     }
     render(){
             return(
-            
+                
+                this.props.authorities?
                 <ListGroup as="ol">            
                     <div>
                         {this.addList('Owner',this.props.authorities.owner)}
@@ -80,7 +81,7 @@ class AuthorityList extends Component<Iprops>{
                         {this.addList('Posting',this.props.authorities.posting)}    
                     </div>
                     
-                </ListGroup>
+                </ListGroup>:''
     
             )
         }
