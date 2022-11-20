@@ -1,17 +1,21 @@
-import React, { Component, useState, useEffect } from "react";
+import React, { Component, useState, useEffect, useReducer } from "react";
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
+import {useParams} from 'react-router-dom';
+import { ids } from "webpack";
 
 const SearchBar = (props:any) =>{
-    const [input,setInput] = useState<string>();
+    const [input,setInput] = useState<string>(props.username);
+    useEffect(()=>{
+      setInput(props.username);
+    },[])
     return(
-
       <div>
-        <div className="ms-2 text-start" style={{color:"red"}}>{props.isValidUserName?'':'Invalid User'}</div>
+        <div className="ms-2 text-start" style={{color:"red"}}>{props.validUsername?'':'Invalid User'}</div>
         <InputGroup className='mb-3'>
           <Form.Control
-            placeholder={input?input:"Username"}
+            placeholder={props.username?props.username:"Username"}
             aria-label="Username"
             aria-describedby="basic-addon2"  
             onChange={(e)=>setInput(e.target.value)}
