@@ -23,39 +23,20 @@ function App() {
   useEffect(() =>{
     if(username.length!==0){
       navigate(`/${username}`)
-      GetAuthorities();
+      AccountUtils.GetAuthorities(setAuthorities,setValidUsername,null,username);
     }
   },[username])
-
-  const GetAuthorities = async(input?:string) => {
-    let searchKey = '';
-    if(input){searchKey = input;
-    }else{searchKey = username;}
-    const response = await AccountUtils.getAccountAuthorities(searchKey);
-    setAuthorities(response);
-    if(response.active || response.owner || response.posting || searchKey === ''){
-        setValidUsername(true);
-    }else{
-        setValidUsername(false);
-    }
-  }
   const OnSearchSubmit = (input:string) => {
       navigate(`/${input}`);
-      GetAuthorities(input);
-  }
+      AccountUtils.GetAuthorities(setAuthorities,setValidUsername,input,null);
 
+  }
   const OnAddressSubmit = (props:any) => {
     const params = useParams();
-    let id = params.id;
     useEffect(() =>{
-      if(id){
-        props.setUsername(id);
-      }
+      if(params.id){props.setUsername(params.id);}
     },[])
-    return (
-      <div>
-      </div>
-    )
+    return (<div></div>);
   }
   return (
     <div className="App">
