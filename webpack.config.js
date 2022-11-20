@@ -9,6 +9,7 @@ module.exports = {
   },
   devServer: {
     port: 8080,
+    historyApiFallback: true,
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
