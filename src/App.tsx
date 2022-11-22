@@ -1,5 +1,5 @@
 import { Op } from "hive-qrcode";
-import { ReactElement, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import "./App.css";
 import NavBar from "./components/NavBar";
@@ -8,7 +8,6 @@ import { Authorities } from "./interfaces/account.interface";
 import AccountUtils from './utils/hive.utils';
 import AuthorityList from './components/AuthorityList';
 import SearchBar from "./components/SearchBar";
-import { ids } from "webpack";
 function App() {
   const [op, setOp] = useState<Op>();
   const [username,setUsername] = useState<string>('');
