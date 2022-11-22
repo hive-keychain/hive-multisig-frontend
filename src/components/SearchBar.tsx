@@ -10,6 +10,18 @@ const SearchBar = (props:any) =>{
     useEffect(()=>{
       setInput(props.username);
     },[])
+    useEffect(()=>{
+      const keyDownHandler = (e:KeyboardEvent )=>{
+        if(e.key==='Enter'){
+          e.preventDefault();
+          props.handleOnSearchSubmit(input);
+        }
+      }
+      document.addEventListener('keydown', keyDownHandler);
+      return () => {
+        document.removeEventListener('keydown', keyDownHandler);
+      };
+    })
     return(
       <div>
         <div className="ms-2 text-start" style={{color:"red"}}>{props.validUsername?'':'Invalid User'}</div>
@@ -20,6 +32,7 @@ const SearchBar = (props:any) =>{
             aria-label="Username"
             aria-describedby="basic-addon2"  
             onChange={(e)=>setInput(e.target.value)}
+            value={input}
           />
           <Button 
             variant='outline-secondary' 
