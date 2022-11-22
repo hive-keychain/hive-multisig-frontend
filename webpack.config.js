@@ -10,7 +10,11 @@ module.exports = {
   devServer: {
     port: 8080,
     historyApiFallback: true,
+    historyApiFallback: {
+      disableDotRule: true
+    }
   },
+  
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
     fallback: { url: require.resolve("url") },
