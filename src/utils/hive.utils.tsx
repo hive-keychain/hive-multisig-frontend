@@ -25,10 +25,7 @@ const getAccountAuthorities = async(username: string) => {
    return keys;
 }
 
-const GetAuthorities = async(setAuthorities:any, setValidUsername:any, searchBarInput?:string, addressInput?:string, ) => {
-   let searchKey = '';
-   if(searchBarInput){searchKey = searchBarInput;
-   }else{searchKey = addressInput;}
+const GetAuthorities = async(setAuthorities:any, setValidUsername:any, searchKey:string ) => {
    const response = await AccountUtils.getAccountAuthorities(searchKey);
    setAuthorities(response);
    if(response.active || response.owner || response.posting || searchKey === ''){

@@ -23,14 +23,18 @@ function App() {
   useEffect(() =>{
     if(username.length!==0){
       navigate(`/${username}`)
-      AccountUtils.GetAuthorities(setAuthorities,setValidUsername,null,username);
+      AccountUtils.GetAuthorities(setAuthorities,setValidUsername,username);
     }
   },[username])
-  const OnSearchSubmit = (input:string) => {
-      navigate(`/${input}`);
-      AccountUtils.GetAuthorities(setAuthorities,setValidUsername,input,null);
 
+  const OnSearchSubmit = (input:string) => {
+    if(input !== username){
+      navigate(`/${input}`);
+      // AccountUtils.GetAuthorities(setAuthorities,setValidUsername,input,null);
+    }
+     
   }
+
   const OnAddressSubmit = (props:any) => {
     const params = useParams();
     useEffect(() =>{
@@ -38,6 +42,7 @@ function App() {
     },[])
     return (<div></div>);
   }
+  
   return (
     <div className="App">
       <NavBar />
