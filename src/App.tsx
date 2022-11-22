@@ -22,14 +22,14 @@ function App() {
   
   useEffect(() =>{
     if(username.length!==0){
-      navigate(`/${username}`)
+      navigate(`/@${username}`)
       AccountUtils.GetAuthorities(setAuthorities,setValidUsername,username);
     }
   },[username])
 
   const OnSearchSubmit = (input:string) => {
     if(input !== username){
-      navigate(`/${input}`);
+      navigate(`/@${input}`);
       // AccountUtils.GetAuthorities(setAuthorities,setValidUsername,input,null);
     }
      
@@ -56,7 +56,7 @@ function App() {
           <AuthorityList authorities={authorities}/>
           <Routes>
                 <Route path='/' element={ <div></div>}/>
-                <Route path='/:id' element={<OnAddressSubmit setUsername={setUsername}/>}/>
+                <Route path='/@:id' element={<OnAddressSubmit setUsername={setUsername}/>}/>
           </Routes>
         </Container>
       </div>
