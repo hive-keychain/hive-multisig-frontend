@@ -14,6 +14,7 @@ const SearchBar = (props:any) =>{
       <div>
         <div className="ms-2 text-start" style={{color:"red"}}>{props.validUsername?'':'Invalid User'}</div>
         <InputGroup className='mb-3'>
+        <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
           <Form.Control
             placeholder={props.username?props.username:"Username"}
             aria-label="Username"
