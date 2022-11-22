@@ -30,7 +30,6 @@ function App() {
   const OnSearchSubmit = (input:string) => {
     if(input !== username){
       navigate(`/@${input}`);
-      // AccountUtils.GetAuthorities(setAuthorities,setValidUsername,input,null);
     }
      
   }
