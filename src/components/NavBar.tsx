@@ -3,7 +3,7 @@ import { Container, Navbar } from "react-bootstrap";
 export default () => (
   <Navbar bg="dark" variant="dark">
     <Container>
-      <Navbar.Brand href="#home">
+      <Navbar.Brand href="/">
         <img
           alt=""
           src="img/logohive.png"
