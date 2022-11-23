@@ -1,6 +1,8 @@
 import { Container, Navbar } from "react-bootstrap";
+import  LogIn from "./LogIn";
+import *  as Ilogin from "../interfaces/login.interface";
 
-export default () => (
+const NavBar = (props:Ilogin.ILogInButtonProps) => (
   <Navbar bg="dark" variant="dark">
     <Container>
       <Navbar.Brand href="/">
@@ -14,6 +16,9 @@ export default () => (
         />
         Hive Multisig
       </Navbar.Brand>
+      <LogIn.LogInButton handleLoginClick={props.handleLoginClick}/>
     </Container>
   </Navbar>
 );
+
+export default NavBar;

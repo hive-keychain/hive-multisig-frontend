@@ -58,3 +58,15 @@ body, #root, .App {
   padding-bottom: 10px;
 }
 
+.show{
+  display:block;
+  background-color: aqua;
+  size: 300px ;
+  transition: 100ms;
+  opacity:1;
+}
+
+.show.active{
+  transform: translateY(100px) scale(0) rotateY(180deg);
+  opacity: 0;
+}

@@ -8,11 +8,13 @@ import { Authorities } from "./interfaces/account.interface";
 import AccountUtils from './utils/hive.utils';
 import AuthorityList from './components/AuthorityList';
 import SearchBar from "./components/SearchBar";
+import LogIn from "./components/LogIn";
 function App() {
   const [op, setOp] = useState<Op>();
   const [username,setUsername] = useState<string>('');
   const [validUsername, setValidUsername] = useState<boolean>(true);
   const [authorities, setAuthorities] = useState<Authorities>();
+  const [isShowLogin, setIsShowLogin] = useState<boolean>(false);
   const onSubmitOp = (op: Op) => {
     setOp(op);
   };
@@ -30,7 +32,6 @@ function App() {
     if(input !== username){
       navigate(`/@${input}`);
     }
-     
   }
 
   const OnAddressSubmit = (props:any) => {
@@ -40,10 +41,14 @@ function App() {
     },[])
     return (<div></div>);
   }
+
+  const handleLoginClick = () => {
+    setIsShowLogin((isShowLogin) => !isShowLogin);
+  }
   
   return (
     <div className="App">
-      <NavBar />
+      <NavBar handleLoginClick={handleLoginClick}/>
       <div style={{ flex: 1 }}>
         <Container
           style={{
@@ -52,6 +57,7 @@ function App() {
         >
           <SearchBar handleOnSearchSubmit={OnSearchSubmit} username={username} validUsername={validUsername}/>
           <AuthorityList authorities={authorities}/>
+          <LogIn.LogInForm isShowLogin={isShowLogin}/>
           <Routes>
                 <Route path='/' element={ <div></div>}/>
                 <Route path='/@:id' element={<OnAddressSubmit setUsername={setUsername}/>}/>
