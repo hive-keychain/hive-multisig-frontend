@@ -31,7 +31,7 @@ class AuthorityList extends Component<Iprops>{
                                                     authority.account_auths.map((k):  React.ReactNode=>
                                                         <ListGroup.Item key={k[0].toString()}>
                                                             <div>
-                                                                <b className="text-secondary">Account: </b>{k[0].toString()} <br/>
+                                                                <b className="text-secondary">Account: @</b>{k[0].toString()} <br/>
                                                                 <b className="text-secondary">Weight: </b>{k[1]}
                                                             </div>
                                                         </ListGroup.Item>
