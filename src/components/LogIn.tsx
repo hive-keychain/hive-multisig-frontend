@@ -1,6 +1,6 @@
 import Button from 'react-bootstrap/Button';
 import React, { Component, useState, useEffect, useReducer } from "react";
-import *  as Ilogin from "../interfaces/login.interface";
+
 
 const LogInButton = () => {
     return (
@@ -10,7 +10,7 @@ const LogInButton = () => {
     );  
 }
 
-const LogInForm :React.FC<Ilogin.ILogInFormProps> = (props:Ilogin.ILogInFormProps) => {
+const LogInForm  = () => {
     return(
         <div>
            

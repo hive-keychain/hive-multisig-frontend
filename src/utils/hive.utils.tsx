@@ -25,7 +25,7 @@ const getAccountAuthorities = async(username: string) => {
    return keys;
 }
 
-const GetAuthorities = async(setAuthorities:Function, setValidUsername:Function, searchKey:string ) => {
+const GetAuthorities = async(setAuthorities:any, setValidUsername:any, searchKey:string ) => {
    const response = await AccountUtils.getAccountAuthorities(searchKey);
    setAuthorities(response);
    if(response.active || response.owner || response.posting || searchKey === ''){
@@ -34,7 +34,6 @@ const GetAuthorities = async(setAuthorities:Function, setValidUsername:Function,
        setValidUsername(false);
    }
  }
-
  const AccountUtils = {
     getAccount,
     getAccountAuthorities,
