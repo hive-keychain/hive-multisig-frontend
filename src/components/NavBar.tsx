@@ -2,7 +2,7 @@ import { Container, Navbar } from "react-bootstrap";
 import  LogIn from "./LogIn";
 import *  as Ilogin from "../interfaces/login.interface";
 
-const NavBar = (props:Ilogin.ILogInButtonProps) => (
+const NavBar = () => (
   <Navbar bg="dark" variant="dark">
     <Container>
       <Navbar.Brand href="/">
@@ -16,7 +16,7 @@ const NavBar = (props:Ilogin.ILogInButtonProps) => (
         />
         Hive Multisig
       </Navbar.Brand>
-      <LogIn.LogInButton handleLoginClick={props.handleLoginClick}/>
+      <LogIn.LogInButton/>
     </Container>
   </Navbar>
 );
