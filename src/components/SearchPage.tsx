@@ -7,7 +7,6 @@ import {ISearchPageInterface,ISearchBarInterface}  from "../interfaces/search.in
 import {}  from "../interfaces/search.interface";
 import AccountUtils from '../utils/hive.utils';
 import { Authorities  } from "../interfaces/account.interface"
-
 import AuthorityList from "./AuthorityList";
 
 const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
