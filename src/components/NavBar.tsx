@@ -1,5 +1,5 @@
 import { Container, Navbar } from "react-bootstrap";
-
+import LogIn from './LogIn';
 export default () => (
   <Navbar bg="dark" variant="dark">
     <Container>
@@ -14,6 +14,7 @@ export default () => (
         />
         Hive Multisig
       </Navbar.Brand>
+      <LogIn.LogInButton/>
     </Container>
   </Navbar>
 );
