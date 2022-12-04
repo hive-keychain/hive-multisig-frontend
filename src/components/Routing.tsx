@@ -1,6 +1,6 @@
 import {Routes, Route} from 'react-router-dom'
 import Search from './SearchPage';
-import { LoginForm } from './Login';
+import LoginForm from './LoginForm';
 
 const Routing = () =>{
     return(

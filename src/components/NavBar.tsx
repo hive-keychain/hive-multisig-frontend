@@ -1,5 +1,5 @@
 import { Container, Navbar } from "react-bootstrap";
-import {LoginButton} from './Login';
+import LoginButton from './LoginButton';
 
 export default () => (
   <Navbar bg="dark" variant="dark">
