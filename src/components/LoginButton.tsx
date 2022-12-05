@@ -1,67 +1,104 @@
+import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
-import Toast from 'react-bootstrap/Toast';
-import {useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { CheckKeychain } from '../utils/hive-keychain.utils';
-import { useAppSelector } from '../redux/app/hooks'
-
-const HiveKeychainNotFound = () => {
-    return (
-        <Toast>
-            <Toast.Header>
-                <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
-                <strong className="me-auto">Hive Keychain</strong>
-            </Toast.Header>
-            <Toast.Body>Extension Not Found.</Toast.Body>
-        </Toast>
-    )
-}
-
+import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
+import { SignResponseType } from '../interfaces';
+import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
+import { checkKeychain } from '../redux/features/keyChain/keyChainSlice';
+import {
+  getElapsedTimestampSeconds,
+  getTimestampInSeconds,
+} from '../utils/utils';
 const LoginButton = () => {
-    const [isKeyChainActive, setKeychainState] = useState<boolean>(false);
-    const [signedIn, setSignedIn] = useState<boolean>(false);
-    const navigate = useNavigate();
-    const isLoginSucceed  = useAppSelector(state => state.login.isSignatureSuccess)
-    const signedAccountObj = useAppSelector(state => state.login.accountObject)
+  const loginExpirationInSec = 15;
+  const [signedIn, setSignedIn] = useState<boolean>(false);
+  const isKeyChainFound = useAppSelector(
+    (state) => state.keychain.isKeyChainFound,
+  );
+  const keyChainMsg = useAppSelector((state) => state.keychain.message);
+  const keyChainError = useAppSelector((state) => state.keychain.error);
+  const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage<boolean>(
+    'loginStatus',
+    useReadLocalStorage('loginStatus'),
+  );
+  const [accountDetails, setStorageAccountDetails] =
+    useLocalStorage<SignResponseType>(
+      'accountDetails',
+      useReadLocalStorage('accountDetails'),
+    );
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage<number>(
+    'loginTimestap',
+    null,
+  );
 
-    useEffect(() => {
-        console.log("Signed in: ", isLoginSucceed)
-        setSignedIn(isLoginSucceed)
-    },[isLoginSucceed])
+  const navigate = useNavigate();
+  const isLoginSucceed = useAppSelector(
+    (state) => state.login.isSignatureSuccess,
+  );
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const dispatch = useAppDispatch();
 
-    useEffect(() =>{
-        if(!isKeyChainActive){
-            HiveKeychainNotFound();
-        }else{
-            navigate('/login');
-        }
-    },[isKeyChainActive]);
-
-    const handleBtnOnClick = ()=>{
-        if(signedIn){
-            navigate(`/@${signedAccountObj.data.username}`);
-        }
-        else{
-            CheckKeychain(setKeychainState);
-        }
+  useEffect(() => {
+    if (isLoggedIn) {
+      const loggedinDuration = getElapsedTimestampSeconds(
+        loginTimestamp,
+        getTimestampInSeconds(),
+      );
+      console.log('Login timestamp:', loginTimestamp);
+      console.log('Login duration:', loggedinDuration);
+      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
+        console.log('Login Expired:', loggedinDuration);
+        setLoginTimestamp(0);
+        setStorageAccountDetails(null);
+        setStorageIsLoggedIn(false);
+      }
     }
+  }, []);
+  useEffect(() => {
+    console.log('Signed in: ', isLoginSucceed);
+    setSignedIn(isLoginSucceed);
+  }, [isLoginSucceed]);
 
-    const Display = ()  => {
-        let text:string = "Login";
-        if(signedIn){
-            text = signedAccountObj.data.username
-        }
-        return(
-            <Button 
-                variant="outline-light"
-                onClick={handleBtnOnClick}
-            >{text}</Button> 
-        )
+  useEffect(() => {
+    if (!isKeyChainFound) {
+    } else {
+      navigate('/login');
     }
-    
-    return (
-        <Display/>
-    );  
-}
+  }, [isKeyChainFound]);
+
+  const handleBtnOnClick = () => {
+    if (!isLoggedIn) {
+      dispatch(checkKeychain());
+    } else if (accountDetails) {
+      navigate(`/@${accountDetails.data.username}`);
+    }
+  };
+
+  const Display = () => {
+    let text: string = 'Login';
+    if (isLoggedIn) {
+      return (
+        <div>
+          <img
+            className="avatar"
+            src={`https://images.hive.blog/u/${accountDetails.data.username}/avatar`}
+            alt="new"
+            onClick={handleBtnOnClick}
+          />
+        </div>
+      );
+    } else {
+      return (
+        <div>
+          <Button variant="outline-light" onClick={handleBtnOnClick}>
+            {text}
+          </Button>
+        </div>
+      );
+    }
+  };
+
+  return <Display />;
+};
 
 export default LoginButton;
