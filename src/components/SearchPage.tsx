@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
+import {useNavigate, useParams} from 'react-router-dom';
+import {ISearchPageInterface,ISearchBarInterface}  from "../interfaces";
+import { Authorities  } from "../interfaces"
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
-import {useNavigate, useParams} from 'react-router-dom';
-import {ISearchPageInterface,ISearchBarInterface}  from "../interfaces/search.interface";
-import {}  from "../interfaces/search.interface";
 import AccountUtils from '../utils/hive.utils';
-import { Authorities  } from "../interfaces/account.interface"
 import AuthorityList from "./AuthorityList";
 
 const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{

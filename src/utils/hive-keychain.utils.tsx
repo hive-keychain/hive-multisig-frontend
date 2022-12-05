@@ -1,7 +1,5 @@
-import { delay } from "./utils";
-import { IHiveSignatureInterface } from "../interfaces/hive-keychain.interface";
-
-
+import { delay, getTimestampInSeconds } from "./utils";
+import { IHiveSignatureInterface, SignResponseType } from "../interfaces";
 
 export const CheckKeychain= async(setKeychainState:Function)=>{
     await delay(500);
@@ -13,11 +11,34 @@ export const CheckKeychain= async(setKeychainState:Function)=>{
     }
 }
 
-export const RequestSign = (props:IHiveSignatureInterface):void =>{
-    window.hive_keychain.requestSignBuffer(
-        props.username,
-        JSON.stringify(props.message),
-        props.key,
-        props.responseCallback
-        )
+export const RequestSignature = (username:string) => {
+    return   new Promise<SignResponseType>((resolve, reject) => {
+      const callback = (response:SignResponseType) =>{
+             if(response.success){
+                  resolve(response);
+             }else{
+                  reject(response)
+             }
+         }
+         const sigObj = createSignatureObject(username,callback)
+         window.hive_keychain.requestSignBuffer(
+             sigObj.username,
+             JSON.stringify(sigObj.message),
+             sigObj.key,
+             sigObj.responseCallback)
+     })
+  }
+
+
+  const createSignatureObject = (username:string, setValidLogIn: Function):IHiveSignatureInterface => {
+    return {
+        username: username,
+        message: {
+            username: username,
+            timestamp: getTimestampInSeconds(),
+            message: 'sign in from hive multisig'
+        },
+        key: 'Posting',
+        responseCallback: setValidLogIn
+    }
 }

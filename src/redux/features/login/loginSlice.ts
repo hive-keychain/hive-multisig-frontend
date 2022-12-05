@@ -1,33 +1,12 @@
 import {createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
-import { rejects } from 'assert'
-import { IHiveSignatureInterface, SignBufferMessageObject } from '../../../interfaces/hive-keychain.interface'
-import { getTimestampInSeconds } from '../../../utils/utils'
+import { SignResponseType } from '../../../interfaces'
+import { RequestSignature } from '../../../utils/hive-keychain.utils'
+
 
 export enum LoginState {
     SIGNATURE_REQUESTED = "SIGNATURE_REQUESTED",
     SIGNATURE_SUCCEEDED = "SIGNATURE_SUCCEEDED",
     SIGNATURE_FAILED = "SIGNATURE_FAILED"
-}
-
-
-export type SignResponseDataType ={
-    key: string
-    message: string
-    method: string
-    rpc: string
-    title: string
-    type: string
-    username: string
-}
-export type SignResponseType = {
-    error: string
-    message: string
-    publiKey: string
-    request_id: number
-    result: string
-    success:boolean
-    data:  SignResponseDataType
-    
 }
 
 export type LoginStateType = {
@@ -43,42 +22,10 @@ const initialState: LoginStateType = {
     error: ''
 }
 
-
-
-const createSignatureObject = (username:string, setValidLogIn: Function):IHiveSignatureInterface => {
-    return {
-        username: username,
-        message: {
-            username: username,
-            timestamp: getTimestampInSeconds(),
-            message: 'sign in from hive multisig'
-        },
-        key: 'Posting',
-        responseCallback: setValidLogIn
-    }
-}
-const requestSignature = (username:string) => {
-  return   new Promise<SignResponseType>((resolve, reject) => {
-    const callback = (response:SignResponseType) =>{
-           if(response.success){
-                resolve(response);
-           }else{
-                reject(response)
-           }
-       }
-       const sigObj = createSignatureObject(username,callback)
-       window.hive_keychain.requestSignBuffer(
-           sigObj.username,
-           JSON.stringify(sigObj.message),
-           sigObj.key,
-           sigObj.responseCallback)
-   })
-}
-
 export const hiveKeyChainRequestSign = createAsyncThunk(
     'login/request',
     async(username:string) =>{
-        const response = await requestSignature(username)
+        const response = await RequestSignature(username)
         return response
     } 
     

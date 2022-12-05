@@ -3,7 +3,26 @@
       hive_keychain: any;
     }
   }
-  
+
+export type SignResponseDataType ={
+    key: string
+    message: string
+    method: string
+    rpc: string
+    title: string
+    type: string
+    username: string
+}
+export type SignResponseType = {
+    error: string
+    message: string
+    publiKey: string
+    request_id: number
+    result: string
+    success:boolean
+    data:  SignResponseDataType
+}
+
 export type SignBufferMessageObject = {
     username:string,
     timestamp:number,

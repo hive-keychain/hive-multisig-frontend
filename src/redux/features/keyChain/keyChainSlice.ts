@@ -1,19 +1,19 @@
 import { createSlice, PayloadAction,createAsyncThunk } from '@reduxjs/toolkit'
 
-type KeychainCheckType = {
+export type KeychainCheckType = {
     loading: boolean
     isKeyChainFound: boolean
     message: string
     error: string
 }
-
+    
 const initialState: KeychainCheckType = {
     loading: false,
     isKeyChainFound: false,
     message: '',
     error: ''
 }
-    
+
 export const checkKeychain = createAsyncThunk('keychain/check', 
     () =>
     new Promise<boolean>((resolve, reject) =>{
