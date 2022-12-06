@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
+import { Config } from '../config';
 import { SignResponseType } from '../interfaces';
 import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { checkKeychain } from '../redux/features/keyChain/keyChainSlice';
@@ -10,7 +11,7 @@ import {
   getTimestampInSeconds,
 } from '../utils/utils';
 const LoginButton = () => {
-  const loginExpirationInSec = 15;
+  const loginExpirationInSec = Config.login.expirationInSec;
   const [signedIn, setSignedIn] = useState<boolean>(false);
   const isKeyChainFound = useAppSelector(
     (state) => state.keychain.isKeyChainFound,

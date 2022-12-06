@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
+import { Config } from '../config';
 import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../redux/features/login/loginSlice';
 import {
@@ -9,7 +10,7 @@ import {
   getTimestampInSeconds,
 } from '../utils/utils';
 const LoginForm = () => {
-  const loginExpirationInSec = 15;
+  const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');
   const isKeyChainFound = useAppSelector(
     (state) => state.keychain.isKeyChainFound,
