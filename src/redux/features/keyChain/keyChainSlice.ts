@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction,createAsyncThunk } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 export type KeychainCheckType = {
     loading: boolean
@@ -50,7 +50,7 @@ const keyChainSlice = createSlice({
                 state.loading = false
                 state.isKeyChainFound = false
                 state.message = ''
-                state.error = "Hive Keychain Not Found"
+                state.error = "Please install keychain to login"
             }
         )
     }
