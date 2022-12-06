@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { checkKeychain } from '../redux/features/keyChain/keyChainSlice';
 import {
   getElapsedTimestampSeconds,
-  getTimestampInSeconds,
+  getTimestampInSeconds
 } from '../utils/utils';
 const LoginButton = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
