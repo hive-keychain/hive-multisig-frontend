@@ -7,16 +7,11 @@ import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
-  getTimestampInSeconds,
+  getTimestampInSeconds
 } from '../utils/utils';
 const LoginForm = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');
-  const isKeyChainFound = useAppSelector(
-    (state) => state.keychain.isKeyChainFound,
-  );
-  const keyChainMsg = useAppSelector((state) => state.keychain.message);
-  const keyChainError = useAppSelector((state) => state.keychain.error);
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
   );
@@ -44,10 +39,7 @@ const LoginForm = () => {
         loginTimestamp,
         getTimestampInSeconds(),
       );
-      console.log('Login timestamp:', loginTimestamp);
-      console.log('Login duration:', loggedinDuration);
       if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
-        console.log('Login Expired:', loggedinDuration);
         setLoginTimestamp(0);
         setStorageAccountDetails(null);
         setStorageIsLoggedIn(false);
