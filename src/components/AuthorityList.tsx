@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import { Badge } from "react-bootstrap";
+import { Authorities } from "../interfaces";
 import ListGroup from 'react-bootstrap/ListGroup';
 import * as Hive from '@hiveio/dhive';
-import { Authorities } from "../interfaces/account.interface";
+
 interface Iprops {
     authorities: Authorities;
 }

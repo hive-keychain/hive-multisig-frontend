@@ -1,8 +1,15 @@
-html{
-  min-height:100%;
+.avatar {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+html {
+  min-height: 100%;
 }
 
-body, #root, .App {
+body,
+#root,
+.App {
   height: 100vh;
 }
 
@@ -10,7 +17,7 @@ body, #root, .App {
   text-align: center;
   display: flex;
   flex-direction: column;
-  flex:1;
+  flex: 1;
 }
 
 .App-logo {
@@ -48,13 +55,12 @@ body, #root, .App {
   }
 }
 
-.centered { 
+.centered {
   display: flex;
-  justify-content: center ;
+  justify-content: center;
 }
 
-.footer-text { 
+.footer-text {
   text-align: center;
   padding-bottom: 10px;
 }
-

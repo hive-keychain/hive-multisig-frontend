@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
-import Button from 'react-bootstrap/Button';
-import {useNavigate, useParams} from 'react-router-dom';
-import {ISearchPageInterface,ISearchBarInterface}  from "../interfaces/search.interface";
-import {}  from "../interfaces/search.interface";
+import { useNavigate, useParams } from 'react-router-dom';
+import { Authorities, ISearchBarInterface, ISearchPageInterface } from "../interfaces";
+import { useAppSelector } from "../redux/app/hooks";
 import AccountUtils from '../utils/hive.utils';
-import { Authorities  } from "../interfaces/account.interface"
-
 import AuthorityList from "./AuthorityList";
 
 const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
   const [input,setInput] = useState<string>('');
-  const navigate = useNavigate();
+  const [isKeychain, setKeychain] = useState<boolean>(true);
+  const isKeyChainFound = useAppSelector<boolean>(
+    (state) => state.keychain.isKeyChainFound,
+    );
+    const keyChainMsg = useAppSelector((state) => state.keychain.message);
+    const keyChainError = useAppSelector((state) => state.keychain.error);
+    const navigate = useNavigate();
+  
+  useEffect(() =>{
+    setKeychain(isKeyChainFound)
+  },[isKeyChainFound])
+
   useEffect(()=>{
     const keyDownHandler = (e:KeyboardEvent )=>{
       if(e.key==='Enter'){
@@ -33,6 +42,16 @@ const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
       navigate('/');
     }
   }
+
+  const DispalyHiveKeyChainError = () => {
+    if(!isKeychain){
+      return (
+        <div className="ms-2 text-start" style={{color:"red"}}>{keyChainError}</div>
+      )
+    }else{
+      return(<div></div>)
+    }
+  }
   const DisplayValidity = () =>{
     if(props.isValid===false){
       return (
@@ -50,6 +69,7 @@ const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
   return (
       <div>
         <DisplayValidity/>
+        <DispalyHiveKeyChainError/>
         <InputGroup className='mb-3'>
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
           <Form.Control
