@@ -5,3 +5,9 @@ export type Authorities = {
   active?: Hive.Authority;
   posting?: Hive.Authority;
 }
+export type UpdateAuthorityType = {
+  authorityType: string 
+  authorities: Hive.Authority
+  accountType: string | Hive.PublicKey
+  authorityToUpdate: [string,number]
+}
