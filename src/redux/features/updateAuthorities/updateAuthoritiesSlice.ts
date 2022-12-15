@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { IAccountKeysCardProps } from "../../../components/cards/AuthorityCard"
 import { Authorities, BroadCastResponseType, IDHiveAccountUpdateBroadcast, IHiveAccountUpdateBroadcast } from "../../../interfaces"
 import { AccountUpdateBroadcast } from "../../../utils/hive-keychain.utils"
 import { BroadcastUpdateAccount } from "../../../utils/hive.utils"
@@ -28,13 +29,38 @@ export const dhiveBroadcastUpdateAccount = createAsyncThunk(
   'updateAuthority/dhiveBroadcast',
   async(props:IDHiveAccountUpdateBroadcast) => {
     const response = await BroadcastUpdateAccount(props)
+    return response;
   }
 )
 
 const updateAuthoritySlice = createSlice({
     name: 'updateAuthority',
     initialState,
-    reducers: {},
+    reducers: {
+      initializeAuthorities(state, action: PayloadAction<Authorities>){
+        state.Authorities = action.payload
+      },
+      updateAccount(state, action: PayloadAction<IAccountKeysCardProps> ){
+        switch(action.payload.authorityName.toLowerCase()){
+          case "owner":
+            action.payload.authAccountType.toLowerCase() === 'account'?
+            state.Authorities.owner.account_auths = action.payload.accountKeyAuths
+            :state.Authorities.owner.key_auths = action.payload.accountKeyAuths
+            break;
+          case "active":
+            action.payload.authAccountType.toLowerCase() === 'active'?
+            state.Authorities.active.account_auths = action.payload.accountKeyAuths
+            :state.Authorities.owner.key_auths = action.payload.accountKeyAuths
+            break;
+          case "posting":
+            action.payload.authAccountType.toLocaleLowerCase() ==='posting'?
+            state.Authorities.posting.account_auths = action.payload.accountKeyAuths
+            :state.Authorities.posting.account_auths = action.payload.accountKeyAuths
+            break;
+        }
+      }
+
+    },
     extraReducers: (builder) => {
         builder.addCase(
             hiveKeyChainRequestBroadCast.fulfilled,
@@ -74,3 +100,4 @@ const updateAuthoritySlice = createSlice({
 })
 
 export default updateAuthoritySlice.reducer;
+export const {initializeAuthorities, updateAccount} = updateAuthoritySlice.actions

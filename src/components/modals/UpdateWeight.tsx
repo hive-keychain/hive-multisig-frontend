@@ -1,15 +1,15 @@
 import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from "react";
 import { Button, Form, Modal } from "react-bootstrap";
-import { UPDATE_TARGET, UPDATE_TARGET_AUTHORITY } from '../interfaces';
+import { UPDATE_TARGET_ACCOUNT_TYPE, UPDATE_TARGET_AUTHORITY_TYPE } from '../../interfaces';
 
 interface IUpdateWeightProps { 
     showForm:boolean,
     setShowForm:Function,
     setNewWeight: Function,
     setOwnerKey: Function,
-    targetAuthType: string | UPDATE_TARGET_AUTHORITY,
-    targetAccountType: string | UPDATE_TARGET,
+    targetAuthType: string | UPDATE_TARGET_AUTHORITY_TYPE,
+    targetAccountType: string | UPDATE_TARGET_ACCOUNT_TYPE,
     targetAuthAccount: [string | Hive.PublicKey,number]
 }
 
@@ -17,6 +17,7 @@ export const UpdateWeight = ({showForm, setShowForm, setOwnerKey,
                                 setNewWeight, targetAuthType,
                                 targetAccountType, targetAuthAccount}:IUpdateWeightProps) => {
     const [weight, setWeight] = useState<number>(targetAuthAccount[1])
+    const [ownerKey, _setOwnerKey] = useState<string>('');
     const [show, setShow] = useState(showForm);
     
     useEffect(() => {
@@ -30,7 +31,8 @@ export const UpdateWeight = ({showForm, setShowForm, setOwnerKey,
 
     const handleClose = () => setShow(false);
     
-    const hanleUpdate = () => {
+    const handleUpdate = () => {
+        setOwnerKey(ownerKey)
         setNewWeight(weight)
         setShow(false);
     }
@@ -56,9 +58,6 @@ export const UpdateWeight = ({showForm, setShowForm, setOwnerKey,
                 <Modal.Body>
                     <Form>
                         <Form.Group className="mb-3">
-                            {/* authority type */}
-                            {/* account/key name */}
-                            {/* current weight */}
                             <h2>{targetAuthType +" Authority"}</h2>
                             <b className="text-secondary">{targetAccountType+": "}</b> {targetAuthAccount[0].toString()} <br/>
                             <b className="text-secondary">Weight: </b> {targetAuthAccount[1].toString()} <br/>
@@ -67,7 +66,7 @@ export const UpdateWeight = ({showForm, setShowForm, setOwnerKey,
                                 type="text"
                                 placeholder="Enter Owner Key"
                                 autoFocus
-                                onChange = {e => {setOwnerKey(e.target.value)}}
+                                onChange = {e => {_setOwnerKey(e.target.value)}}
                                 />
                                 :<div></div>
                             }
@@ -85,7 +84,7 @@ export const UpdateWeight = ({showForm, setShowForm, setOwnerKey,
                 <Button variant="secondary" onClick={() => {handleClose()}}>
                     Close
                 </Button>
-                <Button variant="primary" onClick={() => {hanleUpdate()}}>
+                <Button variant="primary" onClick={() => {handleUpdate()}}>
                     Update
                 </Button>
                 </Modal.Footer>
