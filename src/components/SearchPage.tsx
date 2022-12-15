@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Authorities, ISearchBarInterface, ISearchPageInterface } from "../interfaces";
 import { useAppSelector } from "../redux/app/hooks";
 import AccountUtils from '../utils/hive.utils';
-import AuthorityList from "./AuthorityList";
+import AccountPage from "./AccountPage";
 
 const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
   const [input,setInput] = useState<string>('');
@@ -72,6 +72,7 @@ const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
         <DispalyHiveKeyChainError/>
         <InputGroup className='mb-3'>
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
+            
           <Form.Control
             placeholder={props.username?props.username:"Username"}
             aria-label="Username"
@@ -102,7 +103,7 @@ const SearchPage:React.FC<ISearchPageInterface>  = (props:ISearchPageInterface) 
   return (
     <div>
       <SearchBar username={searchKey} isValid={isValid}/>
-      <AuthorityList authorities={authorities}/>
+      <AccountPage authorities={authorities}/>
     </div>
   )
 }
