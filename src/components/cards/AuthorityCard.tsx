@@ -1,6 +1,5 @@
 import * as Hive from '@hiveio/dhive';
-import * as _ from 'lodash';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import {
   Button,
   Card,
@@ -9,16 +8,17 @@ import {
   InputGroup,
   Stack,
 } from 'react-bootstrap';
-import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { useAppDispatch } from '../../redux/app/hooks';
 import { updateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { useDidMountEffect } from '../../utils/utils';
 
-interface IAccountKeyRowProps {
+export interface IAccountKeyRowProps {
   authorityName: string;
-  authAccountType: string;
-  accountKeyAuth: [string, number];
-  accountKeyAuths: [string, number][];
+  type: string;
+  accountKeyAuth?: [string, number];
+  threshold?: number;
 }
-export interface IAccountKeysCardProps {
+ interface IAccountKeysCardProps {
   authorityName: string;
   authAccountType: string;
   accountKeyAuths: [string, number][];
@@ -30,72 +30,44 @@ interface IAuthorityCardProps {
 interface IAddAccountKeyProps {
   authAccountType: string;
 }
-interface IAuthorityThreshProps {
-  authorityName: string;
-  threshold: number;
-}
+
+
 
 export function AccountKeyRow({
   authorityName,
-  authAccountType,
+  type,
   accountKeyAuth,
-  accountKeyAuths,
 }: IAccountKeyRowProps) {
   const [editFlag, setEdiFlag] = useState<string>('text-body');
-  const [updateAccountKeyAuth, updateAccKeyAuth] = useState<[string, number]>();
-  const [newAccountKeyAuths, setNewAccountKeyAuths] =
-    useState<[string, number][]>(accountKeyAuths);
   const [deleteAccKeyAuth, setDeleteAccKeyAuth] = useState<string>();
+  const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
+  const [newAuth, setNewAuth] = useState<[string,number]>(accountKeyAuth);
   const dispatch = useAppDispatch();
-  const newAuthorities = useAppSelector(
-    (state) => state.updateAuthorities.NewAuthorities,
-  );
-  const update = (
-    index: number,
-    newVal: [string, number],
-  ): [string, number][] => {
-    const newAuths: [string, number][] = newAccountKeyAuths.map((val, i) => {
-      if (i === index) {
-        return newVal;
-      } else {
-        return val;
-      }
-    });
-    return newAuths;
-  };
-  useEffect(() => {
-    if (updateAccountKeyAuth) {
-      //if account/key exists then apply the update
-      const index = newAccountKeyAuths.findIndex(
-        (e) => e[0] === updateAccountKeyAuth[0],
-      );
-      if (index !== -1) {
-        setNewAccountKeyAuths(update(index, updateAccountKeyAuth));
-      }
-    }
-  }, [updateAccountKeyAuth]);
+ 
 
-  useEffect(() => {
-    if (updateAccountKeyAuth) {
-      console.log('2newAccountKeyAuths: ', newAccountKeyAuths);
-      const prop: IAccountKeysCardProps = {
-        authorityName,
-        authAccountType,
-        accountKeyAuths: _.cloneDeep(newAccountKeyAuths),
-      };
-      dispatch(updateAccount(prop));
-    }
-  }, [newAccountKeyAuths]);
-
-  const handleUpdate = (newWeight: number) => {
-    if (newWeight !== accountKeyAuth[1]) {
+  useDidMountEffect(()=> {
+    if (weight !== accountKeyAuth[1]) {
       setEdiFlag('text-danger');
     } else {
       setEdiFlag('text-body');
     }
-    updateAccKeyAuth([accountKeyAuth[0], newWeight]);
-  };
+    setNewAuth([accountKeyAuth[0],weight]);
+  },[weight])
 
+  useDidMountEffect(()=>{
+    if(newAuth){
+      const payload: IAccountKeyRowProps = {
+        authorityName,
+        type,
+        accountKeyAuth: [...newAuth]
+      }
+      dispatch(updateAccount(payload));
+    }
+  },[newAuth])
+ 
+  const handleUpdate = (v:number) =>{
+    setWeight(v);
+  }
   const handleDelete = () => {
     setDeleteAccKeyAuth(accountKeyAuth[0]);
   };
@@ -104,7 +76,7 @@ export function AccountKeyRow({
     <Stack direction="horizontal" gap={3}>
       <InputGroup className="mb-3 ">
         <InputGroup.Text id="basic-addon1">
-          {authAccountType === 'Accounts' ? (
+          {type === 'Accounts' ? (
             '@'
           ) : (
             <i className="fa fa-lock"></i>
@@ -127,10 +99,9 @@ export function AccountKeyRow({
           step="1"
           className="form-control"
           id="weightInput"
-          onChange={(e) => {
-            handleUpdate(parseInt(e.target.value));
-          }}
-          placeholder={accountKeyAuth[1].toString()}
+          onChange={(e) => handleUpdate(parseInt(e.target.value))}
+          placeholder={weight.toString()}
+          value={weight}
         />
       </InputGroup>
       <Button
@@ -163,9 +134,8 @@ export function AccountKeysCard({
                 <AccountKeyRow
                   key={accountKeyAuth[0].toString()}
                   authorityName={authorityName}
-                  authAccountType={authAccountType}
+                  type={authAccountType}
                   accountKeyAuth={accountKeyAuth}
-                  accountKeyAuths={accountKeyAuths}
                 />
               ),
             )}
@@ -177,16 +147,22 @@ export function AccountKeysCard({
   );
 }
 
-export function AuthorityWeightThreshold(props: IAuthorityThreshProps) {
-  const [weight, setNewWeightThresh] = useState<number>(props.threshold);
+export function AuthorityWeightThreshold({authorityName, type, threshold}: IAccountKeyRowProps) {
+  const [weight, setNewWeightThresh] = useState<number>(threshold);
   const [editFlag, setEdiFlag] = useState<string>('text-body');
-
-  useEffect(() => {
-    if (weight !== props.threshold) {
+  const dispatch = useAppDispatch();
+  useDidMountEffect(() => {
+    if (weight !== threshold) {
       setEdiFlag('text-danger');
     } else {
       setEdiFlag('text-body');
     }
+    const payload:IAccountKeyRowProps ={
+      authorityName,
+      type,
+      threshold: weight
+    }
+    dispatch(updateAccount(payload));
   }, [weight]);
 
   return (
@@ -204,7 +180,8 @@ export function AuthorityWeightThreshold(props: IAuthorityThreshProps) {
           onChange={(e) => {
             setNewWeightThresh(parseInt(e.target.value));
           }}
-          placeholder={props.threshold.toString()}
+          placeholder={weight.toString()}
+          value={weight}
         />
       </InputGroup>
     </div>
@@ -237,7 +214,7 @@ export function AddAccountKeyRow(props: IAddAccountKeyProps) {
           step="1"
           className="form-control"
           id="weightInput"
-          placeholder={'2'}
+          placeholder={'1'}
         />
       </InputGroup>
       <Button className="mb-3" variant="outline-primary">
@@ -264,7 +241,8 @@ export function AuthorityCard(props: IAuthorityCardProps) {
     authAccountType: 'Keys',
     accountKeyAuths: keyAuths,
   };
-  const thresh: IAuthorityThreshProps = {
+  const thresh: IAccountKeyRowProps = {
+    type: 'threshold',
     authorityName: props.authorityName,
     threshold: props.authority.weight_threshold,
   };
@@ -285,7 +263,8 @@ export function AuthorityCard(props: IAuthorityCardProps) {
               accountKeyAuths={keys.accountKeyAuths}
             />
             <AuthorityWeightThreshold
-              authorityName={props.authorityName}
+              type={thresh.type}
+              authorityName={thresh.authorityName}
               threshold={thresh.threshold}
             />
           </Stack>
@@ -293,7 +272,4 @@ export function AuthorityCard(props: IAuthorityCardProps) {
       </Container>
     </Card>
   );
-}
-function useAppSelector(arg0: (state: any) => any) {
-  throw new Error('Function not implemented.');
 }

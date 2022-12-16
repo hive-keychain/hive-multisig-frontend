@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -6,4 +8,12 @@ export function getTimestampInSeconds() {
 }
 export function getElapsedTimestampSeconds(old_t: number, new_t: number) {
   return new_t - old_t;
+}
+export const useDidMountEffect = (func:Function, deps:[any]) => {
+  const didMount = useRef(false);
+
+  useEffect(() => {
+      if (didMount.current) func();
+      else didMount.current = true;
+  }, deps);
 }

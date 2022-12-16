@@ -1,20 +1,50 @@
+import { useEffect, useState } from 'react';
 import { Button, Stack } from 'react-bootstrap';
 import { Authorities } from '../interfaces';
-import { useAppDispatch } from '../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { initializeAuthorities } from '../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { AuthorityCard } from './cards/AuthorityCard';
+import UpdateAuthoritiesConfirmation from './modals/UpdateAuthoritiesConfirmation';
 
 interface IAccountPageProp {
   authorities: Authorities;
 }
 function AccountPage({ authorities }: IAccountPageProp) {
+  const [show, setShow] = useState(false);
+  const [display, setDisplay] = useState(false);
   const dispatch = useAppDispatch();
+  const isOwnerAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isOwnerAuthUpdated,
+  );
+  const isActiveAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isActiveAuthUpdated,
+  );
+  const isPostingAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isPostingAuthUpdated,
+  );
 
-  if (authorities) {
-    dispatch(initializeAuthorities(authorities));
+  useEffect(() =>{
+    if (authorities) {
+      dispatch(initializeAuthorities(authorities));
+      setDisplay(true);
+    }else{
+      setDisplay(false);
+    }
+  },[authorities])
+  
+
+  const handleUpdateBtn = () => {
+    if(isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated){
+      handleShow();
+    }
   }
-  return authorities ? (
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  return display ? (
     <div>
+      <UpdateAuthoritiesConfirmation show={show} handleClose={handleClose}/>
       <Stack gap={3}>
         <AuthorityCard authorityName={'Owner'} authority={authorities.owner} />
         <AuthorityCard
@@ -29,7 +59,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
           <Button className="ms-auto" variant="secondary">
             Reset
           </Button>{' '}
-          <Button variant="success">Update</Button>{' '}
+          <Button variant="success" onClick={() => handleUpdateBtn()}>Update</Button>{' '}
         </Stack>
       </Stack>
     </div>
