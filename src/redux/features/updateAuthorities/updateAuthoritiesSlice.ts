@@ -128,6 +128,50 @@ const updateAuthoritySlice = createSlice({
         state.Authorities.posting,
       );
     },
+    addAccount(state, action:PayloadAction<IAccountKeyRowProps>){
+      switch (action.payload.authorityName.toLowerCase()) {
+        case 'owner':
+          action.payload.type.toLowerCase() === 'accounts'?
+          state.NewAuthorities.owner.account_auths = 
+          [...state.NewAuthorities.owner.account_auths, action.payload.accountKeyAuth]
+          :action.payload.type.toLowerCase() === 'keys'?
+          state.NewAuthorities.owner.key_auths = 
+          [...state.NewAuthorities.owner.key_auths, action.payload.accountKeyAuth]
+          : state
+          break;
+        case 'active':
+          action.payload.type.toLowerCase() === 'accounts'?
+          state.NewAuthorities.active.account_auths = 
+          [...state.NewAuthorities.active.account_auths,action.payload.accountKeyAuth]
+          :action.payload.type.toLowerCase() === 'keys'?
+          state.NewAuthorities.active.key_auths = 
+          [...state.NewAuthorities.active.key_auths, action.payload.accountKeyAuth]
+          : state
+          break;
+        case 'posting':
+          action.payload.type.toLowerCase() === 'accounts'?
+          state.NewAuthorities.posting.account_auths = 
+          [...state.NewAuthorities.posting.account_auths, action.payload.accountKeyAuth]
+          :action.payload.type.toLowerCase() === 'keys'?
+          state.NewAuthorities.posting.key_auths =
+          [...state.NewAuthorities.posting.key_auths, action.payload.accountKeyAuth]
+          : state
+          break;
+      }
+      state.isOwnerAuthUpdated = !_.isEqual(
+        state.NewAuthorities.owner,
+        state.Authorities.owner,
+      );
+      state.isActiveAuthUpdated = !_.isEqual(
+        state.NewAuthorities.active,
+        state.Authorities.active,
+      );
+      state.isPostingAuthUpdated = !_.isEqual(
+        state.NewAuthorities.posting,
+        state.Authorities.posting,
+      );
+    }
+    ,
     setOwnerKey(state, action: PayloadAction<string>){
       state.ownerKey = action.payload
     },
@@ -165,5 +209,5 @@ const updateAuthoritySlice = createSlice({
 });
 
 export default updateAuthoritySlice.reducer;
-export const { initializeAuthorities, updateAccount, setOwnerKey } =
+export const { initializeAuthorities, updateAccount, setOwnerKey, addAccount } =
   updateAuthoritySlice.actions;

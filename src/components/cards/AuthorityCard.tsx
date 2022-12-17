@@ -1,5 +1,5 @@
 import * as Hive from '@hiveio/dhive';
-import { ReactNode, useState } from 'react';
+import { FC, ReactNode, useState } from 'react';
 import {
   Button,
   Card,
@@ -9,7 +9,7 @@ import {
   Stack,
 } from 'react-bootstrap';
 import { useAppDispatch } from '../../redux/app/hooks';
-import { updateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { addAccount, updateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { useDidMountEffect } from '../../utils/utils';
 
 export interface IAccountKeyRowProps {
@@ -29,15 +29,16 @@ interface IAuthorityCardProps {
 }
 interface IAddAccountKeyProps {
   authAccountType: string;
+  setNewAccount: Function;
 }
 
 
 
-export function AccountKeyRow({
+export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   authorityName,
   type,
   accountKeyAuth,
-}: IAccountKeyRowProps) {
+}) =>{
   const [editFlag, setEdiFlag] = useState<string>('text-body');
   const [deleteAccKeyAuth, setDeleteAccKeyAuth] = useState<string>();
   const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
@@ -122,24 +123,60 @@ export function AccountKeysCard({
   accountKeyAuths,
 }: IAccountKeysCardProps) {
   const [cardBorder, setCardBorder] = useState<string>('secondary');
-
+  const [accountList, setAccountList] = useState<[string,number][]>(accountKeyAuths)
+  const [accountComponentList, setAccountComponentList] = useState<ReactNode[]>([
+    accountKeyAuths.map((accountKeyAuth):ReactNode=>{
+      return  <AccountKeyRow
+          key={accountKeyAuth[0].toString()}
+          authorityName = {authorityName}
+          type={authAccountType}
+          accountKeyAuth={accountKeyAuth} />
+    })
+  ]);
+  const [newAccount, setNewAccount] = useState<[string, number]>(['',1]);
+  const dispatch = useAppDispatch();
+  useDidMountEffect(()=>{
+      if(!isDuplicate(newAccount[0])){
+        setAccountList(accountList => [
+          ...accountList,
+          newAccount
+        ])
+        
+        const newRow = <AccountKeyRow
+            key={newAccount[0].toString()}
+            authorityName = {authorityName}
+            type={authAccountType}
+            accountKeyAuth={newAccount} />
+        setAccountComponentList(accountComponentList => [
+            ...accountComponentList,
+            newRow
+          ])
+        const payload:IAccountKeyRowProps={
+          authorityName, 
+          type:authAccountType,
+          accountKeyAuth:newAccount
+        }
+        console.log('payload', payload)
+        dispatch(addAccount(payload))
+      }
+  },[newAccount])
+   
+  const isDuplicate = (name:string):boolean => {
+    for(let i = 0; i< accountList.length; i++){
+      if(accountList[i][0] === name){
+        return true;
+      }
+    }
+    return false;
+  }
   return (
     <Card border={cardBorder}>
       <Container>
         <Card.Body>
           <Card.Title>{authAccountType}</Card.Title>
           <Stack gap={2}>
-            {accountKeyAuths.map(
-              (accountKeyAuth): ReactNode => (
-                <AccountKeyRow
-                  key={accountKeyAuth[0].toString()}
-                  authorityName={authorityName}
-                  type={authAccountType}
-                  accountKeyAuth={accountKeyAuth}
-                />
-              ),
-            )}
-            <AddAccountKeyRow authAccountType={authAccountType} />
+            {accountComponentList?accountComponentList:<div></div>}
+            <AddAccountKeyRow authAccountType={authAccountType} setNewAccount={setNewAccount} />
           </Stack>
         </Card.Body>
       </Container>
@@ -187,12 +224,21 @@ export function AuthorityWeightThreshold({authorityName, type, threshold}: IAcco
     </div>
   );
 }
-export function AddAccountKeyRow(props: IAddAccountKeyProps) {
+export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKeyProps) {
+  const [accountName, setAccountName] = useState<string>('');
+  const [weight, setAccountWeight] = useState<number>(1);
+  const handleAddOnClick = () =>{
+    if(accountName!==''){
+      setNewAccount([accountName,weight]);
+      setAccountName('');
+      setAccountWeight(1);
+    }
+  }
   return (
     <Stack direction="horizontal" gap={3}>
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">
-          {props.authAccountType === 'Accounts' ? (
+          {authAccountType === 'Accounts' ? (
             '@'
           ) : (
             <i className="fa fa-lock"></i>
@@ -202,8 +248,10 @@ export function AddAccountKeyRow(props: IAddAccountKeyProps) {
           className="me-auto"
           type="text"
           placeholder={`Add ${
-            props.authAccountType === 'Accounts' ? 'Account' : 'Key'
+            authAccountType === 'Accounts' ? 'Account' : 'Key'
           }`}
+          onChange={(e) => {setAccountName(e.target.value)}}
+          value = {accountName}
         />
       </InputGroup>
       <InputGroup className="mb-3">
@@ -215,9 +263,11 @@ export function AddAccountKeyRow(props: IAddAccountKeyProps) {
           className="form-control"
           id="weightInput"
           placeholder={'1'}
+          onChange={(e) => {setAccountWeight(parseInt(e.target.value))}}
+          value = {weight}
         />
       </InputGroup>
-      <Button className="mb-3" variant="outline-primary">
+      <Button className="mb-3" variant="outline-primary" onClick={() => {handleAddOnClick()}}>
         Add{' '}
       </Button>
     </Stack>
