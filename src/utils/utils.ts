@@ -17,3 +17,11 @@ export const useDidMountEffect = (func:Function, deps:[any]) => {
       else didMount.current = true;
   }, deps);
 }
+
+export const removeStringElement = (array:string[], element:string):string[] => {
+  const index = array.indexOf(element);
+  if(index!==-1){
+    return [...array.slice(0,index), ...array.slice(index+1)]
+  }
+  return [...array];
+}

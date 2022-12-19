@@ -36,7 +36,7 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
     const update = (origAuth:[string|Hive.PublicKey,number][], newAuth:[string|Hive.PublicKey,number][], setter:Function) => {
         setter((prev:[string|Hive.PublicKey,number][]) => {
             const newAuths = [...prev];
-            for(var i = 0; i< origAuth.length; i++){
+            for(var i = 0; i< newAuth.length; i++){
                 if(origAuth[i][1] !== newAuth[i][1]){
                     newAuths[i]=[...newAuth[i]];
                     newAuths[i][1] = newAuths[i][1];

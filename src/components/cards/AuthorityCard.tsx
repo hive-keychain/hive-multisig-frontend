@@ -1,5 +1,5 @@
 import * as Hive from '@hiveio/dhive';
-import { FC, ReactNode, useState } from 'react';
+import { FC, ReactNode, useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -8,8 +8,10 @@ import {
   InputGroup,
   Stack,
 } from 'react-bootstrap';
-import { useAppDispatch } from '../../redux/app/hooks';
-import { addAccount, updateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { useReadLocalStorage } from 'usehooks-ts';
+import { Authorities } from '../../interfaces';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { addAccount, deleteAccount, updateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { useDidMountEffect } from '../../utils/utils';
 
 export interface IAccountKeyRowProps {
@@ -40,11 +42,16 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   accountKeyAuth,
 }) =>{
   const [editFlag, setEdiFlag] = useState<string>('text-body');
-  const [deleteAccKeyAuth, setDeleteAccKeyAuth] = useState<string>();
+  const [deleteComponentKey, setDeleteComponentKey] = useState<string>();
   const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
   const [newAuth, setNewAuth] = useState<[string,number]>(accountKeyAuth);
   const dispatch = useAppDispatch();
- 
+  let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
+  useEffect(()=>{
+    setLoginState(isLoggedIn);
+  },[isLoggedIn])
+  
 
   useDidMountEffect(()=> {
     if (weight !== accountKeyAuth[1]) {
@@ -65,12 +72,24 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
       dispatch(updateAccount(payload));
     }
   },[newAuth])
- 
+  
+  useDidMountEffect(() => {
+    if(deleteComponentKey!==''){
+      const payload: IAccountKeyRowProps = {
+        authorityName,
+        type,
+        accountKeyAuth: [...newAuth],
+      }
+      dispatch(deleteAccount(payload));
+      setDeleteComponentKey('');
+    }
+  },[deleteComponentKey])
+  
   const handleUpdate = (v:number) =>{
     setWeight(v);
   }
   const handleDelete = () => {
-    setDeleteAccKeyAuth(accountKeyAuth[0]);
+    setDeleteComponentKey(accountKeyAuth[0]);
   };
 
   return (
@@ -87,7 +106,9 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
           className="me-auto "
           type="text"
           placeholder={accountKeyAuth[0].toString()}
+          value = {accountKeyAuth[0]}
           readOnly
+
         />
       </InputGroup>
       <InputGroup className="mb-3">
@@ -95,99 +116,153 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
           Weight
         </InputGroup.Text>
         <Form.Control
-          type="number"
+          type= {loginState?"number":'text'}
           min="1"
           step="1"
           className="form-control"
           id="weightInput"
-          onChange={(e) => handleUpdate(parseInt(e.target.value))}
+          onChange={loginState?(e) => handleUpdate(parseInt(e.target.value)):null}
           placeholder={weight.toString()}
           value={weight}
+          readOnly={loginState}
         />
       </InputGroup>
-      <Button
+      {loginState?
+        <Button
         className="mb-3"
         variant="outline-danger"
         onClick={() => {
           handleDelete();
         }}>
-        Delete
+           Delete
       </Button>
+      :<div></div>}
     </Stack>
   );
 }
-
 export function AccountKeysCard({
   authorityName,
   authAccountType,
   accountKeyAuths,
 }: IAccountKeysCardProps) {
+  const dispatch = useAppDispatch();
+  const newAuthorities:Authorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities
+  );
+  let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [cardBorder, setCardBorder] = useState<string>('secondary');
-  const [accountList, setAccountList] = useState<[string,number][]>(accountKeyAuths)
-  const [accountComponentList, setAccountComponentList] = useState<ReactNode[]>([
-    accountKeyAuths.map((accountKeyAuth):ReactNode=>{
-      return  <AccountKeyRow
+  const [newAccount, setNewAccount] = useState<[string, number]>(['',1]);
+  const [accountComponentList, setAccountComponentList] = useState<[string,ReactNode][]>(
+    accountKeyAuths.map(
+      (accountKeyAuth):[string,ReactNode] =>
+        { return [accountKeyAuth[0], <AccountKeyRow
           key={accountKeyAuth[0].toString()}
           authorityName = {authorityName}
           type={authAccountType}
-          accountKeyAuth={accountKeyAuth} />
-    })
-  ]);
-  const [newAccount, setNewAccount] = useState<[string, number]>(['',1]);
-  const dispatch = useAppDispatch();
+          accountKeyAuth={accountKeyAuth} />]}
+     )
+  );
+  useEffect(()=>{
+    setLoginState(isLoggedIn);
+  },[isLoggedIn])
+  
+ 
   useDidMountEffect(()=>{
-      if(!isDuplicate(newAccount[0])){
-        setAccountList(accountList => [
-          ...accountList,
-          newAccount
-        ])
-        
-        const newRow = <AccountKeyRow
-            key={newAccount[0].toString()}
-            authorityName = {authorityName}
-            type={authAccountType}
-            accountKeyAuth={newAccount} />
-        setAccountComponentList(accountComponentList => [
-            ...accountComponentList,
-            newRow
-          ])
-        const payload:IAccountKeyRowProps={
-          authorityName, 
-          type:authAccountType,
-          accountKeyAuth:newAccount
-        }
-        console.log('payload', payload)
-        dispatch(addAccount(payload))
-      }
+    const newRow:[string, ReactNode ] = [newAccount[0].toString(),
+    <AccountKeyRow
+     key={newAccount[0].toString()}
+     authorityName = {authorityName}
+     type={authAccountType}
+     accountKeyAuth={newAccount} />]
+
+    setAccountComponentList(accountComponentList => [
+        ...accountComponentList,
+        newRow
+      ])
+    const payload:IAccountKeyRowProps={
+      authorityName, 
+      type:authAccountType,
+      accountKeyAuth:newAccount
+    }
+  dispatch(addAccount(payload))
   },[newAccount])
-   
-  const isDuplicate = (name:string):boolean => {
-    for(let i = 0; i< accountList.length; i++){
-      if(accountList[i][0] === name){
-        return true;
+  
+  useDidMountEffect(()=>{
+    removeComponent();
+  },[newAuthorities])
+
+  const removeComponent = ():void =>{
+    const componentKeys = getComponentKeys();
+    const accountNames = getNewAuthorityNames();
+    const componentToDelete = componentKeys.filter((e) => !accountNames.includes(e))[0]
+    const componentIndex = getComponentIndex(componentToDelete);
+    let newComponentList:[string,ReactNode][] = []
+    if(componentIndex!==-1){
+      newComponentList=[...accountComponentList.slice(0,componentIndex), ...accountComponentList.slice(componentIndex+1)]
+      setAccountComponentList([...newComponentList])
+    }
+  }
+
+  const getComponentIndex = (key:string):number=>{
+    let index = -1
+    for(let i =0; i<accountComponentList.length; i++){
+      if(accountComponentList[i][0] === key){
+        index = i;
+        break;
       }
     }
-    return false;
+    return index;
   }
+  const getComponentKeys = ():string[] =>{
+    return accountComponentList?accountComponentList.map((component) => {return component[0]}):[]
+  }
+  const getNewAuthorityNames = ():string[] =>{
+    let names:string[] = [];
+    switch(authorityName.toLowerCase()){
+      case 'owner':
+        authAccountType.toLowerCase() === 'accounts'?
+        names = newAuthorities.owner.account_auths.map((e) => {return e[0]}):
+        names = newAuthorities.owner.key_auths.map((e) => {return e[0].toString()})
+      break;
+      case 'active':
+        authAccountType.toLowerCase() === 'accounts'?
+        names = newAuthorities.active.account_auths.map((e) => {return e[0]}):
+        names = newAuthorities.active.key_auths.map((e) => {return e[0].toString()})
+        break;
+      case 'posting':
+        authAccountType.toLowerCase() === 'accounts'?
+        names = newAuthorities.posting.account_auths.map((e) => {return e[0]}):
+        names = newAuthorities.posting.key_auths.map((e) => {return e[0].toString()})
+        break;
+    }
+    return names;
+  }
+
   return (
     <Card border={cardBorder}>
       <Container>
         <Card.Body>
           <Card.Title>{authAccountType}</Card.Title>
           <Stack gap={2}>
-            {accountComponentList?accountComponentList:<div></div>}
-            <AddAccountKeyRow authAccountType={authAccountType} setNewAccount={setNewAccount} />
+            {accountComponentList?accountComponentList.map((component) => {return component[1]}):<div></div>}
+            {loginState?<AddAccountKeyRow authAccountType={authAccountType} setNewAccount={setNewAccount} />:<div></div>}
           </Stack>
         </Card.Body>
       </Container>
     </Card>
   );
 }
-
 export function AuthorityWeightThreshold({authorityName, type, threshold}: IAccountKeyRowProps) {
+  const dispatch = useAppDispatch();
   const [weight, setNewWeightThresh] = useState<number>(threshold);
   const [editFlag, setEdiFlag] = useState<string>('text-body');
-  const dispatch = useAppDispatch();
+  let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
+  useEffect(()=>{
+    setLoginState(isLoggedIn);
+  },[isLoggedIn])
+  
   useDidMountEffect(() => {
     if (weight !== threshold) {
       setEdiFlag('text-danger');
@@ -209,16 +284,17 @@ export function AuthorityWeightThreshold({authorityName, type, threshold}: IAcco
           Weight Threshold
         </InputGroup.Text>
         <Form.Control
-          type="number"
+          type={loginState?"number":"text"}
           min="1"
           step="1"
           className="form-control"
           id="threshInput"
-          onChange={(e) => {
+          onChange={loginState?(e) => {
             setNewWeightThresh(parseInt(e.target.value));
-          }}
+          }:null}
           placeholder={weight.toString()}
           value={weight}
+          readOnly={loginState}
         />
       </InputGroup>
     </div>
@@ -273,6 +349,7 @@ export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKe
     </Stack>
   );
 }
+
 export function AuthorityCard(props: IAuthorityCardProps) {
   const accounts: IAccountKeysCardProps = {
     authorityName: props.authorityName,

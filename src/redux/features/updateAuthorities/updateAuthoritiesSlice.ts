@@ -1,3 +1,4 @@
+import * as Hive from '@hiveio/dhive';
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import * as _ from 'lodash';
 import { IAccountKeyRowProps } from '../../../components/cards/AuthorityCard';
@@ -53,6 +54,32 @@ export const dhiveBroadcastUpdateAccount = createAsyncThunk(
   },
 );
 
+export const getIndexOfStringFromTupleArray = (array:[string|Hive.PublicKey,number][], element:string|Hive.PublicKey):number =>{
+  let index = -1
+  for(let i =0; i<array.length; i++){
+    if(array[i][0] === element){
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
+export const removeAuthorityKey = (array:[string|Hive.PublicKey,number][], element:[string|Hive.PublicKey,number]):[string|Hive.PublicKey,number][] => {
+  const index = getIndexOfStringFromTupleArray(array,element[0]);
+  if(index!==-1){
+    return [...array.slice(0,index), ...array.slice(index+1)]
+  }
+  return [...array];
+}
+
+export const removeAuthorityAccount = (array:[string,number][], element:[string,number]):[string,number][] => {
+  const index = getIndexOfStringFromTupleArray(array,element[0]);
+  if(index!==-1){
+    return [...array.slice(0,index), ...array.slice(index+1)]
+  }
+  return [...array];
+}
 const updateAuthoritySlice = createSlice({
   name: 'updateAuthority',
   initialState,
@@ -170,8 +197,62 @@ const updateAuthoritySlice = createSlice({
         state.NewAuthorities.posting,
         state.Authorities.posting,
       );
-    }
-    ,
+    },
+    deleteAccount(state,action:PayloadAction<IAccountKeyRowProps>){
+      switch (action.payload.authorityName.toLowerCase()) {
+        case 'owner':
+          action.payload.type.toLowerCase() === 'accounts'?
+          {...state,
+            ...state.NewAuthorities,
+            ...state.NewAuthorities.owner.account_auths =
+            removeAuthorityAccount(state.NewAuthorities.owner.account_auths,action.payload.accountKeyAuth)
+          }:
+          {
+            ...state,
+            ...state.NewAuthorities,
+            ...state.NewAuthorities.owner.key_auths =
+            removeAuthorityKey(state.NewAuthorities.owner.key_auths,action.payload.accountKeyAuth)
+          }
+        case 'active':
+          action.payload.type.toLowerCase() === 'active'?
+          {...state,
+            ...state.NewAuthorities,
+            ...state.NewAuthorities.active.account_auths =
+            removeAuthorityAccount(state.NewAuthorities.active.account_auths,action.payload.accountKeyAuth)
+          }:
+          {
+            ...state,
+            ...state.NewAuthorities,
+            ...state.NewAuthorities.active.key_auths =
+            removeAuthorityKey(state.NewAuthorities.active.key_auths,action.payload.accountKeyAuth)
+          }
+        case 'posting':
+            action.payload.type.toLowerCase() === 'accounts'?
+            {...state,
+              ...state.NewAuthorities,
+              ...state.NewAuthorities.posting.account_auths = 
+              removeAuthorityAccount(state.NewAuthorities.posting.account_auths,action.payload.accountKeyAuth)
+            }:
+            {
+              ...state,
+              ...state.NewAuthorities,
+              ...state.NewAuthorities.posting.key_auths = 
+              removeAuthorityKey(state.NewAuthorities.posting.key_auths,action.payload.accountKeyAuth)
+            }
+          }
+      state.isOwnerAuthUpdated = !_.isEqual(
+        state.NewAuthorities.owner,
+        state.Authorities.owner,
+      );
+      state.isActiveAuthUpdated = !_.isEqual(
+        state.NewAuthorities.active,
+        state.Authorities.active,
+      );
+      state.isPostingAuthUpdated = !_.isEqual(
+        state.NewAuthorities.posting,
+        state.Authorities.posting,
+      );
+    },
     setOwnerKey(state, action: PayloadAction<string>){
       state.ownerKey = action.payload
     },
@@ -209,5 +290,5 @@ const updateAuthoritySlice = createSlice({
 });
 
 export default updateAuthoritySlice.reducer;
-export const { initializeAuthorities, updateAccount, setOwnerKey, addAccount } =
+export const { initializeAuthorities, updateAccount, setOwnerKey, addAccount, deleteAccount } =
   updateAuthoritySlice.actions;

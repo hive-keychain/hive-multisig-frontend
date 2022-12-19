@@ -7,7 +7,7 @@ const store = configureStore({
     reducer: {
         keychain: keyChainReducer,
         login: loginReducer,
-        updateAuthorities: updateAuthoritiesSlice
+        updateAuthorities: updateAuthoritiesSlice,
     },
     middleware:(getDefaultMiddleware) => getDefaultMiddleware().concat(logger)
 
