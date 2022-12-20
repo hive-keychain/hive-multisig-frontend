@@ -4,17 +4,19 @@ import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../interfaces';
 import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
 import { initializeAuthorities } from '../redux/features/updateAuthorities/updateAuthoritiesSlice';
-import { AuthorityCard } from './cards/AuthorityCard';
+import { AuthorityCard } from './cards/Account/AuthorityCard';
 import UpdateAuthoritiesConfirmation from './modals/UpdateAuthoritiesConfirmation';
 
 interface IAccountPageProp {
   authorities: Authorities;
 }
 function AccountPage({ authorities }: IAccountPageProp) {
+  const dispatch = useAppDispatch();
+  let isLoggedIn = useReadLocalStorage<boolean>('loginStatus'); 
   const [show, setShow] = useState(false);
   const [display, setDisplay] = useState(false);
-  const dispatch = useAppDispatch();
-  let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
+
   const isOwnerAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isOwnerAuthUpdated,
   );
@@ -24,8 +26,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const isPostingAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isPostingAuthUpdated,
   );
- 
-  const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
+
   useEffect(()=>{
     setLoginState(isLoggedIn);
   },[isLoggedIn])

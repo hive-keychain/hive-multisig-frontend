@@ -1,3 +1,4 @@
+import * as Hive from '@hiveio/dhive';
 import { useEffect, useRef } from "react";
 
 export function delay(ms: number) {
@@ -25,3 +26,7 @@ export const removeStringElement = (array:string[], element:string):string[] => 
   }
   return [...array];
 }
+
+export const castToString = (k: string|Hive.PublicKey):string => {
+  return k.toString();
+};

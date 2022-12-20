@@ -1,7 +1,7 @@
 import * as Hive from '@hiveio/dhive';
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import * as _ from 'lodash';
-import { IAccountKeyRowProps } from '../../../components/cards/AuthorityCard';
+import { IAccountKeyRowProps } from '../../../components/cards/interfaces';
 import {
   Authorities,
   BroadCastResponseType,
@@ -85,8 +85,8 @@ const updateAuthoritySlice = createSlice({
   initialState,
   reducers: {
     initializeAuthorities(state, action: PayloadAction<Authorities>) {
-      state.Authorities = action.payload;
-      state.NewAuthorities = action.payload;
+      state.Authorities = {...action.payload};
+      state.NewAuthorities = {...action.payload};
     },
     updateAccount(state, action: PayloadAction<IAccountKeyRowProps>) {
       switch (action.payload.authorityName.toLowerCase()) {

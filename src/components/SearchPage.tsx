@@ -3,12 +3,14 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Authorities, ISearchBarInterface, ISearchPageInterface } from "../interfaces";
+import { useReadLocalStorage } from "usehooks-ts";
+import { Authorities, ISearchBarInterface, ISearchPageInterface, SignResponseType } from "../interfaces";
 import { useAppSelector } from "../redux/app/hooks";
 import AccountUtils from '../utils/hive.utils';
 import AccountPage from "./AccountPage";
+import SearchAccountPage from "./SearchAccountPage";
 
-const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
+export const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
   const [input,setInput] = useState<string>('');
   const [isKeychain, setKeychain] = useState<boolean>(true);
   const isKeyChainFound = useAppSelector<boolean>(
@@ -90,26 +92,42 @@ const SearchBar:React.FC<ISearchBarInterface> = (props:ISearchBarInterface) =>{
   )
 }
 
-const SearchPage:React.FC<ISearchPageInterface>  = (props:ISearchPageInterface) =>{
+export const HomePage:React.FC<ISearchPageInterface>  = (props:ISearchPageInterface) =>{
   const [authorities, setAuthorities] = useState<Authorities>()
   const [isValid, setValid] = useState<boolean>()
   const params = useParams();
   const searchKey = params.id;
-
+  const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn)
+  
   useEffect(() =>{
     AccountUtils.GetAuthorities(setAuthorities,setValid,searchKey);
   },[searchKey]);
 
+  useEffect(()=>{
+    if(authorities){
+      if(loggedInAccount){
+        if(loggedInAccount.data.username === searchKey){
+          setAccountSearch(false);
+        }else{
+          setAccountSearch(true);
+        }
+      }else{
+        setAccountSearch(true);
+      }
+    }else{
+      setAccountSearch(false);
+    }
+  },[authorities])
   return (
     <div>
       <SearchBar username={searchKey} isValid={isValid}/>
+      {isAccountSearch?
+      <SearchAccountPage authorities={authorities}/>:
       <AccountPage authorities={authorities}/>
+      }
     </div>
   )
 }
 
-const Search = {
-  SearchBar,
-  SearchPage,
-}
-export default Search;
