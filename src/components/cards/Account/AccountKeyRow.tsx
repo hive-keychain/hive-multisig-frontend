@@ -44,6 +44,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
           type,
           accountKeyAuth: [...newAuth],
         }
+        console.log("deleteDispatchPayload: ",payload)
         dispatch(deleteAccount(payload));
         setDeleteComponentKey('');
       }

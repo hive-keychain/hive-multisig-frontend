@@ -7,13 +7,13 @@ export default () => (
       <Navbar.Brand href="/">
         <img
           alt=""
-          // src="img/logohive.png"
+          src="img/logohive.png"
           width="30"
           height="30"
           className="d-inline-block align-top"
           style={{ marginRight: 20 }}
         />
-        {/* Hive Multisig */}
+        Hive Multisig
       </Navbar.Brand>
       <LoginButton/>
     </Container>

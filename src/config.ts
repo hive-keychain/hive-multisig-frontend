@@ -1,5 +1,5 @@
 export const Config = {
   login: {
-    expirationInSec: 60*60 ,
+    expirationInSec: 60*5 ,
   },
 };

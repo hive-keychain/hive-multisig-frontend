@@ -48,8 +48,9 @@ export const hiveKeyChainRequestBroadCast = createAsyncThunk(
 
 export const dhiveBroadcastUpdateAccount = createAsyncThunk(
   'updateAuthority/dhiveBroadcast',
-  async (props: IDHiveAccountUpdateBroadcast) => {
-    const response = await BroadcastUpdateAccount(props);
+  async ({newAuthorities, ownerKey}: IDHiveAccountUpdateBroadcast) => {
+    const response = await BroadcastUpdateAccount({newAuthorities,ownerKey});
+    console.log(response);
     return response;
   },
 );
@@ -214,7 +215,7 @@ const updateAuthoritySlice = createSlice({
             removeAuthorityKey(state.NewAuthorities.owner.key_auths,action.payload.accountKeyAuth)
           }
         case 'active':
-          action.payload.type.toLowerCase() === 'active'?
+          action.payload.type.toLowerCase() === 'accounts'?
           {...state,
             ...state.NewAuthorities,
             ...state.NewAuthorities.active.account_auths =
@@ -275,9 +276,10 @@ const updateAuthoritySlice = createSlice({
     });
     builder.addCase(
       dhiveBroadcastUpdateAccount.fulfilled,
-      (state, action: PayloadAction<any>) => {
+      (state, action) => {
         state.Authorities = null;
         state.isUpdateSucces = true;
+        state.updateCount++;
         state.error = '';
       },
     );

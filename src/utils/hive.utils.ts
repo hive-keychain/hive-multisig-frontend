@@ -43,10 +43,12 @@ const GetAuthorities = async(setAuthorities:Function, setValidUsername:Function,
  }
 
 export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) => {
+   console.log("updatewith: ",props.newAuthorities)
    const result = await client.broadcast.updateAccount(
       props.newAuthorities,
       Hive.PrivateKey.from(props.ownerKey),
     );
+    console.log(result);
 }
 
  const AccountUtils = {
