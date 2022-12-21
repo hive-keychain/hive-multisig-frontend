@@ -1,4 +1,5 @@
-   import { useEffect, useState } from 'react';
+import * as Hive from '@hiveio/dhive';
+import { useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -63,6 +64,17 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
         navigate(`/@${newAuthorities.account}`);
       }
     },[updateResult])
+
+    const orderAlphabetically = (auths:[string|Hive.PublicKey,number][]):[string,number][]=>{
+      const names = auths.map((auth) => auth[0]).sort()
+      const sortedArr:[string,number][] = []
+      for(let i=0; i<names.length;i++){
+        const index = auths.findIndex((e) => e[0]==names[i]);
+        const element:[string,number] = [auths[index][0].toString(),auths[index][1]]
+        sortedArr.push(element);
+      }
+      return sortedArr;
+    }
     const handleUpdate = () =>{
       if(isOwnerUpdate||isPostingUpdate){
         //usedhive
@@ -74,10 +86,25 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
         setDispatched(true)
       }else{
         // usekeychain
+        const activeAccounts = orderAlphabetically(newAuths.active.account_auths);
+        const activeKeys = orderAlphabetically(newAuths.active.key_auths);
+        const postingAccounts = orderAlphabetically(newAuths.posting.account_auths);
+        const postingKeys = orderAlphabetically(newAuths.posting.key_auths);
+
         const hiveUpdate: IHiveAccountUpdateBroadcast = {
           newAuthorities: {
-            ...newAuthorities,
-            owner:undefined
+            ...newAuths,
+            owner:undefined,
+            active:{
+              account_auths:activeAccounts,
+              key_auths:activeKeys,
+              weight_threshold:newAuths.active.weight_threshold
+            },
+            posting:{
+              account_auths:postingAccounts,
+              key_auths:postingKeys,
+              weight_threshold:newAuths.posting.weight_threshold
+            }
           },
           targetAuthorityType: 'Active',
         };
