@@ -116,7 +116,7 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
 
     return (
     <div
-      className="modal show"
+      className="modal updateAuthoritiesModal"
       style={{ display: 'block', position: 'initial' }}
     >
       <Modal

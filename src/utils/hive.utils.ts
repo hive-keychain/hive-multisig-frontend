@@ -1,5 +1,5 @@
    import * as Hive from '@hiveio/dhive';
-import { Client } from "@hiveio/dhive";
+import { Client, PrivateKey } from "@hiveio/dhive";
 import { Authorities } from "../interfaces/account.interface";
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';
 const client = new Client(["https://api.hive.blog", "https://api.hivekings.com", "https://anyx.io", "https://api.openhive.network"]);
@@ -43,12 +43,10 @@ const GetAuthorities = async(setAuthorities:Function, setValidUsername:Function,
  }
 
 export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) => {
-   console.log("updatewith: ",props.newAuthorities)
    const result = await client.broadcast.updateAccount(
       props.newAuthorities,
       Hive.PrivateKey.from(props.ownerKey),
     );
-    console.log(result);
 }
 
  const AccountUtils = {
@@ -57,4 +55,7 @@ export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) 
     GetAuthorities,
 }
 
+export const GetPrivateKeyFromSeed = (seed:string):Hive.PrivateKey => {
+   return PrivateKey.fromSeed(seed);
+}
  export default AccountUtils;

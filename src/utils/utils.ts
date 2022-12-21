@@ -30,3 +30,23 @@ export const removeStringElement = (array:string[], element:string):string[] => 
 export const castToString = (k: string|Hive.PublicKey):string => {
   return k.toString();
 };
+
+export function copyTextToClipboard(text:string):boolean {
+  var textArea = document.createElement("textarea");
+  // Avoid flash of the white box if rendered for any reason.
+  textArea.style.background = 'transparent';
+
+  textArea.value = text;
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    var successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    document.body.removeChild(textArea);
+    return false;
+  }
+}

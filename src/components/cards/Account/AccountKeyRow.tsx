@@ -73,7 +73,6 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
             placeholder={accountKeyAuth[0].toString()}
             value = {accountKeyAuth[0]}
             readOnly
-  
           />
         </InputGroup>
         <InputGroup className="mb-3">
