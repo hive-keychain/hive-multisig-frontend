@@ -93,13 +93,18 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
       style={{ display: 'block', position: 'initial' }}
     >
       <Modal
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
         show={showModal}
         onHide={()=> {handleClose()}}
         backdrop="static"
         keyboard={false}
+        centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Update Account Authorities</Modal.Title>
+          <Modal.Title
+          id="contained-modal-title-vcenter"
+          >Update Account Authorities</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {isOwnerUpdate||isPostingUpdate?
