@@ -33,9 +33,7 @@ export const castToString = (k: string|Hive.PublicKey):string => {
 
 export function copyTextToClipboard(text:string):boolean {
   var textArea = document.createElement("textarea");
-  // Avoid flash of the white box if rendered for any reason.
   textArea.style.background = 'transparent';
-
   textArea.value = text;
   document.body.appendChild(textArea);
   textArea.focus();

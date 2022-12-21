@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
-import { useNavigate } from 'react-router-dom';
 import { Authorities, IDHiveAccountUpdateBroadcast, IHiveAccountUpdateBroadcast } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { dhiveBroadcastUpdateAccount, hiveKeyChainRequestBroadCast, setOwnerKey } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { useDidMountEffect } from '../../utils/utils';
 interface Iprops{
     show: boolean
     handleClose: Function
@@ -15,7 +15,7 @@ interface Iprops{
 function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
    const dispatch = useAppDispatch();
    
-   const isUpdateSuceed = useAppSelector(
+   const isUpdateSucceed = useAppSelector(
     (state) => state.updateAuthorities.isUpdateSucces
    );
     const originalAuthorities = useAppSelector(
@@ -32,19 +32,19 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
     );
     const[origAuths, setOrigAuths] = useState<Authorities>(originalAuthorities)
     const[isDispatched,setDispatched] = useState<boolean>(false);
-    const[updateResult, setUpdateResult] = useState<boolean>(isUpdateSuceed);
+    const[updateError, setUpdateError] = useState<boolean>(false);
+    const[updateResult, setUpdateResult] = useState<boolean>(isUpdateSucceed);
     const[newAuths, setNewAuths] = useState<Authorities>(newAuthorities)
     const[isOwnerUpdate, setIsOwnerUpdated] = useState<boolean>(isOwnerAuthUpdated);
     const[isPostingUpdate, setIsPostingUpdate] = useState<boolean>(isPostingAuthUpdated);
     const[key, setKey] =  useState<string>('');
     const[showModal, setShowModal] = useState<boolean>(show);
-    const navigate = useNavigate();
       
     useEffect(()=>{
       setShowModal(show);
     },[show])
 
-    useEffect(()=>{
+    useDidMountEffect(()=>{
       dispatch(setOwnerKey(key));
     },[key])
 
@@ -58,13 +58,23 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
       setIsPostingUpdate(isPostingAuthUpdated)
     },[isPostingUpdate])
 
-    useEffect(() =>{
-      if(isDispatched){// || updateResult
+    useDidMountEffect(() =>{
+      if(isDispatched || updateResult){ 
         setShowModal(false);
-        navigate(`/@${newAuthorities.account}`);
+        setUpdateError(false);
+        window.location.reload();
+      }else {
+        setUpdateError(true);
       }
     },[updateResult])
 
+    useDidMountEffect(()=>{
+      if(isUpdateSucceed){
+        setUpdateResult(true);
+      }else{
+        setUpdateResult(false);
+      }
+    },[isUpdateSucceed])
     const orderAlphabetically = (auths:[string|Hive.PublicKey,number][]):[string,number][]=>{
       const names = auths.map((auth) => auth[0]).sort()
       const sortedArr:[string,number][] = []
@@ -134,6 +144,7 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
           >Update Account Authorities</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {updateError?'Update failed! Max number of update reached. Please Try again after 2 hours.':''}
           {isOwnerUpdate||isPostingUpdate?
             <OnwerKeyInput setOwnerKey={setKey}/>
           :  <div>Are you sure you wanna update?</div>
@@ -156,7 +167,7 @@ interface IOwnerKeyProp{
 
 const OnwerKeyInput = ({setOwnerKey}:IOwnerKeyProp) =>{
   const [key, setKey] = useState<string>('');
-  useEffect(() => {
+  useDidMountEffect(() => {
     setOwnerKey(key);
   },[key])
   return (

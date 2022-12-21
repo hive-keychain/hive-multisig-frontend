@@ -27,7 +27,7 @@ export type AuthorityUpdateStateType = {
 const initialState: AuthorityUpdateStateType = {
   Authorities: null,
   NewAuthorities: null,
-  isUpdateSucces: false,
+  isUpdateSucces: undefined,
   updateCount: 0,
   isOwnerAuthUpdated: false,
   isActiveAuthUpdated: false,
