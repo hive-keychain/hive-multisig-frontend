@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Stack } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
@@ -62,17 +63,23 @@ const LoginButton = () => {
     }
   };
 
+ 
+  
   const Display = () => {
     let text: string = 'Login';
     if (isLoggedIn) {
       return (
         <div>
+          <Stack direction="horizontal"  gap={3}>
+          <Button variant="secondary" onClick={handleBtnOnClick}>@{accountDetails.data.username}</Button>{' '}
           <img
             className="avatar"
             src={`https://images.hive.blog/u/${accountDetails.data.username}/avatar`}
             alt="new"
             onClick={handleBtnOnClick}
           />
+          </Stack>
+         
         </div>
       );
     } else {
