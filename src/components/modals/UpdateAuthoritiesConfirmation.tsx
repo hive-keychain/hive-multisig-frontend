@@ -123,7 +123,10 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
       }
       setDispatched(false)
     }
-
+    const handleModalClose = () =>{
+      window.location.reload();
+      handleClose();
+    }
     return (
     <div
       className="modal updateAuthoritiesModal"
@@ -133,7 +136,7 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
         size="lg"
         aria-labelledby="contained-modal-title-vcenter"
         show={showModal}
-        onHide={()=> {handleClose()}}
+        onHide={()=> {handleModalClose()}}
         backdrop="static"
         keyboard={false}
         centered
@@ -144,17 +147,20 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
           >Update Account Authorities</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+        <Form.Label>
           {updateError?'Update failed! Max number of update reached. Please Try again after 2 hours.':''}
-          {isOwnerUpdate||isPostingUpdate?
+        </Form.Label>
+          {isOwnerUpdate||isPostingUpdate  ?
             <OnwerKeyInput setOwnerKey={setKey}/>
-          :  <div>Are you sure you wanna update?</div>
+          : !updateError? <Form.Label>Are you sure you wanna update?</Form.Label>:''
         }
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={()=> {handleClose()}}>
+          <Button variant="secondary" onClick={()=> {handleModalClose()}}>
             Close
           </Button>
-          <Button variant="primary" onClick={()=>{handleUpdate()}}>Update</Button>
+          {!updateError?
+          <Button variant="primary" onClick={()=>{handleUpdate()}}>Update</Button>:''}
         </Modal.Footer>
       </Modal>
     </div>

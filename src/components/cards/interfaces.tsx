@@ -17,6 +17,7 @@ type: string;
 accountKeyAuth?: [string, number];
 threshold?: number;
 isLoggedIn?:boolean;
+componentColor?:string;
 }
 
 export interface IAuthorityCardProps {

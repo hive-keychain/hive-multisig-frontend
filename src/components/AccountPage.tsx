@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../interfaces';
@@ -13,10 +13,11 @@ interface IAccountPageProp {
 function AccountPage({ authorities }: IAccountPageProp) {
   const dispatch = useAppDispatch();
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus'); 
+  const [accountAuthorities, setAccountAuthorities] = useState(authorities);
   const [show, setShow] = useState(false);
   const [display, setDisplay] = useState(false);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
-
+  const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
   const isOwnerAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isOwnerAuthUpdated,
   );
@@ -33,20 +34,45 @@ function AccountPage({ authorities }: IAccountPageProp) {
   
   useEffect(() =>{
     if (authorities) {
-      dispatch(initializeAuthorities(authorities));
-      setDisplay(true);
+      setAccountAuthorities({...authorities})
     }else{
       setDisplay(false);
     }
   },[authorities])
   
+  useEffect(()=>{
+    if(accountAuthorities){
+      dispatch(initializeAuthorities(accountAuthorities));
+      setDisplay(true);
+      const newCards = [ 
+      <AuthorityCard 
+        key={'Owner'} 
+        authorityName={'Owner'} 
+        authority={accountAuthorities.owner} />,
+      <AuthorityCard
+        key={'Active'}
+        authorityName={'Active'}
+        authority={accountAuthorities.active}
+      />,
+      <AuthorityCard
+        key={'Posting'} 
+        authorityName={'Posting'}
+        authority={accountAuthorities.posting}
+      />]
+      setAuthorityCards([...newCards])
+    }
+  },[accountAuthorities])
 
   const handleUpdateBtn = () => {
     if(isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated){
       handleShow();
     }
   }
-
+  const handleResetBtn =() => {
+    if(isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated){
+      window.location.reload();
+    }
+  }
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
@@ -54,18 +80,10 @@ function AccountPage({ authorities }: IAccountPageProp) {
     <div>
       <UpdateAuthoritiesConfirmation show={show} handleClose={handleClose}/>
       <Stack gap={3}>
-        <AuthorityCard authorityName={'Owner'} authority={authorities.owner} />
-        <AuthorityCard
-          authorityName={'Active'}
-          authority={authorities.active}
-        />
-        <AuthorityCard
-          authorityName={'Posting'}
-          authority={authorities.posting}
-        />
+        {authorityCards? authorityCards.map((e) => {return e}):''}
         {loginState?
         <Stack direction="horizontal" gap={2}>
-          <Button className="ms-auto" variant="secondary">
+          <Button className="ms-auto" variant="secondary" onClick={()=>handleResetBtn()}>
             Reset
           </Button>{' '}
           <Button variant="success" onClick={() => handleUpdateBtn()}>Update</Button>{' '}

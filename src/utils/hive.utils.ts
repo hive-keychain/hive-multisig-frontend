@@ -58,4 +58,4 @@ export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) 
 export const GetPrivateKeyFromSeed = (seed:string):Hive.PrivateKey => {
    return PrivateKey.fromSeed(seed);
 }
- export default AccountUtils;
+export default AccountUtils;

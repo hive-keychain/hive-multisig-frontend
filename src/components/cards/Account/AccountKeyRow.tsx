@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Button, Form, InputGroup, Stack } from "react-bootstrap";
 import { useAppDispatch } from "../../../redux/app/hooks";
 import { deleteAccount, updateAccount } from "../../../redux/features/updateAuthorities/updateAuthoritiesSlice";
@@ -9,19 +9,34 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     authorityName,
     type,
     accountKeyAuth,
+    componentColor,
   }) =>{
-    const [editFlag, setEdiFlag] = useState<string>('text-body');
+    const [color, setColor] = useState<string>(componentColor);
+    const [outlineColor, setOutlineColor] = useState<string>('gray-input-outline')
     const [deleteComponentKey, setDeleteComponentKey] = useState<string>();
     const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
     const [newAuth, setNewAuth] = useState<[string,number]>(accountKeyAuth);
     const dispatch = useAppDispatch();
    
-  
+    useEffect(()=>{
+      switch(color){
+        case 'red':
+          setOutlineColor('red-input-outline')
+          break;
+        case 'blue':
+          setOutlineColor('blue-input-outline')
+          break;
+        default:
+          setOutlineColor('gray-input-outline')
+          break;
+      }
+    },[color])
+
     useDidMountEffect(()=> {
       if (weight !== accountKeyAuth[1]) {
-        setEdiFlag('text-danger');
+        setColor('red');
       } else {
-        setEdiFlag('text-body');
+        setColor('gray');
       }
       setNewAuth([accountKeyAuth[0],weight]);
     },[weight])
@@ -60,15 +75,15 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     return (
       <Stack direction="horizontal" gap={3}>
         <InputGroup className="mb-3 ">
-          <InputGroup.Text id="basic-addon1">
+          <InputGroup.Text className={outlineColor} id="basic-addon1">
             {type === 'Accounts' ? (
               '@'
             ) : (
               <i className="fa fa-lock"></i>
             )}
           </InputGroup.Text>
-          <Form.Control
-            className="me-auto "
+          <Form.Control 
+            className={`me-auto ${outlineColor}`}
             type="text"
             placeholder={accountKeyAuth[0].toString()}
             value = {accountKeyAuth[0]}
@@ -76,14 +91,14 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
           />
         </InputGroup>
         <InputGroup className="mb-3">
-          <InputGroup.Text className={editFlag} id="basic-addon1">
+          <InputGroup.Text className={outlineColor} id="basic-addon1">
             Weight
           </InputGroup.Text>
           <Form.Control
             type= {"number"}
             min="1"
             step="1"
-            className="form-control"
+            className={`form-control ${outlineColor}`}
             id="weightInput"
             onChange={(e) => handleUpdate(parseInt(e.target.value))}
             placeholder={weight.toString()}

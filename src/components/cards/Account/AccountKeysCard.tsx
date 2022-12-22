@@ -34,6 +34,7 @@ export function AccountKeysCard({
             type={authAccountType}
             accountKeyAuth={accountKeyAuth} 
             isLoggedIn={loginState}
+            componentColor={'gray'}
             />]}
        )
     );
@@ -57,6 +58,7 @@ export function AccountKeysCard({
        type={authAccountType}
        accountKeyAuth={newAccount} 
        isLoggedIn={loginState}
+       componentColor={'blue'}
        />]
   
       setAccountComponentList(accountComponentList => [
