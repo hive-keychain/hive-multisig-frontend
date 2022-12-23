@@ -59,16 +59,22 @@ export const SearchAuthorityCard: FC<IAuthorityCardProps> = ({authorityName, aut
         <Card.Body>
           <Card.Title>{authorityName}</Card.Title>
           <Stack gap={2}>
-            <SearchAccountKeysCard
+            {
+              accounts.accountKeyAuths.length>0?
+              <SearchAccountKeysCard
               authorityName={authorityName}
               authAccountType={accounts.authAccountType}
               accountKeyAuths={accounts.accountKeyAuths}
-            />
-            <SearchAccountKeysCard
+            />:''
+            }
+            {
+              keys.accountKeyAuths.length>0?
+              <SearchAccountKeysCard
               authorityName={authorityName}
               authAccountType={keys.authAccountType}
               accountKeyAuths={keys.accountKeyAuths}
-            />
+            />:''
+            }
             <AuthorityWeightThreshold
               type={thresh.type}
               authorityName={thresh.authorityName}
