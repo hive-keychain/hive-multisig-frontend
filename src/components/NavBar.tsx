@@ -1,5 +1,5 @@
 import { Container, Navbar } from "react-bootstrap";
-import LoginButton from './LoginButton';
+import AccountDropdown from './AccountDropown';
 
 export default () => (
   <Navbar bg="dark" variant="dark">
@@ -15,7 +15,7 @@ export default () => (
         />
         Hive Multisig
       </Navbar.Brand>
-      <LoginButton/>
+      <AccountDropdown/>
     </Container>
   </Navbar>
 );

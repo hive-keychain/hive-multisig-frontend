@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { SignResponseType } from '../../../interfaces';
 import { RequestSignature } from '../../../utils/hive-keychain.utils';
 
@@ -6,6 +6,7 @@ export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
   SIGNATURE_SUCCEEDED = 'SIGNATURE_SUCCEEDED',
   SIGNATURE_FAILED = 'SIGNATURE_FAILED',
+  LOGGED_OUT = 'LOGGED_OUT'
 }
 
 export type LoginStateType = {
@@ -15,7 +16,7 @@ export type LoginStateType = {
   error: string;
 };
 const initialState: LoginStateType = {
-  loginState: null,
+  loginState: LoginState.LOGGED_OUT,
   isSignatureSuccess: false,
   accountObject: null,
   error: '',
@@ -32,7 +33,17 @@ export const hiveKeyChainRequestSign = createAsyncThunk(
 const loginSclice = createSlice({
   name: 'login',
   initialState,
-  reducers: {},
+  reducers: {
+    logout(state, action){
+      state={
+        loginState:LoginState.LOGGED_OUT,
+        isSignatureSuccess: false,
+        accountObject: null,
+        error: '',
+      }
+    }
+
+  },
   extraReducers: (builder) => {
     builder.addCase(
       hiveKeyChainRequestSign.fulfilled,
@@ -55,3 +66,5 @@ const loginSclice = createSlice({
 });
 
 export default loginSclice.reducer;
+export const { logout } =
+  loginSclice.actions;
