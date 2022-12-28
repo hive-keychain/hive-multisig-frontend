@@ -34,7 +34,7 @@ const loginSclice = createSlice({
   name: 'login',
   initialState,
   reducers: {
-    logout(state, action){
+    logout(state){
       state={
         loginState:LoginState.LOGGED_OUT,
         isSignatureSuccess: false,
