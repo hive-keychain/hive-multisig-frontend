@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from "react";
-import { Button, Form, InputGroup, Stack } from "react-bootstrap";
+import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { useAppDispatch } from "../../../redux/app/hooks";
 import { deleteAccount, updateAccount } from "../../../redux/features/updateAuthorities/updateAuthoritiesSlice";
 import { useDidMountEffect } from "../../../utils/utils";
@@ -73,46 +73,55 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     };
   
     return (
-      <Stack direction="horizontal" gap={3}>
-        <InputGroup className="mb-3 ">
-          <InputGroup.Text className={outlineColor} id="basic-addon1">
-            {type === 'Accounts' ? (
-              '@'
-            ) : (
-              <i className="fa fa-lock"></i>
-            )}
-          </InputGroup.Text>
-          <Form.Control 
-            className={`me-auto ${outlineColor}`}
-            type="text"
-            placeholder={accountKeyAuth[0].toString()}
-            value = {accountKeyAuth[0]}
-            readOnly
-          />
-        </InputGroup>
-        <InputGroup className="mb-3">
-          <InputGroup.Text className={outlineColor} id="basic-addon1">
-            Weight
-          </InputGroup.Text>
-          <Form.Control
-            type= {"number"}
-            min="1"
-            step="1"
-            className={`form-control ${outlineColor}`}
-            id="weightInput"
-            onChange={(e) => handleUpdate(parseInt(e.target.value))}
-            placeholder={weight.toString()}
-            value={weight}
-          />
-        </InputGroup>
-          <Button
-          className="mb-3"
-          variant="outline-danger"
-          onClick={() => {
-            handleDelete();
-          }}>
-             Delete
-        </Button>
-      </Stack>
+      
+      <div className="mb-3">
+          <Row >
+            <Col md={8} sm>
+              <InputGroup >
+                <InputGroup.Text className={outlineColor} id="basic-addon1">
+                  {type === 'Accounts' ? (
+                    '@'
+                  ) : (
+                    <i className="fa fa-lock"></i>
+                  )}
+                </InputGroup.Text>
+                <Form.Control 
+                  className={`${outlineColor}`}
+                  type="text"
+                  placeholder={accountKeyAuth[0].toString()}
+                  value = {accountKeyAuth[0]}
+                  readOnly
+                />
+              </InputGroup>
+            </Col>
+            <Col md={3} sm>
+              <InputGroup >
+                <InputGroup.Text className={outlineColor} id="basic-addon1">
+                  Weight
+                </InputGroup.Text>
+                <Form.Control
+                  type= {"number"}
+                  min="1"
+                  step="1"
+                  className={`form-control ${outlineColor}`}
+                  id="weightInput"
+                  onChange={(e) => handleUpdate(parseInt(e.target.value))}
+                  placeholder={weight.toString()}
+                  value={weight}
+                />
+              </InputGroup>
+            </Col>
+            <Col >
+              <Button
+                variant="outline-danger"
+                onClick={() => {
+                  handleDelete();
+                }}>
+                  Delete
+              </Button>
+                    
+            </Col>
+          </Row>
+        </div>
     );
   }

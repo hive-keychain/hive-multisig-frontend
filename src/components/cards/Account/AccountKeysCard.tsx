@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
-import { Card, Container, Stack } from "react-bootstrap";
+import { Card, Container, Row } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import { Authorities, SignResponseType } from "../../../interfaces";
 import { useAppDispatch, useAppSelector } from "../../../redux/app/hooks";
@@ -132,10 +132,8 @@ export function AccountKeysCard({
         <Container>
           <Card.Body>
             <Card.Title>{authAccountType}</Card.Title>
-            <Stack gap={2}>
-              {accountComponentList?accountComponentList.map((component) => {return component[1]}):<div></div>}
-              {loginState?<AddAccountKeyRow authAccountType={authAccountType} setNewAccount={setNewAccount} />:<div></div>}
-            </Stack>
+              {accountComponentList?accountComponentList.map((component) => {return <Row>{component[1]}</Row> }):<div></div>}
+              {loginState? <Row><AddAccountKeyRow authAccountType={authAccountType} setNewAccount={setNewAccount}/></Row> :<div></div>}
           </Card.Body>
         </Container>
       </Card>
