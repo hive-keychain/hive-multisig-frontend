@@ -34,7 +34,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
 
     useDidMountEffect(()=> {
       if (weight !== accountKeyAuth[1]) {
-        setColor('red');
+        setColor('blue');
       } else {
         setColor('gray');
       }
