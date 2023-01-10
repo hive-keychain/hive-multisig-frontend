@@ -1,3 +1,5 @@
+import { Authorities } from "./account.interface";
+
  declare global {
     interface Window { 
       hive_keychain: any;
@@ -36,4 +38,21 @@ export interface IHiveSignatureInterface{
     responseCallback: Function,
     rpc?:string,
     title?:string
+}
+
+
+export interface IHiveAccountUpdateBroadcast{
+  newAuthorities: Authorities
+  targetAuthorityType: string
+}
+
+
+export type BroadCastResponseType = {
+  error: string
+  message: string
+  publiKey: string
+  request_id: number
+  result: string
+  success:boolean
+  data:  SignResponseDataType
 }

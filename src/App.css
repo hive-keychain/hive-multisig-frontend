@@ -1,3 +1,12 @@
+.gray-input-outline{
+  border-color: gray;
+}
+.red-input-outline{
+  border-color: red;
+}
+.blue-input-outline{
+  border-color: blue;
+}
 .avatar {
   height: 40px;
   width: 40px;
@@ -14,7 +23,6 @@ body,
 }
 
 .App {
-  text-align: center;
   display: flex;
   flex-direction: column;
   flex: 1;

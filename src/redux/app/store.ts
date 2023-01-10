@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
+import { logger } from 'redux-logger'
 import keyChainReducer from '../features/keyChain/keyChainSlice'
 import loginReducer from '../features/login/loginSlice'
-import {logger} from 'redux-logger'
+import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice'
 const store = configureStore({
     reducer: {
         keychain: keyChainReducer,
-        login: loginReducer
+        login: loginReducer,
+        updateAuthorities: updateAuthoritiesSlice,
     },
     middleware:(getDefaultMiddleware) => getDefaultMiddleware().concat(logger)
 
