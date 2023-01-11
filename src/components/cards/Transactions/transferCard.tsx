@@ -3,17 +3,41 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from "usehooks-ts";
 import { SignResponseType } from "../../../interfaces";
-
 function Transfer() {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
-    const [ transferOpObj, setTransferOpObj] = useState<TransferOperation>();   
+    const [ transferOpObj, setTransferOpObj] = useState<any>();   
     const [from,setFrom] = useState<string>(loggedInAccount.data.username);
-    const [to,setTo] = useState<string>();
-    const [amount,setAmount] = useState<string>();
-    const [memo,setMemo] = useState<string>();
+    const [to,setTo] = useState<string>('');
+    const [amount,setAmount] = useState<string>('');
+    const [memo,setMemo] = useState<string>('');
+    const [invalidINputList, setInvalidInputList] = useState<string[]>(['to','amount','memo'])
 
+    useEffect(() =>{
+        console.log(invalidINputList);
+    },[invalidINputList]);
+
+    //input validation
     useEffect(()=>{
-        console.log(transferOpObj)
+        if(transferOpObj){
+            console.log(transferOpObj);
+            for (const [key, value] of Object.entries(transferOpObj[1])) {
+                console.log(`${key}: ${value}`);
+                if(!value || value === ''){
+                    if(!invalidINputList.includes(key)){
+                        setInvalidInputList([...invalidINputList,key])
+                    }
+                }
+                else{
+                    let newList = [...invalidINputList]
+                    const index = newList.indexOf(key);
+                    if (index > -1) { 
+                        newList.splice(index, 1); 
+                      }
+                    setInvalidInputList([...newList])
+
+                }
+              }
+        }
     },[transferOpObj])
 
     const handleSendOnclick = ()=>{
