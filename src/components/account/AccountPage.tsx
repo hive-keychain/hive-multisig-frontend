@@ -1,11 +1,11 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
-import { Authorities } from '../interfaces';
-import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
-import { initializeAuthorities } from '../redux/features/updateAuthorities/updateAuthoritiesSlice';
-import { AuthorityCard } from './cards/Account/AuthorityCard';
-import UpdateAuthoritiesConfirmation from './modals/UpdateAuthoritiesConfirmation';
+import { Authorities } from '../../interfaces';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { AuthorityCard } from '../cards/Account/AuthorityCard';
+import UpdateAuthoritiesConfirmation from '../modals/UpdateAuthoritiesConfirmation';
 
 interface IAccountPageProp {
   authorities: Authorities;

@@ -1,5 +1,5 @@
 import { Container, Navbar } from "react-bootstrap";
-import AccountDropdown from './AccountDropown';
+import AccountDropdown from '../account/AccountDropown';
 
 export default () => (
   <Navbar bg="dark" variant="dark">

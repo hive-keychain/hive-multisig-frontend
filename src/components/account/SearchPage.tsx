@@ -4,9 +4,9 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useReadLocalStorage } from "usehooks-ts";
-import { Authorities, ISearchBarInterface, ISearchPageInterface, SignResponseType } from "../interfaces";
-import { useAppSelector } from "../redux/app/hooks";
-import AccountUtils from '../utils/hive.utils';
+import { Authorities, ISearchBarInterface, ISearchPageInterface, SignResponseType } from "../../interfaces";
+import { useAppSelector } from "../../redux/app/hooks";
+import AccountUtils from '../../utils/hive.utils';
 import AccountPage from "./AccountPage";
 import SearchAccountPage from "./SearchAccountPage";
 

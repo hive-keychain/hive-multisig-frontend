@@ -3,15 +3,15 @@ import { Nav, NavDropdown, Stack } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
-import { Config } from '../config';
-import { SignResponseType } from '../interfaces';
-import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
-import { checkKeychain } from '../redux/features/keyChain/keyChainSlice';
-import { logout } from '../redux/features/login/loginSlice';
+import { Config } from '../../config';
+import { SignResponseType } from '../../interfaces';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { checkKeychain } from '../../redux/features/keyChain/keyChainSlice';
+import { logout } from '../../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds
-} from '../utils/utils';
+} from '../../utils/utils';
 const AccountDropdown = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ const AccountDropdown = () => {
     }
   }, [isKeyChainFound]);
 
-  const handleBtnOnClick = () => {
+  const handleUpdateBtnOnClick = () => {
     if (!isLoggedIn) {
       dispatch(checkKeychain());
     } else if (accountDetails) {
@@ -64,8 +64,13 @@ const AccountDropdown = () => {
     }
   };
 
+  const handleTransactionBtnOnClick = () => {
+    if(isLoggedIn){
+      window.open('/transaction');
+    }
+  }
   const handleLogOutOnclick = () => {
-    if (isLoggedIn) {
+    if (isLoggedIn) { 
       dispatch(logout(null));
         setLoginTimestamp(0);
         setStorageAccountDetails(null);
@@ -85,7 +90,7 @@ const AccountDropdown = () => {
               className="avatar"
               src={`https://images.hive.blog/u/${accountDetails.data.username}/avatar`}
               alt="new"
-              onClick={handleBtnOnClick}
+              onClick={handleUpdateBtnOnClick}
             />
             <Nav>
             <NavDropdown
@@ -93,7 +98,8 @@ const AccountDropdown = () => {
               title={`@${accountDetails.data.username}`}
               menuVariant="dark"
             >
-              <NavDropdown.Item onClick={e => handleBtnOnClick()}>Update Account</NavDropdown.Item>
+              <NavDropdown.Item onClick={e => handleUpdateBtnOnClick()}>Update Account</NavDropdown.Item>
+              <NavDropdown.Item onClick={e => handleTransactionBtnOnClick()}>Transactions</NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item onClick={e => handleLogOutOnclick()}>Logout</NavDropdown.Item>
             </NavDropdown>
@@ -105,7 +111,7 @@ const AccountDropdown = () => {
     } else {
       return (
         <div>
-          <Button variant="outline-light" onClick={handleBtnOnClick}>
+          <Button variant="outline-light" onClick={handleUpdateBtnOnClick}>
             {text}
           </Button>
         </div>

@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
-import { Config } from '../config';
-import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
-import { hiveKeyChainRequestSign } from '../redux/features/login/loginSlice';
+import { Config } from '../../config';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds
-} from '../utils/utils';
+} from '../../utils/utils';
 const LoginForm = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');

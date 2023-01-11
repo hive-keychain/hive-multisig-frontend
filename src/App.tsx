@@ -2,8 +2,8 @@ import { Op } from "hive-qrcode";
 import { useState } from "react";
 import { Container } from "react-bootstrap";
 import "./App.css";
-import NavBar from "./components/NavBar";
-import Routing from "./components/Routing";
+import NavBar from "./components/navigating/NavBar";
+import Routing from "./components/navigating/Routing";
 function App() {
   const [op, setOp] = useState<Op>();
   const onSubmitOp = (op: Op) => {
