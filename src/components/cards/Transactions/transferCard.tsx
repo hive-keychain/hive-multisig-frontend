@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from "usehooks-ts";
 import { SignResponseType } from "../../../interfaces";
+import { isNumeric } from "../../../utils/utils";
 function Transfer() {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
     const [ transferOpObj, setTransferOpObj] = useState<any>();   
@@ -10,34 +11,105 @@ function Transfer() {
     const [to,setTo] = useState<string>('');
     const [amount,setAmount] = useState<string>('');
     const [memo,setMemo] = useState<string>('');
-    const [invalidINputList, setInvalidInputList] = useState<string[]>(['to','amount','memo'])
+    const [invalidINputList, setInvalidInputList] = useState<string[]>([])
+    const [isFromValid, setFromValid] = useState<boolean>();
+    const [isToValid, setToValid] = useState<boolean>();
+    const [isAmountValid, setAmountValid] = useState<boolean>();
+    const [isMemoValid, setMemoValid] = useState<boolean>();
+    const [fromText, setFromText] = useState<string>('');
+    const [toText, setToText] = useState<string>('');
+    const [amountText, setAmountText] = useState<string>('');
+    const [memoText, setMemoText] = useState<string>('');
+    const [isReadyToSend, setIsReadyToSend] = useState<boolean>(false);
 
+    useEffect(() => {
+        if(isReadyToSend){
+            console.log("Ready to send!")
+        }
+    },[isReadyToSend])
+    useEffect(()=>{
+        if(isFromValid && isToValid && isAmountValid && isMemoValid){
+            setIsReadyToSend(true);
+        }else{
+            setIsReadyToSend(false);
+        }
+    },[isFromValid,isToValid,isAmountValid,isMemoValid])
     useEffect(() =>{
-        console.log(invalidINputList);
+        setFromValid(!invalidINputList.includes('from'));
+        setToValid(!invalidINputList.includes('to'));
+        setAmountValid(!invalidINputList.includes('amount'));
+        setMemoValid(!invalidINputList.includes('memo'));
     },[invalidINputList]);
 
-    //input validation
     useEffect(()=>{
+        if(!isFromValid){
+            setFromText('Please enter valid username.')
+        }else{
+            setFromText('')
+        }
+    },[isFromValid])
+    useEffect(()=>{
+        if(!isToValid){
+            setToText('Please enter valid username.')
+        }else{
+            setToText('')
+        }
+    },[isToValid])
+    useEffect(()=>{
+        if(!isAmountValid){
+            setAmountText('Please enter valid amount.')
+        }else{
+            setAmountText('')
+        }
+    },[isAmountValid])
+    useEffect(()=>{
+        if(!isMemoValid){
+            setMemoText('Please enter valid memo.')
+        }else{
+            setMemoText('')
+        }
+    },[isMemoValid])
+
+
+    useEffect(
+        ()=>{
+        let newList = [...invalidINputList]
         if(transferOpObj){
-            console.log(transferOpObj);
-            for (const [key, value] of Object.entries(transferOpObj[1])) {
-                console.log(`${key}: ${value}`);
-                if(!value || value === ''){
-                    if(!invalidINputList.includes(key)){
-                        setInvalidInputList([...invalidINputList,key])
+            (Object.keys(transferOpObj[1]) as (keyof typeof transferOpObj[1])[]).forEach((key:string, index) => {
+                const value:string = transferOpObj[1][key]
+                if(value || value !== ''){
+                    if(key==='amount'){
+                        if(!isNumeric(value)){
+                            if(!invalidINputList.includes(key)){
+                                newList.push(key)
+                                setInvalidInputList([...newList]);
+                            }
+                        }
+                        else{
+                            const index = newList.indexOf(key);
+                            if (index > -1) { 
+                                newList.splice(index, 1); 
+                                }
+                            setInvalidInputList([...newList])
+                        }
+                    }
+                    else{
+                        const index = newList.indexOf(key);
+                        if (index > -1) { 
+                            newList.splice(index, 1); 
+                            }
+                        setInvalidInputList([...newList])
                     }
                 }
                 else{
-                    let newList = [...invalidINputList]
-                    const index = newList.indexOf(key);
-                    if (index > -1) { 
-                        newList.splice(index, 1); 
-                      }
-                    setInvalidInputList([...newList])
-
+                    if(!invalidINputList.includes(key)){
+                        newList.push(key)
+                        setInvalidInputList([...newList]);
+                    }
                 }
-              }
+            })
         }
+              
     },[transferOpObj])
 
     const handleSendOnclick = ()=>{
@@ -54,7 +126,7 @@ function Transfer() {
     }
 
     return (
-        <Card>
+        <Card border='secondary'>
       <Container>
         <Card.Body>
           <Card.Title>Transfer</Card.Title>
@@ -68,6 +140,10 @@ function Transfer() {
                         onChange= {(e) => setFrom(e.target.value)}
                         value={from}
                         />
+                    {!isFromValid?
+                    <Form.Text className="text-danger">
+                    {fromText}
+                    </Form.Text>:''}
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="trasnferTo">
                     <Form.Label>To</Form.Label>
@@ -75,6 +151,10 @@ function Transfer() {
                         type="username" 
                         onChange= {(e) => setTo(e.target.value)}
                         />
+                    {!isToValid?
+                    <Form.Text className="text-danger">
+                    {toText}
+                    </Form.Text>:''}
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="transferAmount">
                     <Form.Label>Amount</Form.Label>
@@ -82,6 +162,10 @@ function Transfer() {
                         type="text" 
                         onChange= {(e) => setAmount(e.target.value)}
                         />
+                    {!isAmountValid?
+                    <Form.Text className="text-danger">
+                    {amountText}
+                    </Form.Text>:''}
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="transferMemo">
                 <Form.Label>Memo</Form.Label>
@@ -90,6 +174,10 @@ function Transfer() {
                     rows={3} 
                     onChange= {(e) => setMemo(e.target.value)}
                     />
+                    {!isMemoValid?
+                    <Form.Text className="text-danger">
+                    {memoText}
+                    </Form.Text>:''}
                 </Form.Group>
             </Form>
           </Stack>

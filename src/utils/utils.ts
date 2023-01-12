@@ -48,3 +48,6 @@ export function copyTextToClipboard(text:string):boolean {
     return false;
   }
 }
+export function isNumeric(n:string) {
+  return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
+}
