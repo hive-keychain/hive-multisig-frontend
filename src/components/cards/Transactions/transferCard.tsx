@@ -1,6 +1,6 @@
 import { TransferOperation } from "@hiveio/dhive";
 import { useEffect, useState } from 'react';
-import { Button, Card, Container, Form, Stack } from 'react-bootstrap';
+import { Button, Card, Container, Form, InputGroup, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from "usehooks-ts";
 import { SignResponseType } from "../../../interfaces";
 import { isNumeric } from "../../../utils/utils";
@@ -25,6 +25,7 @@ function Transfer() {
     useEffect(() => {
         if(isReadyToSend){
             console.log("Ready to send!")
+            console.log("Put Dispatch here!")
         }
     },[isReadyToSend])
     useEffect(()=>{
@@ -132,8 +133,9 @@ function Transfer() {
           <Card.Title>Transfer</Card.Title>
           <Stack gap={2}>
             <Form>
-                <Form.Group className="mb-3" controlId="trasnferFrom">
-                    <Form.Label>From</Form.Label>
+                <Form.Label>From</Form.Label>
+                <InputGroup className="mb-3">
+                    <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
                     <Form.Control 
                         type="username"
                         placeholder={loggedInAccount.data.username} 
@@ -144,9 +146,10 @@ function Transfer() {
                     <Form.Text className="text-danger">
                     {fromText}
                     </Form.Text>:''}
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="trasnferTo">
-                    <Form.Label>To</Form.Label>
+                </InputGroup>
+                <Form.Label>To</Form.Label>
+                <InputGroup className="mb-3" >
+                    <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
                     <Form.Control 
                         type="username" 
                         onChange= {(e) => setTo(e.target.value)}
@@ -155,7 +158,7 @@ function Transfer() {
                     <Form.Text className="text-danger">
                     {toText}
                     </Form.Text>:''}
-                </Form.Group>
+                </InputGroup>
                 <Form.Group className="mb-3" controlId="transferAmount">
                     <Form.Label>Amount</Form.Label>
                     <Form.Control 
