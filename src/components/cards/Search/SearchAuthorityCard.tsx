@@ -1,8 +1,8 @@
 import { FC, useEffect, useState } from "react";
 import { Card, Container, Stack } from "react-bootstrap";
+import { IAccountKeyRowProps, IAccountKeysCardProps, IAuthorityCardProps } from "../../../interfaces/cardInterfaces";
 import { castToString } from '../../../utils/utils';
 import { AuthorityWeightThreshold } from '../Account/AuthorityWeightThresholdRow';
-import { IAccountKeyRowProps, IAccountKeysCardProps, IAuthorityCardProps } from "../interfaces";
 import { SearchAccountKeysCard } from "./SearchAccountKeysCard";
 
 

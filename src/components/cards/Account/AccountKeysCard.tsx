@@ -2,10 +2,10 @@ import { ReactNode, useEffect, useState } from "react";
 import { Card, Container, Row } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import { Authorities, SignResponseType } from "../../../interfaces";
+import { IAccountKeyRowProps, IAccountKeysCardProps } from "../../../interfaces/cardInterfaces";
 import { useAppDispatch, useAppSelector } from "../../../redux/app/hooks";
 import { addAccount } from "../../../redux/features/updateAuthorities/updateAuthoritiesSlice";
 import { useDidMountEffect } from "../../../utils/utils";
-import { IAccountKeyRowProps, IAccountKeysCardProps } from "../interfaces";
 import { AccountKeyRow } from "./AccountKeyRow";
 import { AddAccountKeyRow } from "./AddAccountKeyRow";
 
@@ -128,7 +128,7 @@ export function AccountKeysCard({
     }
   
     return (
-      <Card border={cardBorder}>
+    <Card border={cardBorder}>
         <Container>
           <Card.Body>
             <Card.Title>{authAccountType}</Card.Title>

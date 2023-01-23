@@ -1,9 +1,9 @@
 import { FC, useEffect, useState } from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
+import { IAccountKeyRowProps } from "../../../interfaces/cardInterfaces";
 import { useAppDispatch } from "../../../redux/app/hooks";
 import { deleteAccount, updateAccount } from "../../../redux/features/updateAuthorities/updateAuthoritiesSlice";
 import { useDidMountEffect } from "../../../utils/utils";
-import { IAccountKeyRowProps } from "../interfaces";
 
 export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     authorityName,
@@ -73,7 +73,6 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     };
   
     return (
-      
       <div className="mb-3">
           <Row >
             <Col md={8} sm>
