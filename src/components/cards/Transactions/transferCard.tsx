@@ -4,6 +4,8 @@ import { Button, Card, Container, Form, InputGroup, Stack } from 'react-bootstra
 import { useReadLocalStorage } from "usehooks-ts";
 import { SignResponseType } from "../../../interfaces";
 import { isNumeric } from "../../../utils/utils";
+
+
 function Transfer() {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
     const [ transferOpObj, setTransferOpObj] = useState<any>();   
@@ -148,16 +150,21 @@ function Transfer() {
                     </Form.Text>:''}
                 </InputGroup>
                 <Form.Label>To</Form.Label>
-                <InputGroup className="mb-3" >
+                <InputGroup className="mb-3" hasValidation>
                     <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
                     <Form.Control 
                         type="username" 
+                        required
+                        isInvalid={isToValid}
                         onChange= {(e) => setTo(e.target.value)}
                         />
-                    {!isToValid?
+                    {/* {!isToValid?
                     <Form.Text className="text-danger">
                     {toText}
-                    </Form.Text>:''}
+                    </Form.Text>:''} */}
+                    <Form.Control.Feedback type="invalid">
+                        Please choose a username.
+                    </Form.Control.Feedback>
                 </InputGroup>
                 <Form.Group className="mb-3" controlId="transferAmount">
                     <Form.Label>Amount</Form.Label>
@@ -184,7 +191,7 @@ function Transfer() {
                 </Form.Group>
             </Form>
           </Stack>
-          <Button className='pull-right' variant="success" onClick={() => handleSendOnclick()}>Send</Button>{' '}
+          <Button type="submit" className='pull-right' variant="success" onClick={() => handleSendOnclick()}>Send</Button>{' '}
           <br/>
           <br/>
 
