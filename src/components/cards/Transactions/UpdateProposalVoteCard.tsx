@@ -1,147 +1,14 @@
 import { Formik } from "formik";
 import { ReactNode, useEffect, useState } from "react";
-import { Button, Card, Col, Container, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Container, Form, InputGroup, Row, Stack } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
 import { useDidMountEffect } from "../../../utils/utils";
+import { AddExtensionRow, ExtensionRow } from "./ExtensionRow";
+import { AddProposalIDRow, ProposalIDRow } from "./ProposalIdRow";
 
-interface IExtensionRowProps {
-    extension:string
-    handleDelete:Function
-}
-interface IAddExtensionRowProps{
-    handleAdd:Function
-}
 
-interface IProposalIDsRowProps{
-    proposalId:string
-    handleDelete:Function
-}
-interface IAddProposalIdRowProps{
-    handleAdd:Function
-}
-const ExtensionRow: React.FC<IExtensionRowProps> = ({extension, handleDelete}) => {
-    return(
-        <Row className="mb-3">
-            <Col >
-            <InputGroup hasValidation>
-                <InputGroup.Text>@</InputGroup.Text>
-                <Form.Control
-                className='gray-input-outline'
-                value={String(extension)}
-                readOnly
-                />
-                </InputGroup>
-            </Col>
-            <Col > 
-                <Button
-                variant="outline-danger"
-                onClick={() => {
-                  handleDelete(extension);
-                }}>
-                  Delete
-              </Button>
-            </Col>
-        </Row>
-    )
-}
-
-const AddExtensionRow: React.FC<IAddExtensionRowProps> = ({handleAdd}) =>{
-    const[extensionString, setExtensionString] = useState<string>('')
-    
-    const onAddBtnClicked = () =>{
-        if(extensionString && extensionString!==''){
-            handleAdd(extensionString);
-            setExtensionString('');
-        }
-    }
-    return(
-      
-        <Row className="mb-3">
-            <Col >
-            <InputGroup hasValidation>
-                <InputGroup.Text>@</InputGroup.Text>
-                <Form.Control
-                className='gray-input-outline'
-                type='text'
-                placeholder='Username'
-                value={extensionString}
-                onChange={(e) => {setExtensionString(e.target.value)}}
-                />
-            </InputGroup>
-            </Col>
-            <Col > 
-                <Button
-                variant="success"
-                onClick={ () => {onAddBtnClicked()}}
-                >
-                Add
-                </Button>
-            </Col>  
-        </Row>
-                  
-    )
-}
-
-const ProposalIDRow: React.FC<IProposalIDsRowProps> = ({proposalId,handleDelete}) => {
-   
-    return(
-        <Row className="mb-3">
-            <Col >
-            <InputGroup hasValidation>
-                <Form.Control
-                className='gray-input-outline'
-                value={String(proposalId)}
-                readOnly
-                />
-                </InputGroup>
-            </Col>
-            <Col > 
-                <Button
-                variant="outline-danger"
-                onClick={() => {
-                  handleDelete(proposalId);
-                }}>
-                  Delete
-              </Button>
-            </Col>
-        </Row>
-    )
-}
-
-const AddProposalIDRow: React.FC<IAddProposalIdRowProps> = ({handleAdd}) =>{
-    const [input, setInput] = useState('')
-    const onAddBtnClicked = ()=>{
-        if(input && input!==''){
-            handleAdd(input)
-            setInput('')
-        }
-    }
-    return (
-        <Row className="mb-3">
-        <Col >
-        <InputGroup hasValidation>
-            <Form.Control
-            className='gray-input-outline'
-            type='text'
-            placeholder='Proposal ID'
-            value={input}
-            onChange={(e) => {setInput(e.target.value.replace(/[^\d.-]/g, ''))}}
-            />
-        </InputGroup>
-        </Col>
-        <Col > 
-            <Button
-            variant="success"
-            onClick={ () => {onAddBtnClicked()}}
-            >
-            Add
-            </Button>
-        </Col>  
-    </Row>
-    )
-}
 interface errors {
     extensions: string,
     proposal_id: string,
@@ -332,31 +199,33 @@ const UpdateProposalVoteCard: React.FC<{}> = ()=>{
                             </Row>
 
                             <Form.Label>Extensions</Form.Label>
-                            <Card>
+                            <Card border={inputErrors.extensions && inputErrors.extensions!==''? 'danger':'secondary'}>
                                 <Card.Body>
                                 <Form.Group controlId="voteValidation2">
-                                {extensionRows}
+                                <Stack direction='vertical' gap={3}>{extensionRows}
                                     <AddExtensionRow handleAdd={(ext:string) => {
                                         if(!extensionList.includes(ext)){
                                             setExtensionList([...extensionList,ext])
                                         }
-                                        }}/>
+                                    }}/>
+                                </Stack>
                                 </Form.Group>
                                 {inputErrors.extensions && inputErrors.extensions!==''?<div style={{ color: 'red' }}>{inputErrors.extensions}</div>:null}
-
                             </Card.Body>
                             </Card>
                             <br/>
+
                             <Form.Label>Proposal IDs</Form.Label>
-                            <Card>
+                            <Card border={inputErrors.proposal_id && inputErrors.proposal_id!==''? 'danger':'secondary'}>
                                 <Card.Body>
                                 <Form.Group controlId="voteValidation3">
-                                    {proposalIdRows}
+                                <Stack direction='vertical' gap={3}> {proposalIdRows}
                                     <AddProposalIDRow handleAdd={(id:string) => {
                                         if(!proposalIdList.includes(id)){
                                             setProposalIdList([...proposalIdList,id])
                                         }
                                     }}/>
+                                </Stack>
                                 </Form.Group>
                                 {inputErrors.proposal_id && inputErrors.proposal_id!==''?<div style={{ color: 'red' }}>{inputErrors.proposal_id}</div>:null}
                             </Card.Body>

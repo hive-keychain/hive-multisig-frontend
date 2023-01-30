@@ -5,7 +5,7 @@ import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
 
-const PowerUp: React.FC<{}> = () => {
+const PowerUpCard: React.FC<{}> = () => {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
     const [powerAmount, setPowerAmount] = useState<string>('')
     const [fromUsername, setFromUsername] = useState<string>(loggedInAccount.data.username);
@@ -123,4 +123,4 @@ const PowerUp: React.FC<{}> = () => {
     )
 }
 
-export default PowerUp;
+export default PowerUpCard;
