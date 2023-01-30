@@ -47,6 +47,10 @@ export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) 
       props.newAuthorities,
       Hive.PrivateKey.from(props.ownerKey),
     );
+   }
+   
+export const GetPrivateKeyFromSeed = (seed:string):Hive.PrivateKey => {
+   return PrivateKey.fromSeed(seed);
 }
 
  const AccountUtils = {
@@ -55,7 +59,4 @@ export const BroadcastUpdateAccount = async(props:IDHiveAccountUpdateBroadcast) 
     GetAuthorities,
 }
 
-export const GetPrivateKeyFromSeed = (seed:string):Hive.PrivateKey => {
-   return PrivateKey.fromSeed(seed);
-}
 export default AccountUtils;

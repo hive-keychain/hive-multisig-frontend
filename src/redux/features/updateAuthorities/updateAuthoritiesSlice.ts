@@ -1,13 +1,13 @@
 import * as Hive from '@hiveio/dhive';
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import * as _ from 'lodash';
-import { IAccountKeyRowProps } from '../../../components/cards/interfaces';
 import {
   Authorities,
   BroadCastResponseType,
   IDHiveAccountUpdateBroadcast,
   IHiveAccountUpdateBroadcast,
 } from '../../../interfaces';
+import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import { AccountUpdateBroadcast } from '../../../utils/hive-keychain.utils';
 import { BroadcastUpdateAccount } from '../../../utils/hive.utils';
 

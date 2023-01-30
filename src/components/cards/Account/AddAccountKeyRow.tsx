@@ -68,7 +68,8 @@ export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKe
                 value = {accountName}
               />
               {authAccountType==='Keys'?
-              <Button  variant="outline-secondary" onClick={() => {handleNewKeyOnClick()}}>
+              <Button  
+              variant="outline-secondary" onClick={() => {handleNewKeyOnClick()}}>
               New Key
               </Button>
               :<div></div>
@@ -93,7 +94,9 @@ export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKe
           </Col>
           
           <Col sm="1">
-            <Button variant="outline-primary" onClick={() => {handleAddOnClick()}}>
+            <Button 
+            className="acc-crd-btn" 
+            variant="outline-primary" onClick={() => {handleAddOnClick()}}>
               Add 
             </Button>
           </Col>

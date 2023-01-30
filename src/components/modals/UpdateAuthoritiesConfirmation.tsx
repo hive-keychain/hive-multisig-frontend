@@ -160,9 +160,7 @@ function UpdateAuthoritiesConfirmation({show, handleClose}:Iprops) {
             Close
           </Button>
           {!updateError?
-          <Button className='pull-right' variant="primary" onClick={()=>{handleUpdate()}}>Update</Button>:''}
-          <Button className="pull-right"  onClick={() => {alert('do stuff')}}>
-</Button>
+          <Button variant="primary" onClick={()=>{handleUpdate()}}>Update</Button>:''}
         </Modal.Footer>
       </Modal>
     </div>
