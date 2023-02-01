@@ -1,20 +1,13 @@
 import { Formik } from "formik";
-import { useEffect, useState } from "react";
-import { Button, Card, Container, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Container, Form } from "react-bootstrap";
 import * as yup from 'yup';
+import { InputRow } from "./InputRow";
 
 const PowerDownCard: React.FC<{}> = () => {
-    const [accountUsername, setAccountUsername] = useState<string>('');
-    const [amount, setAmount] = useState<string>('');
-
-    useEffect(() => {
-        console.log("Dispatch here");
-        console.log(accountUsername,amount);
-    }, [accountUsername,amount])
-
+  
     const schema = yup.object().shape({
         account: yup.string().required("Required"),
-        vestingShare: yup.number()
+        vesting_shares: yup.number()
         .typeError('Must be a number')
         .positive('Must be more than 0')
         .required('Required')
@@ -24,13 +17,12 @@ const PowerDownCard: React.FC<{}> = () => {
             validationSchema={schema}
             onSubmit={
                 values =>{
-                    setAccountUsername(String(values.account));
-                    setAmount(String(values.vestingShare));
+                    console.log(values);
                 }
             }  
             initialValues={{
-                account: accountUsername,
-                vestingShare: amount,
+                account: '',
+                vesting_shares: 0,
             }} 
         >
                 {
@@ -52,39 +44,29 @@ const PowerDownCard: React.FC<{}> = () => {
                                 noValidate
                                 onSubmit={handleSubmit}
                                 >
-                                <Row className = "mb-3">
-                                    <Form.Group controlId='fromValidation'>
-                                        <Form.Label>From</Form.Label>
-                                        <InputGroup hasValidation>
-                                            <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                            <Form.Control
-                                            type="text"
-                                            name="account"
-                                            placeholder="Username"
-                                            value={String(values.account)}
-                                            onChange={handleChange}
-                                            isInvalid={touched.account && !!errors.account}
-                                            />
-                                            <Form.Control.Feedback type="invalid">{String(errors.account)}</Form.Control.Feedback>
-                                        </InputGroup>
-                                    </Form.Group>
-                                </Row>
-                                
-                                <Row  className = "mb-3">
-                                    <Form.Group controlId='amountValidation3'>
-                                    <Form.Label>Vesting Share</Form.Label>
-                                    <InputGroup hasValidation>
-                                        <Form.Control
-                                        type="text"
-                                        name="vestingShare"
-                                        value={String(values.vestingShare)}
-                                        onChange={handleChange}
-                                        isInvalid={touched.vestingShare && !!errors.vestingShare}
-                                        />
-                                        <Form.Control.Feedback type="invalid">{String(errors.vestingShare)}</Form.Control.Feedback>
-                                    </InputGroup>
-                                    </Form.Group>
-                                </Row>
+                                <InputRow 
+                                    rowKey="account"
+                                    prepend="@"
+                                    label="Account"
+                                    rowName="account"
+                                    type="text"
+                                    placeholder="Username"
+                                    value={values.account}
+                                    onChangeFunc={handleChange}
+                                    invalidFlag = {touched.account && !!errors.account}
+                                    error = {errors.account}
+                                />
+                                <InputRow 
+                                    rowKey="vesting_shares"
+                                    label="Vesting Shares"
+                                    rowName="vesting_shares"
+                                    type="text"
+                                    placeholder="0"
+                                    value={values.vesting_shares}
+                                    onChangeFunc={handleChange}
+                                    invalidFlag = {touched.vesting_shares && !!errors.vesting_shares}
+                                    error = {errors.vesting_shares}
+                                />
                                     <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                                 <br/>
                                 <br/>

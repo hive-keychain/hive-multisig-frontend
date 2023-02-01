@@ -1,21 +1,14 @@
 import { Formik } from "formik";
-import { useEffect, useState } from "react";
-import { Button, Card, Container, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Container, Form } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
+import { InputRow } from "./InputRow";
 
 
 const AccountWitnessProxCard: React.FC<{}> = () =>{
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
-    const [accountUsername, setAccountUsername] = useState<string>(loggedInAccount.data.username);
-    const [proxyUsername, setProxyUsername] = useState<string>('');
-
-    useEffect(()=>{
-        console.log("Dispatch here!")
-        console.log(accountUsername,proxyUsername)
-    },[accountUsername,proxyUsername])
-
+   
     const schema = yup.object().shape({
         account: yup.string().required("Required"),
         proxy: yup.string().required("Required")
@@ -26,13 +19,13 @@ const AccountWitnessProxCard: React.FC<{}> = () =>{
         validationSchema={schema}
         onSubmit={
             values => {
-                setAccountUsername(values.account);
-                setProxyUsername(values.proxy);
+                console.log(values)
+                console.log("Dispatch here")
             }
         }
         initialValues={{
-            account:accountUsername,
-            proxy:proxyUsername
+            account:'',
+            proxy:''
         }}
         >
             {(
@@ -51,44 +44,30 @@ const AccountWitnessProxCard: React.FC<{}> = () =>{
                         <Form 
                         noValidate
                         onSubmit={handleSubmit}>
-                            <Row className='mb-3'>
-                                <Form.Group controlId="proxyValidation1">
-                                <Form.Label>Account</Form.Label>
-                                <InputGroup hasValidation>
-                                <InputGroup.Text>@</InputGroup.Text>
-                                <Form.Control
+                             <InputRow 
+                                rowKey="account"
+                                prepend="@"
+                                label="Account"
+                                rowName="account"
                                 type="text"
-                                name="account"
                                 placeholder="Username"
-                                value={String(values.account)}
-                                onChange={handleChange}
-                                isInvalid={touched.account && !!errors.account}
-                                />
-                                <Form.Control.Feedback type='invalid'>
-                                    {String(errors.account)}
-                                </Form.Control.Feedback>
-                                </InputGroup>
-                                </Form.Group>
-                            </Row>
-                            <Row className='mb-3'>
-                                <Form.Group controlId="proxyValidation2">
-                                <Form.Label>Proxy</Form.Label>
-                                <InputGroup hasValidation>
-                                <InputGroup.Text>@</InputGroup.Text>
-                                <Form.Control
+                                value={values.account}
+                                onChangeFunc={handleChange}
+                                invalidFlag = {touched.account && !!errors.account}
+                                error = {errors.account}
+                            />
+                            <InputRow 
+                                rowKey="proxy"
+                                prepend="@"
+                                label="Proxy"
+                                rowName="proxy"
                                 type="text"
-                                name="proxy"
                                 placeholder="Username"
-                                value={String(values.proxy)}
-                                onChange={handleChange}
-                                isInvalid={touched.proxy && !!errors.proxy}
-                                />
-                                <Form.Control.Feedback type='invalid'>
-                                    {String(errors.proxy)}
-                                </Form.Control.Feedback>
-                                </InputGroup>
-                                </Form.Group>
-                            </Row>
+                                value={values.proxy}
+                                onChangeFunc={handleChange}
+                                invalidFlag = {touched.proxy && !!errors.proxy}
+                                error = {errors.proxy}
+                            />
                             <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                             <br/>
                             <br/>

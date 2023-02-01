@@ -1,8 +1,9 @@
 import { Formik } from 'formik';
-import { Button, Card, Container, Form, InputGroup, Row } from 'react-bootstrap';
+import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
+import { InputRow } from './InputRow';
 
 interface ICommentOpProp {
     type:string
@@ -10,37 +11,24 @@ interface ICommentOpProp {
 export const CommentOperationCard = ({type}:ICommentOpProp) =>{
     const loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
 
-    const blogSchema =  yup.object().shape({
+    const schema = yup.object().shape({
         author: yup.string().required('Required'),
         body: yup.string().required('Required'),
         json_metadata: yup.string().required('Required'),
-        permalink: yup.string().required('Required'),
-        title: yup.string().required('Required')
-    })
-    const commentSchema = yup.object().shape({
-        author: yup.string().required('Required'),
-        body: yup.string().required('Required'),
-        json_metadata: yup.string().required('Required'),
-        parent_author: yup.string().required('Required'),
-        parent_permalink: yup.string().required('Required'),
+        parent_author: yup.string(),
+        parent_permalink: yup.string(),
         permalink: yup.string().required('Required'),
         title: yup.string().required('Required')
     })
     return(
        <Formik
-        validationSchema={ type ==='blog'? blogSchema:commentSchema}
+        validationSchema={schema}
         onSubmit={values=>{
+            console.log(values)
             console.log('Dispatch Here!')
         }}
         initialValues={
-        type ==='blog'?
-        {
-            author: loggedInAccount.data.username,
-            json_metadata: '',
-            body: '',
-            permalink: '',
-            title: '',
-        }:{
+       {
             author: loggedInAccount.data.username,
             json_metadata: '',
             body: '',
@@ -65,124 +53,96 @@ export const CommentOperationCard = ({type}:ICommentOpProp) =>{
                     <Card.Body>
                     <Card.Title>{type ==='blog'? "Blog": "Comment"}</Card.Title>
                     <Form noValidate onSubmit={handleSubmit}>
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                            <Form.Label>Author</Form.Label>
-                            <InputGroup hasValidation>
-                                <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                <Form.Control
-                                type="text"
-                                name="author"
-                                placeholder="Username"
-                                value={String(values.author)}
-                                onChange={handleChange}
-                                isInvalid={touched.author && !!errors.author}
-                                />
-                                <Form.Control.Feedback type="invalid">{String(errors.author)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                        <Form.Label>Title</Form.Label>
-                        <InputGroup hasValidation>
-                            <Form.Control
+                       
+                        <InputRow 
+                            rowKey="author"
+                            prepend="@"
+                            label="Author"
+                            rowName="author"
                             type="text"
-                            name="title"
-                            value={String(values.title)}
-                            onChange={handleChange}
-                            isInvalid={touched.title && !!errors.title}
+                            placeholder="Username"
+                            value={values.author}
+                            onChangeFunc={handleChange}
+                            invalidFlag = {touched.author && !!errors.author}
+                            error = {errors.author}
                             />
-                            <Form.Control.Feedback type="invalid">{String(errors.title)}</Form.Control.Feedback>
-                        </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        <Row className='mb-3'>
-                        <Form.Group >
-                        <Form.Label>Body</Form.Label>
-                            <InputGroup>
-                            <Form.Control 
-                            as="textarea" 
-                            aria-label="With textarea" 
-                            name="body"
-                            value={String(values.body)}
-                            onChange={handleChange}
-                            isInvalid={touched.body && !!errors.body}
-                            />
-                            <Form.Control.Feedback type="invalid">{String(errors.body)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
+                        <InputRow 
+                            rowKey="title"
+                            label="Title"
+                            rowName="title"
+                            type="text"
+                            placeholder="Title"
+                            value={values.title}
+                            onChangeFunc={handleChange}
+                            invalidFlag = {touched.title && !!errors.title}
+                            error = {errors.title}
+                            />  
+                         <InputRow 
+                            rowKey="body"
+                            label="Body"
+                            rowName="body"
+                            type="textarea"
+                            as="textarea"
+                            placeholder=""
+                            value={values.body}
+                            onChangeFunc={handleChange}
+                            invalidFlag = {touched.body && !!errors.body}
+                            error = {errors.body}
+                        />
+                       
                         {
                             type ==='comment'? 
                             <div>
-                            <Row className='mb-3'>
-                            <Form.Group controlId='fromValidation'>
-                            <Form.Label>Parent Author</Form.Label>
-                            <InputGroup hasValidation>
-                                <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                <Form.Control
+                            <InputRow 
+                                rowKey="parent_author"
+                                prepend="@"
+                                label="Parent Author"
+                                rowName="parent_author"
                                 type="text"
-                                name="author"
-                                placeholder="Username"
-                                value={String(values.parent_author)}
-                                onChange={handleChange}
-                                isInvalid={touched.parent_author && !!errors.parent_author}
+                                placeholder="Parent Author"
+                                value={values.parent_author}
+                                onChangeFunc={handleChange}
+                                invalidFlag = {touched.parent_author && !!errors.parent_author}
+                                error = {errors.parent_author}
                                 />
-                                <Form.Control.Feedback type="invalid">{String(errors.parent_author)}</Form.Control.Feedback>
-                            </InputGroup>
-                            </Form.Group>
-                            </Row>
-                            <Row className='mb-3'>
-                            <Form.Group controlId='fromValidation'>
-                            <Form.Label>Parent Permalink</Form.Label>
-                            <InputGroup hasValidation>
-                                <Form.Control
+                            <InputRow 
+                                rowKey="parent_permalink"
+                                label="Parent Permalink"
+                                rowName="parent_permalink"
                                 type="text"
-                                name="parent_permalink"
-                                value={String(values.parent_permalink)}
-                                onChange={handleChange}
-                                isInvalid={touched.parent_permalink && !!errors.parent_permalink}
+                                placeholder="Parent Permalink"
+                                value={values.parent_permalink}
+                                onChangeFunc={handleChange}
+                                invalidFlag = {touched.parent_permalink && !!errors.parent_permalink}
+                                error = {errors.parent_permalink}
                                 />
-                                <Form.Control.Feedback type="invalid">{String(errors.parent_permalink)}</Form.Control.Feedback>
-                            </InputGroup>
-                            </Form.Group>
-                            </Row>
                             </div>
                             :null
                         }
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                        <Form.Label>Permalink</Form.Label>
-                        <InputGroup hasValidation>
-                            <Form.Control
+                        <InputRow 
+                            rowKey="permalink"
+                            label="Permalink"
+                            rowName="permalink"
                             type="text"
-                            name="permalink"
-                            value={String(values.permalink)}
-                            onChange={handleChange}
-                            isInvalid={touched.permalink && !!errors.permalink}
-                            />
-                            <Form.Control.Feedback type="invalid">{String(errors.permalink)}</Form.Control.Feedback>
-                        </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        <Row className='mb-3'>
-                        <Form.Group >
-                        <Form.Label>JSON Metadata</Form.Label>
-                            <InputGroup>
-                            <Form.Control 
-                            as="textarea" 
-                            aria-label="With textarea" 
-                            name="json_metadata"
-                            value={String(values.json_metadata)}
-                            onChange={handleChange}
-                            isInvalid={touched.json_metadata && !!errors.json_metadata}
-                            />
-                            <Form.Control.Feedback type="invalid">{String(errors.json_metadata)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
+                            placeholder="Permalink"
+                            value={values.permalink}
+                            onChangeFunc={handleChange}
+                            invalidFlag = {touched.permalink && !!errors.permalink}
+                            error = {errors.permalink}
+                        />
+                        <InputRow 
+                            rowKey="json_metadata"
+                            label="JSON Metadata"
+                            rowName="json_metadata"
+                            type="textarea"
+                            as="textarea"
+                            placeholder=""
+                            value={values.json_metadata}
+                            onChangeFunc={handleChange}
+                            invalidFlag = {touched.json_metadata && !!errors.json_metadata}
+                            error = {errors.json_metadata}
+                        />
+                        
                         <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                         <br/>
                         <br/>

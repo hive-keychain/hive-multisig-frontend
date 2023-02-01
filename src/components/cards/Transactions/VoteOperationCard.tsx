@@ -1,8 +1,9 @@
 import { Formik } from "formik";
-import { Button, Card, Container, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Container, Form } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
+import { InputRow } from "./InputRow";
 
 export const VoteOperationCard = () =>{
     const loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
@@ -21,14 +22,15 @@ export const VoteOperationCard = () =>{
         validationSchema={schema}
         onSubmit={
             values => {
-                console.log('Dispatch here')
+                    console.log(values);
+                    console.log('Dispatch here');
             }
         }
         initialValues={{
             author: loggedInAccount.data.username,
             permalink:'',
             voter:'',
-            weight: 0
+            weight: ''
         }
         }>
             {
@@ -46,71 +48,52 @@ export const VoteOperationCard = () =>{
                     <Card.Body>
                     <Card.Title>Vote</Card.Title>
                     <Form noValidate onSubmit={handleSubmit}>
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                            <Form.Label>Author</Form.Label>
-                            <InputGroup hasValidation>
-                                <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                <Form.Control
-                                type="text"
-                                name="author"
-                                placeholder="Username"
-                                value={String(values.author)}
-                                onChange={handleChange}
-                                isInvalid={touched.author && !!errors.author}
-                                />
-                                <Form.Control.Feedback type="invalid">{String(errors.author)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                            <Form.Label>Permalink</Form.Label>
-                            <InputGroup hasValidation>
-                                <Form.Control
-                                type="text"
-                                name="permalink"
-                                value={String(values.permalink)}
-                                onChange={handleChange}
-                                isInvalid={touched.permalink && !!errors.permalink}
-                                />
-                                <Form.Control.Feedback type="invalid">{String(errors.permalink)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                        <Form.Label>Voter</Form.Label>
-                        <InputGroup hasValidation>
-                            <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                            <Form.Control
-                            type="text"
-                            name="voter"
-                            placeholder="Voter"
-                            value={String(values.voter)}
-                            onChange={handleChange}
-                            isInvalid={touched.voter && !!errors.voter}
-                            />
-                            <Form.Control.Feedback type="invalid">{String(errors.voter)}</Form.Control.Feedback>
-                        </InputGroup>
-                        </Form.Group>
-                        </Row>
-                        <Row className='mb-3'>
-                        <Form.Group controlId='fromValidation'>
-                            <Form.Label>Weight</Form.Label>
-                            <InputGroup hasValidation>
-                                <Form.Control
-                                type="text"
-                                name="weight"
-                                placeholder="0"
-                                value={String(values.weight)}
-                                onChange={handleChange}
-                                isInvalid={touched.weight && !!errors.weight}
-                                />
-                                <Form.Control.Feedback type="invalid">{String(errors.weight)}</Form.Control.Feedback>
-                            </InputGroup>
-                        </Form.Group>
-                        </Row>
+                    <InputRow 
+                        rowKey="author"
+                        prepend="@"
+                        label="Author"
+                        rowName="author"
+                        type="text"
+                        placeholder="Username"
+                        value={values.author}
+                        onChangeFunc={handleChange}
+                        invalidFlag = {touched.author && !!errors.author}
+                        error = {errors.author}
+                    />
+                    <InputRow 
+                        rowKey="permalink"
+                        label="Permalink"
+                        rowName="permalink"
+                        type="text"
+                        placeholder="Permalink"
+                        value={values.permalink}
+                        onChangeFunc={handleChange}
+                        invalidFlag = {touched.permalink && !!errors.permalink}
+                        error = {errors.permalink}
+                    />
+                    <InputRow 
+                        rowKey="voter"
+                        prepend="@"
+                        label="Voter"
+                        rowName="voter"
+                        type="text"
+                        placeholder="Username"
+                        value={values.voter}
+                        onChangeFunc={handleChange}
+                        invalidFlag = {touched.voter && !!errors.voter}
+                        error = {errors.voter}
+                    />
+                    <InputRow 
+                        rowKey="weight"
+                        label="Weight"
+                        rowName="weight"
+                        type="text"
+                        placeholder="100% = 10000"
+                        value={values.weight}
+                        onChangeFunc={handleChange}
+                        invalidFlag = {touched.weight && !!errors.weight}
+                        error = {errors.weight}
+                    />
                         <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                         <br/>
                         <br/>

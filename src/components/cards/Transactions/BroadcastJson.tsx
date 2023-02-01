@@ -1,23 +1,21 @@
 
 import { Formik } from 'formik';
 import { useState } from 'react';
-import { Button, Card, Container, Form, InputGroup, Row } from 'react-bootstrap';
+import { Button, Card, Container, Form, Row } from 'react-bootstrap';
 import * as yup from 'yup';
 import { AddArrayFieldType } from './AddArrayField';
 import { FieldArrayCard } from './FieldArrayCard';
+import { InputRow } from './InputRow';
 
 function BroadcastJson() {
     const [newAuth, setNewAuth] = useState<string>('')
     const [newPostingAuth, setNewPostingAuth] = useState<string>('')
     const schema = yup.object().shape({
-        id: yup.number()
-        .typeError('Must be a number')
-        .positive('Must be more than 0')
-        .required('Required'),
+        id: yup.string()
+        .required('Required').max(32, 'ID string must be less than 32 characters long'),
         json: yup.string().required("Required"),
-        auths: yup.array().required("Required").min(1, 'Minimum of 1 Authority'),
-        posting_auths: yup.array().required("Required").min(1, 'Minimum of 1 Posting Authority')
-
+        required_auths: yup.array().required("Required").min(1, 'Minimum of 1 Authority'),
+        required_posting_auths: yup.array().required("Required").min(1, 'Minimum of 1 Posting Authority')
     })
     const addAuthBtnClicked = (push:Function) =>{
         if(newAuth && newAuth!==''){
@@ -55,8 +53,8 @@ function BroadcastJson() {
             initialValues={{
                 id:'',
                 json: '',
-                auths: [],
-                posting_auths: [],
+                required_auths: [],
+                required_posting_auths: [],
             }}
         >     
         {
@@ -79,26 +77,25 @@ function BroadcastJson() {
                 onSubmit={handleSubmit}>
                 <Row className='mb-3'>
                 <Form.Group controlId='fromValidation'>
-                <Form.Label>ID</Form.Label>
-                <InputGroup hasValidation>
-                    <Form.Control
+                <InputRow 
+                    rowKey="id"
+                    label="ID"
+                    rowName="id"
                     type="text"
-                    name="id"
-                    placeholder="ID"
-                    value={String(values.id)}
-                    onChange={handleChange}
-                    isInvalid={touched.id && !!errors.id}
-                    />
-                    <Form.Control.Feedback type="invalid">{String(errors.id)}</Form.Control.Feedback>
-                </InputGroup>
+                    placeholder=""
+                    value={values.id}
+                    onChangeFunc={handleChange}
+                    invalidFlag = {touched.id && !!errors.id}
+                    error = {errors.id}
+                />
             </Form.Group>
                 </Row>
                 <Row className='mb-3'>
                     <FieldArrayCard 
                         key='authsCard'
-                        name='auths'
+                        name='required_auths'
                         label='Required Authorities'
-                        error={typeof errors.auths==='string'?String(errors.auths):""}
+                        error={typeof errors.required_auths==='string'?String(errors.required_auths):""}
                         addArrayFieldProps={authAddArrayProps}
                     />
                   
@@ -106,28 +103,25 @@ function BroadcastJson() {
                 <Row className='mb-3'>
                     <FieldArrayCard 
                         key='postingAuthsCard'
-                        name='posting_auths'
+                        name='required_posting_auths'
                         label='Required Posting Authorities'
-                        error={typeof errors.posting_auths==='string'?String(errors.posting_auths):""}
+                        error={typeof errors.required_posting_auths==='string'?String(errors.required_posting_auths):""}
                         addArrayFieldProps={posintAuthAddArrayProps}
                     />
                 </Row>
-                <Row className='mb-3'>
-                    <Form.Group >
-                        <Form.Label>JSON</Form.Label>
-                        <InputGroup>
-                        <Form.Control 
-                        as="textarea" 
-                        aria-label="With textarea" 
-                        name="json"
-                        value={String(values.json)}
-                        onChange={handleChange}
-                        isInvalid={touched.json && !!errors.json}
-                        />
-                        <Form.Control.Feedback type="invalid">{String(errors.json)}</Form.Control.Feedback>
-                        </InputGroup>
-                    </Form.Group>
-                </Row>
+                <InputRow 
+                    rowKey="json"
+                    label="JSON"
+                    rowName="json"
+                    type="textarea"
+                    as="textarea"
+                    placeholder=""
+                    value={values.json}
+                    onChangeFunc={handleChange}
+                    invalidFlag = {touched.json && !!errors.json}
+                    error = {errors.json}
+                />
+                
                 <br/>
                 <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                 <br/>

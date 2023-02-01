@@ -1,20 +1,13 @@
 import { Formik } from "formik";
-import { useEffect, useState } from "react";
-import { Button, Card, Container, Form, InputGroup, Row } from "react-bootstrap";
+import { Button, Card, Container, Form } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
+import { InputRow } from "./InputRow";
 
 const PowerUpCard: React.FC<{}> = () => {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
-    const [powerAmount, setPowerAmount] = useState<string>('')
-    const [fromUsername, setFromUsername] = useState<string>(loggedInAccount.data.username);
-    const [toUsername, setToUsername] = useState<string>('')
-    useEffect(() => {
-        console.log("Dispatch here")
-        console.log(powerAmount,fromUsername,toUsername);
-    },[powerAmount,fromUsername,toUsername])
-
+   
     const schema = yup.object().shape({
         amount: yup.number()
         .typeError('Must be a number')
@@ -28,15 +21,14 @@ const PowerUpCard: React.FC<{}> = () => {
             validationSchema={schema}
             onSubmit={
                 values =>{
-                    setPowerAmount(String(values.amount));
-                    setFromUsername(String(values.from));
-                    setToUsername(String(values.to));
+                    console.log(values);
+                    console.log("Dispatch Here")
                 }
             }  
             initialValues={{
-                amount: powerAmount,
-                from: fromUsername,
-                to: toUsername
+                amount: 0,
+                from: loggedInAccount.data.username,
+                to: ''
             }} 
         >
                 {
@@ -49,7 +41,6 @@ const PowerUpCard: React.FC<{}> = () => {
                             errors,
                         }
                     ) => (
-
                         <Card border='secondary'>
                         <Container>
                                 <Card.Body>
@@ -58,57 +49,41 @@ const PowerUpCard: React.FC<{}> = () => {
                                 noValidate
                                 onSubmit={handleSubmit}
                                 >
-                                <Row className = "mb-3">
-                                    <Form.Group controlId='fromValidation'>
-                                        <Form.Label>From</Form.Label>
-                                        <InputGroup hasValidation>
-                                            <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                            <Form.Control
-                                            type="text"
-                                            name="from"
-                                            placeholder="Username"
-                                            value={String(values.from)}
-                                            onChange={handleChange}
-                                            isInvalid={touched.from && !!errors.from}
-                                            />
-                                            <Form.Control.Feedback type="invalid">{String(errors.from)}</Form.Control.Feedback>
-                                        </InputGroup>
-                                    </Form.Group>
-                                </Row>
-                                
-                                <Row  className = "mb-3">
-                                    <Form.Group controlId='toValidation'>
-                                        <Form.Label>To</Form.Label>
-                                        <InputGroup hasValidation>
-                                            <InputGroup.Text id="inputGroupPrepend">@</InputGroup.Text>
-                                            <Form.Control
-                                            type="text"
-                                            name="to"
-                                            placeholder="Username"
-                                            value={String(values.to)}
-                                            onChange={handleChange}
-                                            isInvalid={touched.to && !!errors.to}
-                                            />
-                                            <Form.Control.Feedback type="invalid">{String(errors.to)}</Form.Control.Feedback>
-                                        </InputGroup>
-                                    </Form.Group>
-                                </Row>
-
-                                <Row  className = "mb-3">
-                                    <Form.Group controlId='amountValidation3'>
-                                    <Form.Label>Amount</Form.Label>
-                                    <InputGroup hasValidation>
-                                        <Form.Control
-                                        type="text"
-                                        name="amount"
-                                        value={String(values.amount)}
-                                        onChange={handleChange}
-                                        isInvalid={touched.amount && !!errors.amount}
-                                        />
-                                        <Form.Control.Feedback type="invalid">{String(errors.amount)}</Form.Control.Feedback>
-                                    </InputGroup>
-                                    </Form.Group>
-                                </Row>
+                                 <InputRow 
+                                    rowKey="from"
+                                    prepend="@"
+                                    label="From"
+                                    rowName="from"
+                                    type="text"
+                                    placeholder="Username"
+                                    value={values.from}
+                                    onChangeFunc={handleChange}
+                                    invalidFlag = {touched.from && !!errors.from}
+                                    error = {errors.from}
+                                />
+                                <InputRow 
+                                    rowKey="to"
+                                    prepend="@"
+                                    label="To"
+                                    rowName="to"
+                                    type="text"
+                                    placeholder="Username"
+                                    value={values.to}
+                                    onChangeFunc={handleChange}
+                                    invalidFlag = {touched.to && !!errors.to}
+                                    error = {errors.to}
+                                />
+                                <InputRow 
+                                    rowKey="amount"
+                                    label="Amount"
+                                    rowName="amount"
+                                    type="text"
+                                    placeholder="0"
+                                    value={values.amount}
+                                    onChangeFunc={handleChange}
+                                    invalidFlag = {touched.amount && !!errors.amount}
+                                    error = {errors.amount}
+                                />
                                     <Button type="submit" className='pull-right' variant="success" >Submit</Button>
                                 <br/>
                                 <br/>
