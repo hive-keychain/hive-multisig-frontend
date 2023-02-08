@@ -1,10 +1,50 @@
+import * as Hive from '@hiveio/dhive';
 import { Formik } from "formik";
+import { useEffect, useState } from "react";
 import { Button, Card, Container, Form } from "react-bootstrap";
+import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
+import { SignResponseType } from '../../../interfaces';
+import { requestSignTx } from "../../../utils/hive-keychain.utils";
+import { hiveDecimalFormat } from "../../../utils/utils";
+import ErrorModal from '../../modals/Error';
 import { InputRow } from "./InputRow";
 
 const PowerDownCard: React.FC<{}> = () => {
-  
+    let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+    const [transaction, setTransaction] = useState<object>();
+    const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+    useEffect(() => {
+        if(!onErrorShow){
+            setErrorMessage('')
+        }
+    },[onErrorShow])
+    useEffect(()=>{
+        if(errorMessage!==''){
+            setOnErrorShow(true);
+        }
+    },[errorMessage])
+    useEffect(() => {
+        if(transaction){
+            requestSignTx(
+                loggedInAccount.data.username,
+                transaction,
+                setErrorMessage);
+        }
+    },[transaction])
+
+    const handleTransaction = (values:any) => {
+        const asset:string = hiveDecimalFormat(values.vesting_shares,6)+` VESTS`
+        const tx: Hive.WithdrawVestingOperation = { 
+            0:'withdraw_vesting',
+            1:{
+            account: values.account,
+            vesting_shares: asset
+        }}
+        setTransaction(tx);
+    }
+
     const schema = yup.object().shape({
         account: yup.string().required("Required"),
         vesting_shares: yup.number()
@@ -12,12 +52,14 @@ const PowerDownCard: React.FC<{}> = () => {
         .positive('Must be more than 0')
         .required('Required')
     })
-    return (
+    return (   
+    <div>
+        <ErrorModal show={onErrorShow} setShow={setOnErrorShow} message={errorMessage}/>
         <Formik
             validationSchema={schema}
             onSubmit={
                 values =>{
-                    console.log(values);
+                    handleTransaction(values);
                 }
             }  
             initialValues={{
@@ -61,6 +103,7 @@ const PowerDownCard: React.FC<{}> = () => {
                                     label="Vesting Shares"
                                     rowName="vesting_shares"
                                     type="text"
+                                    append="VESTS"
                                     placeholder="0"
                                     value={values.vesting_shares}
                                     onChangeFunc={handleChange}
@@ -78,6 +121,7 @@ const PowerDownCard: React.FC<{}> = () => {
                 }
         
         </Formik>
+        </div>
     )
 }
 export default PowerDownCard;

@@ -1,13 +1,51 @@
+import * as Hive from '@hiveio/dhive';
 import { Formik } from "formik";
+import { useEffect, useState } from "react";
 import { Button, Card, Container, Form } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
 import * as yup from 'yup';
 import { SignResponseType } from "../../../interfaces";
+import { requestSignTx } from "../../../utils/hive-keychain.utils";
+import { hiveDecimalFormat } from "../../../utils/utils";
+import ErrorModal from '../../modals/Error';
 import { InputRow } from "./InputRow";
 
 const PowerUpCard: React.FC<{}> = () => {
     let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
-   
+    const [transaction, setTransaction] = useState<object>();
+    const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
+    const [errorMessage, setErrorMessage] = useState<string>('');
+
+    useEffect(() => {
+        if(!onErrorShow){
+            setErrorMessage('')
+        }
+    },[onErrorShow])
+    useEffect(()=>{
+        if(errorMessage!==''){
+            setOnErrorShow(true);
+        }
+    },[errorMessage])
+    useEffect(() => {
+        if(transaction){
+            requestSignTx(
+                loggedInAccount.data.username,
+                transaction,
+                setErrorMessage);
+        }
+    },[transaction])
+
+    const handleTransaction = (values:any) => {
+        const asset:string = hiveDecimalFormat(values.amount,3)+` HIVE`
+        const tx: Hive.TransferToVestingOperation = { 
+            0:'transfer_to_vesting',
+            1:{
+                from: values.from,
+                to: values.to,
+                amount: asset
+            }}
+        setTransaction(tx);
+    }
     const schema = yup.object().shape({
         amount: yup.number()
         .typeError('Must be a number')
@@ -17,12 +55,13 @@ const PowerUpCard: React.FC<{}> = () => {
         to: yup.string().required("Required")
     })
     return (
+        <div>
+        <ErrorModal show={onErrorShow} setShow={setOnErrorShow} message={errorMessage}/>
         <Formik
             validationSchema={schema}
             onSubmit={
                 values =>{
-                    console.log(values);
-                    console.log("Dispatch Here")
+                    handleTransaction(values);
                 }
             }  
             initialValues={{
@@ -78,6 +117,7 @@ const PowerUpCard: React.FC<{}> = () => {
                                     label="Amount"
                                     rowName="amount"
                                     type="text"
+                                    append="HIVE"
                                     placeholder="0"
                                     value={values.amount}
                                     onChangeFunc={handleChange}
@@ -95,6 +135,7 @@ const PowerUpCard: React.FC<{}> = () => {
                 }
         
         </Formik>
+        </div>
     )
 }
 

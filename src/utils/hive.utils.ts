@@ -1,4 +1,4 @@
-   import * as Hive from '@hiveio/dhive';
+import * as Hive from '@hiveio/dhive';
 import { Client, PrivateKey } from "@hiveio/dhive";
 import { Authorities } from "../interfaces/account.interface";
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';

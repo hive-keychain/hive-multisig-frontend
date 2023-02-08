@@ -51,3 +51,7 @@ export function copyTextToClipboard(text:string):boolean {
 export function isNumeric(n:string) {
   return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
 }
+
+export function hiveDecimalFormat(num:number,precision:number=3) {
+  return (Math.round(num * 100) / 100).toFixed(precision);
+}
