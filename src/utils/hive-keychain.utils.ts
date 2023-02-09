@@ -58,26 +58,18 @@ const RequestSignTx = (account: string, operation: Object, key: string) => {
     const transaction = await hivetx.create([operation]);
     const callback = async (response: any) => {
       if (!response.error) {
-        await client.database.verifyAuthority(response.result).then(
-          (result: any) => {
-            resolve(result.message);
-          },
-          (error: any) => {
-            console.log(error);
-            reject(error.message);
-          },
-        );
-        await client.broadcast.send(response.result).then(
-          (result: any) => {
-            resolve(result.message);
-          },
-          (error: any) => {
-            console.log(error);
-            reject(error.message);
-          },
-        );
+        await client.database
+          .verifyAuthority(response.result)
+          .catch((error: any) => {
+            reject(
+              'Authority Verification Error:\n' + JSON.stringify(error.message),
+            );
+          });
+        await client.broadcast.send(response.result).catch((error: any) => {
+          reject('Broadcasting Error:\n' + JSON.stringify(error.message));
+        });
       } else {
-        reject(response);
+        reject(JSON.stringify(response));
       }
     };
 
