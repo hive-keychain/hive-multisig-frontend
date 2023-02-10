@@ -9,7 +9,7 @@ import { requestSignTx } from '../../../utils/hive-keychain.utils';
 import ErrorModal from '../../modals/Error';
 import { InputRow } from './InputRow';
 
-export const CommentOperationCard = () => {
+export const BlogpostOperationCard = () => {
   const loggedInAccount =
     useReadLocalStorage<SignResponseType>('accountDetails');
   const [transaction, setTransaction] = useState<object>();
@@ -55,10 +55,10 @@ export const CommentOperationCard = () => {
     author: yup.string().required('Required'),
     body: yup.string().required('Required'),
     json_metadata: yup.string().required('Required'),
-    parent_author: yup.string().required('Required'),
-    parent_permlink: yup.string().required('Required'),
+    parent_author: yup.string(),
+    parent_permlink: yup.string(),
     permlink: yup.string().required('Required'),
-    title: yup.string(),
+    title: yup.string().required('Required'),
   });
   return (
     <div>
@@ -69,8 +69,7 @@ export const CommentOperationCard = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
-          console.log(values);
+        onSubmit={(values, helpers) => {
           handleTransaction(values);
         }}
         initialValues={{
@@ -82,11 +81,18 @@ export const CommentOperationCard = () => {
           permlink: '',
           title: '',
         }}>
-        {({ handleSubmit, handleChange, values, touched, errors }) => (
+        {({
+          handleSubmit,
+          handleChange,
+          handleReset,
+          values,
+          touched,
+          errors,
+        }) => (
           <Card border="secondary">
             <Container>
               <Card.Body>
-                <Card.Title>Comment</Card.Title>
+                <Card.Title>Blog</Card.Title>
                 <Form noValidate onSubmit={handleSubmit}>
                   <InputRow
                     rowKey="author"
@@ -101,6 +107,17 @@ export const CommentOperationCard = () => {
                     error={errors.author}
                   />
                   <InputRow
+                    rowKey="title"
+                    label="Title"
+                    rowName="title"
+                    type="text"
+                    placeholder="Title"
+                    value={values.title}
+                    onChangeFunc={handleChange}
+                    invalidFlag={touched.title && !!errors.title}
+                    error={errors.title}
+                  />
+                  <InputRow
                     rowKey="body"
                     label="Body"
                     rowName="body"
@@ -112,33 +129,7 @@ export const CommentOperationCard = () => {
                     invalidFlag={touched.body && !!errors.body}
                     error={errors.body}
                   />
-                  <InputRow
-                    rowKey="parent_author"
-                    prepend="@"
-                    label="Parent Author"
-                    rowName="parent_author"
-                    type="text"
-                    placeholder="Parent Author"
-                    value={values.parent_author}
-                    onChangeFunc={handleChange}
-                    invalidFlag={
-                      touched.parent_author && !!errors.parent_author
-                    }
-                    error={errors.parent_author}
-                  />
-                  <InputRow
-                    rowKey="parent_permlink"
-                    label="Parent Permlink"
-                    rowName="parent_permlink"
-                    type="text"
-                    placeholder="Parent permlink"
-                    value={values.parent_permlink}
-                    onChangeFunc={handleChange}
-                    invalidFlag={
-                      touched.parent_permlink && !!errors.parent_permlink
-                    }
-                    error={errors.parent_permlink}
-                  />
+
                   <InputRow
                     rowKey="permlink"
                     label="permlink"

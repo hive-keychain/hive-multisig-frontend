@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { SignResponseType } from '../../interfaces';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
+import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
 import BroadcastJson from '../cards/Transactions/BroadcastJson';
 import { CommentOperationCard } from '../cards/Transactions/CommentOperationCard';
 import DelegationsCard from '../cards/Transactions/DelegationsCard';
@@ -75,10 +76,10 @@ export const TransactionPage = () => {
         setTransactionCard(<VoteOperationCard />);
         break;
       case 'BlogOperation':
-        setTransactionCard(<CommentOperationCard type="blog" />);
+        setTransactionCard(<BlogpostOperationCard />);
         break;
       case 'CommentOperation':
-        setTransactionCard(<CommentOperationCard type="comment" />);
+        setTransactionCard(<CommentOperationCard />);
         break;
       default:
         setTransactionCard(undefined);

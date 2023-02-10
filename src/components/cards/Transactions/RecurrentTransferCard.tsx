@@ -12,6 +12,7 @@ import { InputRow } from './InputRow';
 const RecurrentTransferCard: React.FC<{}> = () => {
   const loggedInAccount =
     useReadLocalStorage<SignResponseType>('accountDetails');
+  const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -37,7 +38,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
   }, [transaction]);
 
   const handleTransaction = async (values: any) => {
-    const asset: string = hiveDecimalFormat(values.amount, 3) + ` HIVE`;
+    const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
     const tx: Hive.RecurrentTransferOperation = {
       0: 'recurrent_transfer',
       1: {
@@ -52,7 +53,16 @@ const RecurrentTransferCard: React.FC<{}> = () => {
     };
     setTransaction(tx);
   };
-
+  const handleAssetChange = (value: string) => {
+    switch (value) {
+      case 'HBD':
+        setAssetType('HBD');
+        break;
+      case 'HIVE':
+        setAssetType('HIVE');
+        break;
+    }
+  };
   const schema = yup.object().shape({
     amount: yup
       .number()
@@ -132,6 +142,8 @@ const RecurrentTransferCard: React.FC<{}> = () => {
                     type="text"
                     placeholder="0"
                     value={values.amount}
+                    select={['HIVE', 'HBD']}
+                    selectionHandler={handleAssetChange}
                     onChangeFunc={handleChange}
                     invalidFlag={touched.amount && !!errors.amount}
                     error={errors.amount}

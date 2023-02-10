@@ -15,6 +15,7 @@ import { InputRow } from './InputRow';
 
 const DepositToSavingsCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -40,7 +41,7 @@ const DepositToSavingsCard: React.FC<{}> = () => {
   }, [transaction]);
 
   const handleTransaction = async (values: any) => {
-    const asset: string = hiveDecimalFormat(values.amount, 3) + ` HIVE`;
+    const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
     const rqid = await GetNextRequestID(loggedInAccount.data.username);
     const tx: Hive.TransferToSavingsOperation = {
       0: 'transfer_to_savings',
@@ -55,6 +56,16 @@ const DepositToSavingsCard: React.FC<{}> = () => {
     setTransaction(tx);
   };
 
+  const handleAssetChange = (value: string) => {
+    switch (value) {
+      case 'HBD':
+        setAssetType('HBD');
+        break;
+      case 'HIVE':
+        setAssetType('HIVE');
+        break;
+    }
+  };
   const schema = yup.object().shape({
     from: yup.string().required('Required'),
     to: yup.string().required('Required'),
@@ -120,9 +131,10 @@ const DepositToSavingsCard: React.FC<{}> = () => {
                     label="Amount"
                     rowName="amount"
                     type="text"
-                    append="HIVE"
                     placeholder="0"
                     value={values.amount}
+                    select={['HIVE', 'HBD']}
+                    selectionHandler={handleAssetChange}
                     onChangeFunc={handleChange}
                     invalidFlag={touched.amount && !!errors.amount}
                     error={errors.amount}

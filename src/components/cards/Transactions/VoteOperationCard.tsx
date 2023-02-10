@@ -73,9 +73,9 @@ export const VoteOperationCard = () => {
           handleTransaction(values);
         }}
         initialValues={{
-          author: loggedInAccount.data.username,
+          author: '',
           permlink: '',
-          voter: '',
+          voter: loggedInAccount.data.username,
           weight: '',
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (

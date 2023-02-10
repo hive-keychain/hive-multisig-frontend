@@ -89,7 +89,7 @@ export const requestSignTx = async (
       console.log('Handle success here!');
     },
     (error: any) => {
-      setErrorMessage(JSON.stringify(error));
+      setErrorMessage('Sign error: ' + JSON.stringify(error));
     },
   );
 };
