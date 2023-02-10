@@ -44,7 +44,7 @@ export const VoteOperationCard = () => {
         author: values.author,
         permlink: values.permlink,
         voter: values.voter,
-        weight: values.weight,
+        weight: parseInt(values.weight),
       },
     };
     setTransaction(tx);
@@ -76,7 +76,7 @@ export const VoteOperationCard = () => {
           author: '',
           permlink: '',
           voter: loggedInAccount.data.username,
-          weight: '',
+          weight: 0,
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (
           <Card border="secondary">

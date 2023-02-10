@@ -35,7 +35,6 @@ function BroadcastJson() {
         loggedInAccount.data.username,
         transaction,
         setErrorMessage,
-        'Posting',
       );
     }
   }, [transaction]);
