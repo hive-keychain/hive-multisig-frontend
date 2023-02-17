@@ -5,8 +5,10 @@ import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
+import { IExpiration } from '../../../interfaces/transaction.interface';
 import { requestSignTx } from '../../../utils/hive-keychain.utils';
 import ErrorModal from '../../modals/Error';
+import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 export const BlogpostOperationCard = () => {
@@ -15,7 +17,17 @@ export const BlogpostOperationCard = () => {
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [expiration, setExpiration] = useState<IExpiration>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  });
 
+  useEffect(() => {
+    if (expiration) {
+      console.log(expiration);
+    }
+  }, [expiration]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage('');
@@ -155,6 +167,7 @@ export const BlogpostOperationCard = () => {
                     }
                     error={errors.json_metadata}
                   />
+                  <Expiration setExpiration={setExpiration} />
 
                   <Button
                     type="submit"

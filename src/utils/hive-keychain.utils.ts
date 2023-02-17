@@ -1,5 +1,6 @@
-import { Client } from '@hiveio/dhive';
+import * as Hive from '@hiveio/dhive';
 import * as hiveTx from 'hive-tx';
+import * as math from 'mathjs';
 import {
   BroadCastResponseType,
   IHiveAccountUpdateBroadcast,
@@ -7,7 +8,7 @@ import {
   SignResponseType,
 } from '../interfaces';
 import { getTimestampInSeconds } from './utils';
-const client = new Client([
+const client = new Hive.Client([
   'https://api.hive.blog',
   'https://api.hivekings.com',
   'https://anyx.io',
@@ -121,4 +122,44 @@ const createSignatureObject = (
     key: 'Posting',
     responseCallback: setValidLogIn,
   };
+};
+
+export const getDynamicGlobalProperties = async (
+  method: string,
+  params: any[] | object,
+  key?: string,
+) => {
+  const response = await hiveTx.call(
+    'condenser_api.get_dynamic_global_properties',
+  );
+  if (response?.result) {
+    return key ? response.result[key] : response.result;
+  } else
+    throw new Error(
+      `Error while retrieving data from ${method} : ${JSON.stringify(
+        response.error,
+      )}`,
+    );
+};
+
+export const fromHP = (
+  hp: number,
+  {
+    total_vesting_fund_hive,
+    total_vesting_shares,
+  }: Hive.DynamicGlobalProperties,
+) => {
+  const vesting_fund_hive = math.bignumber(
+    total_vesting_fund_hive.toString().split(' ')[0],
+  );
+  const vesting_shares = math.bignumber(
+    total_vesting_shares.toString().split(' ')[0],
+  );
+  console.log(
+    'Parsed: ',
+    vesting_fund_hive.toString(),
+    vesting_shares.toString(),
+  );
+  var res = math.multiply(math.divide(hp, vesting_fund_hive), vesting_shares);
+  return math.format(res, { notation: 'fixed', precision: 6 });
 };

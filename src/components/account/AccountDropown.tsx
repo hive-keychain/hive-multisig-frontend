@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Nav, NavDropdown, Stack } from 'react-bootstrap';
-import Button from 'react-bootstrap/Button';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
@@ -10,13 +9,13 @@ import { checkKeychain } from '../../redux/features/keyChain/keyChainSlice';
 import { logout } from '../../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
-  getTimestampInSeconds
+  getTimestampInSeconds,
 } from '../../utils/utils';
 const AccountDropdown = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  
+
   const isKeyChainFound = useAppSelector(
     (state) => state.keychain.isKeyChainFound,
   );
@@ -64,28 +63,22 @@ const AccountDropdown = () => {
     }
   };
 
-  const handleTransactionBtnOnClick = () => {
-    if(isLoggedIn){
-      window.open('/transaction');
-    }
-  }
   const handleLogOutOnclick = () => {
-    if (isLoggedIn) { 
+    if (isLoggedIn) {
       dispatch(logout(null));
-        setLoginTimestamp(0);
-        setStorageAccountDetails(null);
-        setStorageIsLoggedIn(false);
-        navigate('/');;
+      setLoginTimestamp(0);
+      setStorageAccountDetails(null);
+      setStorageIsLoggedIn(false);
+      navigate('/');
     }
-  }
- 
-  
+  };
+
   const Display = () => {
     let text: string = 'Login';
     if (isLoggedIn) {
       return (
         <div>
-          <Stack direction="horizontal"  gap={3}>
+          <Stack direction="horizontal" gap={3}>
             <img
               className="avatar"
               src={`https://images.hive.blog/u/${accountDetails.data.username}/avatar`}
@@ -93,30 +86,28 @@ const AccountDropdown = () => {
               onClick={handleUpdateBtnOnClick}
             />
             <Nav>
-            <NavDropdown
-              id="nav-dropdown-dark-example"
-              title={`@${accountDetails.data.username}`}
-              menuVariant="dark"
-            >
-              <NavDropdown.Item onClick={e => handleUpdateBtnOnClick()}>Update Account</NavDropdown.Item>
-              <NavDropdown.Item onClick={e => handleTransactionBtnOnClick()}>Transactions</NavDropdown.Item>
-              <NavDropdown.Divider />
-              <NavDropdown.Item onClick={e => handleLogOutOnclick()}>Logout</NavDropdown.Item>
-            </NavDropdown>
-          </Nav>
+              <NavDropdown
+                id="nav-dropdown-dark-example"
+                title={`@${accountDetails.data.username}`}
+                menuVariant="dark">
+                <NavDropdown.Item onClick={(e) => handleLogOutOnclick()}>
+                  Logout
+                </NavDropdown.Item>
+              </NavDropdown>
+            </Nav>
           </Stack>
-         
-        </div>
-      );
-    } else {
-      return (
-        <div>
-          <Button variant="outline-light" onClick={handleUpdateBtnOnClick}>
-            {text}
-          </Button>
         </div>
       );
     }
+    //  else {
+    //   return (
+    //     <div>
+    //       <Button variant="outline-light" onClick={handleUpdateBtnOnClick}>
+    //         {text}
+    //       </Button>
+    //     </div>
+    //   );
+    // }
   };
 
   return <Display />;
