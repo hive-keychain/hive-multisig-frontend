@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Col, FloatingLabel, Form, Row } from 'react-bootstrap';
+import { IExpiration } from '../../../interfaces/transaction.interface';
 
 interface IExpirationProp {
-  setExpiration: Function;
+  setExpiration: Dispatch<SetStateAction<IExpiration>>;
 }
 export const Expiration = ({ setExpiration }: IExpirationProp) => {
   const [days, setDay] = useState<number>(0);

@@ -80,6 +80,9 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   return (
     <div>
+      <div className="ms-2 text-start" style={{ color: 'black' }}>
+        <h5>Search Account</h5>
+      </div>
       <DisplayValidity />
       <DispalyHiveKeyChainError />
       <InputGroup className="mb-3">

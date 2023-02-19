@@ -5,10 +5,11 @@ import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
+import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import {
   GetNextRequestID,
-  requestSignTx,
+  RequestSignTx,
 } from '../../../utils/hive-keychain.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
@@ -20,7 +21,12 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
+    Title: '',
+    Code: '',
+    ErrorName: '',
+    ErrorMessage: '',
+  });
   const [expiration, setExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
@@ -34,21 +40,38 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
   }, [expiration]);
   useEffect(() => {
     if (!onErrorShow) {
-      setErrorMessage('');
+      setErrorMessage({
+        Title: '',
+        Code: '',
+        ErrorName: '',
+        ErrorMessage: '',
+      });
     }
   }, [onErrorShow]);
   useEffect(() => {
-    if (errorMessage !== '') {
+    if (errorMessage.Title !== '') {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
+
   useEffect(() => {
     if (transaction) {
-      requestSignTx(
-        loggedInAccount.data.username,
-        transaction,
-        setErrorMessage,
-      );
+      const sign = async () => {
+        const res = await RequestSignTx(
+          loggedInAccount.data.username,
+          transaction,
+          setErrorMessage,
+        );
+        if (res) {
+          setErrorMessage({
+            Title: 'Transaction Success!',
+            Code: '',
+            ErrorName: '',
+            ErrorMessage: '',
+          });
+        }
+      };
+      sign().catch(() => {});
     }
   }, [transaction]);
 
@@ -96,7 +119,7 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
       <ErrorModal
         show={onErrorShow}
         setShow={setOnErrorShow}
-        message={errorMessage}
+        error={errorMessage}
       />
       <Formik
         validationSchema={schema}

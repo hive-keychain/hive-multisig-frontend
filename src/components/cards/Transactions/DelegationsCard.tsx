@@ -5,8 +5,13 @@ import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
+import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { requestSignTx } from '../../../utils/hive-keychain.utils';
+import {
+  RequestSignTx,
+  fromHP,
+  getDynamicGlobalProperties,
+} from '../../../utils/hive-keychain.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
@@ -16,7 +21,15 @@ const DelegationsCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>(
+    'VESTS',
+  );
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
+    Title: '',
+    Code: '',
+    ErrorName: '',
+    ErrorMessage: '',
+  });
   const [expiration, setExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
@@ -40,27 +53,65 @@ const DelegationsCard: React.FC<{}> = () => {
   }, [expiration]);
   useEffect(() => {
     if (!onErrorShow) {
-      setErrorMessage('');
+      setErrorMessage({
+        Title: '',
+        Code: '',
+        ErrorName: '',
+        ErrorMessage: '',
+      });
     }
   }, [onErrorShow]);
   useEffect(() => {
-    if (errorMessage !== '') {
+    if (errorMessage.Title !== '') {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
   useEffect(() => {
     if (transaction) {
-      requestSignTx(
-        loggedInAccount.data.username,
-        transaction,
-        setErrorMessage,
-      );
+      const sign = async () => {
+        const res = await RequestSignTx(
+          loggedInAccount.data.username,
+          transaction,
+          setErrorMessage,
+        );
+        if (res) {
+          setErrorMessage({
+            Title: 'Transaction Success!',
+            Code: '',
+            ErrorName: '',
+            ErrorMessage: '',
+          });
+        }
+      };
+      sign().catch(() => {});
     }
   }, [transaction]);
 
-  const handleTransaction = (values: any) => {
-    const asset: string =
-      hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
+  const handleAssetChange = (value: string) => {
+    switch (value) {
+      case 'VESTS':
+        setAssetType('VESTS');
+        break;
+      case 'HP':
+        setAssetType('HP');
+        break;
+    }
+  };
+  const handleTransaction = async (values: any) => {
+    let asset: string;
+    if (assetType === 'HP') {
+      await getDynamicGlobalProperties('PowerUp', []).then((response) => {
+        if (response) {
+          var vests = fromHP(
+            parseInt(hiveDecimalFormat(values.vesting_shares, 3)),
+            response,
+          );
+          asset = vests.toString() + ` VESTS`;
+        }
+      });
+    } else {
+      asset = hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
+    }
     const tx: Hive.DelegateVestingSharesOperation = {
       0: 'delegate_vesting_shares',
       1: {
@@ -76,7 +127,7 @@ const DelegationsCard: React.FC<{}> = () => {
       <ErrorModal
         show={onErrorShow}
         setShow={setOnErrorShow}
-        message={errorMessage}
+        error={errorMessage}
       />
       <Formik
         validationSchema={schema}
@@ -123,9 +174,10 @@ const DelegationsCard: React.FC<{}> = () => {
                     label="Vesting Shares"
                     rowName="vesting_shares"
                     type="text"
-                    append="VESTS"
                     placeholder="0"
                     value={values.vesting_shares}
+                    select={['VESTS', 'HP']}
+                    selectionHandler={handleAssetChange}
                     onChangeFunc={handleChange}
                     invalidFlag={
                       touched.vesting_shares && !!errors.vesting_shares

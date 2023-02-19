@@ -58,3 +58,6 @@ export function isNumeric(n: string) {
 export function hiveDecimalFormat(num: number, precision: number = 3) {
   return ((num * 100) / 100).toFixed(precision);
 }
+export function capitalizeFirstLetter(string: String) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}

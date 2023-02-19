@@ -2,15 +2,13 @@ import * as Hive from '@hiveio/dhive';
 import { Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
+import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import {
-  fromHP,
-  getDynamicGlobalProperties,
-  requestSignTx,
-} from '../../../utils/hive-keychain.utils';
+import { RequestSignTx } from '../../../utils/hive-keychain.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
@@ -20,56 +18,62 @@ const PowerUpCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
-  const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>(
-    'VESTS',
-  );
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
+    Title: '',
+    Code: '',
+    ErrorName: '',
+    ErrorMessage: '',
+  });
   const [expiration, setExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
   });
-
+  const navigate = useNavigate();
   useEffect(() => {
     if (expiration) {
       console.log(expiration);
     }
   }, [expiration]);
+
   useEffect(() => {
     if (!onErrorShow) {
-      setErrorMessage('');
+      setErrorMessage({
+        Title: '',
+        Code: '',
+        ErrorName: '',
+        ErrorMessage: '',
+      });
     }
   }, [onErrorShow]);
   useEffect(() => {
-    if (errorMessage !== '') {
+    if (errorMessage.Title !== '') {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
   useEffect(() => {
     if (transaction) {
-      requestSignTx(
-        loggedInAccount.data.username,
-        transaction,
-        setErrorMessage,
-      );
+      const sign = async () => {
+        const res = await RequestSignTx(
+          loggedInAccount.data.username,
+          transaction,
+          setErrorMessage,
+        );
+        if (res) {
+          setErrorMessage({
+            Title: 'Transaction Success!',
+            Code: '',
+            ErrorName: '',
+            ErrorMessage: '',
+          });
+        }
+      };
+      sign().catch(() => {});
     }
   }, [transaction]);
 
   const handleTransaction = async (values: any) => {
-    let asset: string;
-    if (assetType === 'HP') {
-      await getDynamicGlobalProperties('PowerUp', []).then((response) => {
-        if (response) {
-          var vests = fromHP(
-            parseInt(hiveDecimalFormat(values.amount, 3)),
-            response,
-          );
-          asset = vests.toString() + ` VESTS`;
-        }
-      });
-    } else {
-      asset = hiveDecimalFormat(values.amount, 6) + ` VESTS`;
-    }
+    const asset = hiveDecimalFormat(values.amount, 3) + ` HIVE`;
     const tx: Hive.TransferToVestingOperation = {
       0: 'transfer_to_vesting',
       1: {
@@ -81,16 +85,6 @@ const PowerUpCard: React.FC<{}> = () => {
     setTransaction(tx);
   };
 
-  const handleAssetChange = (value: string) => {
-    switch (value) {
-      case 'VESTS':
-        setAssetType('VESTS');
-        break;
-      case 'HP':
-        setAssetType('HP');
-        break;
-    }
-  };
   const schema = yup.object().shape({
     amount: yup
       .number()
@@ -105,7 +99,7 @@ const PowerUpCard: React.FC<{}> = () => {
       <ErrorModal
         show={onErrorShow}
         setShow={setOnErrorShow}
-        message={errorMessage}
+        error={errorMessage}
       />
       <Formik
         validationSchema={schema}
@@ -152,10 +146,9 @@ const PowerUpCard: React.FC<{}> = () => {
                     label="Amount"
                     rowName="amount"
                     type="text"
+                    append="HIVE"
                     placeholder="0"
                     value={values.amount}
-                    select={['VESTS', 'HP']}
-                    selectionHandler={handleAssetChange}
                     onChangeFunc={handleChange}
                     invalidFlag={touched.amount && !!errors.amount}
                     error={errors.amount}
