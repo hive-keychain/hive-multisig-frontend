@@ -5,8 +5,11 @@ import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
-import { requestSignTx } from '../../../utils/hive-keychain.utils';
+import { ErrorMessage } from '../../../interfaces/errors.interface';
+import { IExpiration } from '../../../interfaces/transaction.interface';
+import { RequestSignTx } from '../../../utils/hive-keychain.utils';
 import ErrorModal from '../../modals/Error';
+import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 export const VoteOperationCard = () => {
@@ -14,26 +17,58 @@ export const VoteOperationCard = () => {
     useReadLocalStorage<SignResponseType>('accountDetails');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
+    Title: '',
+    Code: '',
+    ErrorName: '',
+    ErrorMessage: '',
+  });
+  const [expiration, setExpiration] = useState<IExpiration>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  });
 
   useEffect(() => {
+    if (expiration) {
+      console.log(expiration);
+    }
+  }, [expiration]);
+  useEffect(() => {
     if (!onErrorShow) {
-      setErrorMessage('');
+      setErrorMessage({
+        Title: '',
+        Code: '',
+        ErrorName: '',
+        ErrorMessage: '',
+      });
     }
   }, [onErrorShow]);
   useEffect(() => {
-    if (errorMessage !== '') {
+    if (errorMessage.Title !== '') {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
+
   useEffect(() => {
     if (transaction) {
-      requestSignTx(
-        loggedInAccount.data.username,
-        transaction,
-        setErrorMessage,
-        'Posting',
-      );
+      const sign = async () => {
+        const res = await RequestSignTx(
+          loggedInAccount.data.username,
+          transaction,
+          setErrorMessage,
+          'Posting',
+        );
+        if (res) {
+          setErrorMessage({
+            Title: 'Transaction Success!',
+            Code: '',
+            ErrorName: '',
+            ErrorMessage: '',
+          });
+        }
+      };
+      sign().catch(() => {});
     }
   }, [transaction]);
 
@@ -65,7 +100,7 @@ export const VoteOperationCard = () => {
       <ErrorModal
         show={onErrorShow}
         setShow={setOnErrorShow}
-        message={errorMessage}
+        error={errorMessage}
       />
       <Formik
         validationSchema={schema}
@@ -130,6 +165,7 @@ export const VoteOperationCard = () => {
                     invalidFlag={touched.weight && !!errors.weight}
                     error={errors.weight}
                   />
+                  <Expiration setExpiration={setExpiration} />
                   <Button
                     type="submit"
                     className="pull-right"

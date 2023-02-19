@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
-  getTimestampInSeconds
+  getTimestampInSeconds,
 } from '../../utils/utils';
 const LoginForm = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
@@ -49,7 +49,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(`/@${accountDetails.data.username}`);
+      navigate(`/transaction`);
     } else {
       navigate('/login');
     }
@@ -82,7 +82,7 @@ const LoginForm = () => {
   return (
     <div>
       <div className="ms-2 text-start" style={{ color: 'black' }}>
-        Login
+        <h4>Login</h4>
       </div>
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>

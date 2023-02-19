@@ -1,16 +1,20 @@
-.gray-input-outline{
+.myClassName__control {
+  height: 20px;
+  min-height: 20px;
+}
+.gray-input-outline {
   border-color: gray;
 }
-.red-input-outline{
+.red-input-outline {
   border-color: red;
 }
-.blue-input-outline{
+.blue-input-outline {
   border-color: blue;
 }
-.txn-crd-btn{
+.txn-crd-btn {
   width: 100px !important;
 }
-.acc-crd-btn{
+.acc-crd-btn {
   width: 73px !important;
 }
 .avatar {

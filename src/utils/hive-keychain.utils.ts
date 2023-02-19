@@ -1,13 +1,16 @@
-import { Client } from '@hiveio/dhive';
+import * as Hive from '@hiveio/dhive';
 import * as hiveTx from 'hive-tx';
+import * as math from 'mathjs';
+import { Dispatch, SetStateAction } from 'react';
 import {
   BroadCastResponseType,
   IHiveAccountUpdateBroadcast,
   IHiveSignatureInterface,
   SignResponseType,
 } from '../interfaces';
+import { ErrorMessage } from '../interfaces/errors.interface';
 import { getTimestampInSeconds } from './utils';
-const client = new Client([
+const client = new Hive.Client([
   'https://api.hive.blog',
   'https://api.hivekings.com',
   'https://anyx.io',
@@ -52,46 +55,72 @@ export const RequestSignature = (username: string) => {
   });
 };
 
-const RequestSignTx = (account: string, operation: Object, key: string) => {
-  return new Promise<any>(async (resolve, reject) => {
-    const hivetx = new hiveTx.Transaction();
-    const transaction = await hivetx.create([operation]);
-    const callback = async (response: any) => {
-      if (!response.error) {
-        await client.database
-          .verifyAuthority(response.result)
-          .catch((error: any) => {
-            reject(
-              'Authority Verification Error:\n' + JSON.stringify(error.message),
-            );
-          });
-        await client.broadcast.send(response.result).catch((error: any) => {
-          reject('Broadcasting Error:\n' + JSON.stringify(error.message));
-        });
-      } else {
-        reject(JSON.stringify(response));
-      }
-    };
-
-    window.hive_keychain.requestSignTx(account, transaction, key, callback);
-  });
-};
-
-export const requestSignTx = async (
+export const RequestSignTx = async (
   username: string,
-  transaction: object,
-  setErrorMessage: Function,
-  keyType: string = 'Active',
+  operation: object,
+  setErrorMessage: Dispatch<SetStateAction<ErrorMessage>>,
+  key: string = 'Active',
 ) => {
-  await RequestSignTx(username, transaction, keyType).then(
-    (result: any) => {
-      console.log(result);
-      console.log('Handle success here!');
-    },
-    (error: any) => {
-      setErrorMessage('Sign error: ' + JSON.stringify(error));
-    },
-  );
+  return new Promise<boolean>(async (resolve, reject) => {
+    let signTxResult = false;
+    let verifyAuthResult = false;
+    let broadcastResult = false;
+    let transaction: object;
+    const _hiveTx = new hiveTx.Transaction();
+    try {
+      transaction = await _hiveTx.create([operation]);
+    } catch (error) {
+      console.log('HiveTx Error: ', error);
+    }
+    window.hive_keychain.requestSignTx(
+      username,
+      transaction,
+      key,
+      async (response: any) => {
+        if (response.error) {
+          setErrorMessage({
+            Title: 'Keychain Signing Error',
+            Code: '',
+            ErrorName: response.error.jse_info.message,
+            ErrorMessage: response.error.jse_shortmsg,
+          });
+          reject(false);
+        } else {
+          signTxResult = response.success;
+          try {
+            const resp = await client.database.verifyAuthority(response.result);
+            verifyAuthResult = resp;
+          } catch (error) {
+            setErrorMessage({
+              Title: 'Authority Verification Error',
+              Code: '',
+              ErrorName: error.jse_info.message,
+              ErrorMessage: error.jse_shortmsg,
+            });
+            reject(false);
+          }
+          try {
+            const resp: Hive.TransactionConfirmation =
+              await client.broadcast.send(response.result);
+            broadcastResult = resp ? true : false;
+          } catch (error) {
+            setErrorMessage({
+              Title: 'Broadcasting Error',
+              Code: '',
+              ErrorName: error.jse_info.message,
+              ErrorMessage: error.jse_shortmsg,
+            });
+            reject(false);
+          }
+
+          if (signTxResult && verifyAuthResult && broadcastResult) {
+            // console.log('Success');
+            resolve(true);
+          }
+        }
+      },
+    );
+  });
 };
 
 export const GetNextRequestID = async (username: string) => {
@@ -121,4 +150,39 @@ const createSignatureObject = (
     key: 'Posting',
     responseCallback: setValidLogIn,
   };
+};
+
+export const getDynamicGlobalProperties = async (
+  method: string,
+  params: any[] | object,
+  key?: string,
+) => {
+  const response = await hiveTx.call(
+    'condenser_api.get_dynamic_global_properties',
+  );
+  if (response?.result) {
+    return key ? response.result[key] : response.result;
+  } else
+    throw new Error(
+      `Error while retrieving data from ${method} : ${JSON.stringify(
+        response.error,
+      )}`,
+    );
+};
+
+export const fromHP = (
+  hp: number,
+  {
+    total_vesting_fund_hive,
+    total_vesting_shares,
+  }: Hive.DynamicGlobalProperties,
+) => {
+  const vesting_fund_hive = math.bignumber(
+    total_vesting_fund_hive.toString().split(' ')[0],
+  );
+  const vesting_shares = math.bignumber(
+    total_vesting_shares.toString().split(' ')[0],
+  );
+  var res = math.multiply(math.divide(hp, vesting_fund_hive), vesting_shares);
+  return math.format(res, { notation: 'fixed', precision: 6 });
 };
