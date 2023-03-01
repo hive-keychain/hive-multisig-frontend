@@ -69,7 +69,7 @@ const AccountDropdown = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
-      navigate('/');
+      navigate('/login');
     }
   };
 

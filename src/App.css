@@ -1,6 +1,6 @@
-.myClassName__control {
-  height: 20px;
-  min-height: 20px;
+.search-input-group {
+  width: 20% !important;
+  position: relative;
 }
 .gray-input-outline {
   border-color: gray;

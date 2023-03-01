@@ -15,6 +15,8 @@ import { InputRow } from './InputRow';
 
 function Transfer() {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
@@ -30,6 +32,9 @@ function Transfer() {
     minutes: 0,
   });
 
+  useEffect(() => {
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (expiration) {
       console.log(expiration);
@@ -124,7 +129,7 @@ function Transfer() {
         }}
         initialValues={{
           amount: 0,
-          from: loggedInAccount.data.username,
+          from: accountDetails ? accountDetails.data.username : '',
           memo: '',
           to: '',
           day: 0,

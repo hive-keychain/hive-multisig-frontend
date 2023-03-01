@@ -82,7 +82,7 @@ const LoginForm = () => {
   return (
     <div>
       <div className="ms-2 text-start" style={{ color: 'black' }}>
-        <h4>Login</h4>
+        <h5>Login</h5>
       </div>
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>

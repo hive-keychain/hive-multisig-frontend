@@ -34,6 +34,11 @@ export const TransactionPage = () => {
     }
   }, []);
   useEffect(() => {
+    if (!loggedInAccount) {
+      navigate('/login');
+    }
+  }, [loggedInAccount]);
+  useEffect(() => {
     handleSelectOnChange(transactionType);
   }, [transactionType]);
 
