@@ -6,7 +6,7 @@ export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
   SIGNATURE_SUCCEEDED = 'SIGNATURE_SUCCEEDED',
   SIGNATURE_FAILED = 'SIGNATURE_FAILED',
-  LOGGED_OUT = 'LOGGED_OUT'
+  LOGGED_OUT = 'LOGGED_OUT',
 }
 
 export type LoginStateType = {
@@ -34,15 +34,12 @@ const loginSclice = createSlice({
   name: 'login',
   initialState,
   reducers: {
-    logout(state){
-      state={
-        loginState:LoginState.LOGGED_OUT,
-        isSignatureSuccess: false,
-        accountObject: null,
-        error: '',
-      }
-    }
-
+    logout(state) {
+      (state.loginState = LoginState.LOGGED_OUT),
+        (state.isSignatureSuccess = false),
+        (state.accountObject = null),
+        (state.error = '');
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(
@@ -66,5 +63,4 @@ const loginSclice = createSlice({
 });
 
 export default loginSclice.reducer;
-export const { logout } =
-  loginSclice.actions;
+export const { logout } = loginSclice.actions;
