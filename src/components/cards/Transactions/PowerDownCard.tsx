@@ -56,6 +56,7 @@ const PowerDownCard: React.FC<{}> = () => {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
         );
         if (res) {

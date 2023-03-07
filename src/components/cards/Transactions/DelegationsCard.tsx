@@ -21,9 +21,7 @@ const DelegationsCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
-  const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>(
-    'VESTS',
-  );
+  const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>('HP');
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
     Code: '',
@@ -72,6 +70,7 @@ const DelegationsCard: React.FC<{}> = () => {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
         );
         if (res) {
@@ -176,7 +175,7 @@ const DelegationsCard: React.FC<{}> = () => {
                     type="text"
                     placeholder="0"
                     value={values.vesting_shares}
-                    select={['VESTS', 'HP']}
+                    select={['HP', 'VESTS']}
                     selectionHandler={handleAssetChange}
                     onChangeFunc={handleChange}
                     invalidFlag={

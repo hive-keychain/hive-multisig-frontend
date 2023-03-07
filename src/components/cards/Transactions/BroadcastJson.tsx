@@ -58,6 +58,7 @@ function BroadcastJson() {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
         );
         if (res) {

@@ -1,5 +1,6 @@
 import * as Hive from '@hiveio/dhive';
 import { useEffect, useRef } from 'react';
+import { IExpiration } from '../interfaces/transaction.interface';
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,7 +19,11 @@ export const useDidMountEffect = (func: Function, deps: [any]) => {
     else didMount.current = true;
   }, deps);
 };
-
+export function getSeconds(expiration: IExpiration) {
+  return (
+    expiration.days * 86400 + expiration.hours * 3600 + expiration.minutes * 60
+  );
+}
 export const removeStringElement = (
   array: string[],
   element: string,

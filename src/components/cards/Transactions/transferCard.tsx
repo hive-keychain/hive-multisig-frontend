@@ -8,7 +8,7 @@ import { SignResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import { RequestSignTx } from '../../../utils/hive-keychain.utils';
-import { hiveDecimalFormat } from '../../../utils/utils';
+import { getSeconds, hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
@@ -37,7 +37,7 @@ function Transfer() {
   }, [loggedInAccount]);
   useEffect(() => {
     if (expiration) {
-      console.log(expiration);
+      console.log(expiration, getSeconds(expiration));
     }
   }, [expiration]);
 
@@ -63,6 +63,7 @@ function Transfer() {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
         );
         if (res) {
@@ -110,7 +111,7 @@ function Transfer() {
       .positive('Must be more than 0')
       .required('Required'),
     from: yup.string().required('Required'),
-    memo: yup.string().required('Required'),
+    memo: yup.string(),
     to: yup.string().required('Required'),
     day: yup.number().typeError('Must be a number').required('Required'),
   });

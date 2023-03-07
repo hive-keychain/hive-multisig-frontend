@@ -30,6 +30,7 @@ const LoginForm = () => {
     'loginTimestap',
     null,
   );
+  const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const inputRef = useRef(null);
   useEffect(() => {
@@ -64,15 +65,18 @@ const LoginForm = () => {
   }, [isLoginSucceed]);
 
   useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        handleOnLoginSubmit();
-      }
-    };
-    document.addEventListener('keydown', keyDownHandler);
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
+    if (isFocused) {
+      console.log('login:', isFocused);
+      const keyDownHandler = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          handleOnLoginSubmit();
+        }
+      };
+      document.addEventListener('keydown', keyDownHandler);
+      return () => {
+        document.removeEventListener('keydown', keyDownHandler);
+      };
+    }
   });
 
   const handleOnLoginSubmit = () => {
@@ -91,13 +95,17 @@ const LoginForm = () => {
           aria-label="Username"
           aria-describedby="basic-addon2"
           onChange={(e) => setUsername(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           value={username}
           ref={inputRef}
         />
         <Button
           variant="outline-secondary"
           id="button-addon2"
-          onClick={() => handleOnLoginSubmit()}>
+          onClick={() => handleOnLoginSubmit()}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}>
           Login
         </Button>
       </InputGroup>

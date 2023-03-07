@@ -56,6 +56,7 @@ export const VoteOperationCard = () => {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
           'Posting',
         );

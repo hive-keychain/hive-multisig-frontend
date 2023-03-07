@@ -8,11 +8,12 @@ interface IExpirationProp {
 export const Expiration = ({ setExpiration }: IExpirationProp) => {
   const [days, setDay] = useState<number>(0);
   const [hours, setHour] = useState<number>(0);
-  const [minutes, setMinutes] = useState<number>(0);
+  const [minutes, setMinutes] = useState<number>(10);
 
   useEffect(() => {
     handleChange();
   }, [days, hours, minutes]);
+
   const handleChange = () => {
     setExpiration({
       days: days,
@@ -23,7 +24,7 @@ export const Expiration = ({ setExpiration }: IExpirationProp) => {
 
   return (
     <div>
-      <Form.Label>Expiration</Form.Label>
+      <Form.Label>Expire in</Form.Label>
       <Row className="mb-3" xs="auto">
         <Col xs={3}>
           <FloatingLabel label="Day" className="mb-3">
@@ -43,14 +44,8 @@ export const Expiration = ({ setExpiration }: IExpirationProp) => {
               onChange={(e) => {
                 setHour(parseInt(e.target.value));
               }}>
-              {Array.from(Array(24).keys()).map((hrs) => {
-                if (hrs !== 24) {
-                  if (hrs === 0) {
-                    return <option key={hrs}>{hrs}</option>;
-                  } else {
-                    return <option key={hrs + 1}>{hrs + 1}</option>;
-                  }
-                }
+              {Array.from(Array(25).keys()).map((hrs) => {
+                return <option key={hrs}>{hrs}</option>;
               })}
             </Form.Select>
           </FloatingLabel>
@@ -63,13 +58,7 @@ export const Expiration = ({ setExpiration }: IExpirationProp) => {
                 setMinutes(parseInt(e.target.value));
               }}>
               {Array.from(Array(61).keys()).map((hrs) => {
-                if (hrs !== 60) {
-                  if (hrs === 0) {
-                    return <option key={hrs}>{hrs}</option>;
-                  } else {
-                    return <option key={hrs + 1}>{hrs + 1}</option>;
-                  }
-                }
+                return <option key={hrs}>{hrs}</option>;
               })}
             </Form.Select>
           </FloatingLabel>

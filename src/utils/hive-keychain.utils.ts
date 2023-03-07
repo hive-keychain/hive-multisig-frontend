@@ -9,7 +9,8 @@ import {
   SignResponseType,
 } from '../interfaces';
 import { ErrorMessage } from '../interfaces/errors.interface';
-import { getTimestampInSeconds } from './utils';
+import { IExpiration } from '../interfaces/transaction.interface';
+import { getSeconds, getTimestampInSeconds } from './utils';
 const client = new Hive.Client([
   'https://api.hive.blog',
   'https://api.hivekings.com',
@@ -58,6 +59,7 @@ export const RequestSignature = (username: string) => {
 export const RequestSignTx = async (
   username: string,
   operation: object,
+  expiration: IExpiration,
   setErrorMessage: Dispatch<SetStateAction<ErrorMessage>>,
   key: string = 'Active',
 ) => {
@@ -68,7 +70,7 @@ export const RequestSignTx = async (
     let transaction: object;
     const _hiveTx = new hiveTx.Transaction();
     try {
-      transaction = await _hiveTx.create([operation]);
+      transaction = await _hiveTx.create([operation], getSeconds(expiration));
     } catch (error) {
       console.log('HiveTx Error: ', error);
     }

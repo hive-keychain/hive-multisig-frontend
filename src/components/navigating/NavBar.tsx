@@ -42,8 +42,11 @@ const NavBar = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    console.log('Destination: ', destination);
     if (destination !== '') {
-      setExpanded(false);
+      if (expanded) {
+        setExpanded(false);
+      }
       handleNavigation();
     }
   }, [destination]);
@@ -64,6 +67,7 @@ const NavBar = () => {
 
   const handleNavigation = () => {
     navigate(destination);
+    setDestination('');
   };
   useEffect(() => {
     if (!isLoggedIn && loginTimestamp === 0 && !accountDetails) {
@@ -191,33 +195,48 @@ const NavSearchBar = ({
   setDestination,
 }: INavSearchBarProps) => {
   const [username, setUsername] = useState('');
+  const [isFocused, setIsFocused] = useState<boolean>(false);
   const keyDownHandler = (e: any) => {
-    if (e.key === 'Enter') {
-      setDestination(`@${username}`);
-      setUsername('');
+    if (e.key === 'Enter' && isFocused) {
+      console.log(username, isFocused);
+      if (username !== '') {
+        handleDestination();
+      }
     }
+  };
+  const handleDestination = () => {
+    setDestination(`@${username}`);
+    setUsername('');
   };
   if (isLoggedIn) {
     return (
       <InputGroup className={classNames}>
-        <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
+        <InputGroup.Text
+          className=" bg-dark outline-secondary text-secondary"
+          id="basic-addon1">
+          @
+        </InputGroup.Text>
         <Form.Control
           type="search"
           placeholder="Username"
-          className="navbar-input-group"
+          className="navbar-input-group outline-secondary bg-dark text-secondary"
           aria-label="Search"
           value={username}
           onChange={(e) => {
             setUsername(e.target.value);
           }}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onKeyDown={(e) => {
             keyDownHandler(e);
           }}
         />
         <Button
-          variant="outline-secondary"
+          variant="outline-light  text-secondary"
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onClick={() => {
-            setDestination(`@${username}`);
+            username !== '' ? handleDestination() : null;
           }}>
           Search
         </Button>

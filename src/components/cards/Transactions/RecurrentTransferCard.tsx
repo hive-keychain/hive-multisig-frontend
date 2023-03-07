@@ -57,6 +57,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
         const res = await RequestSignTx(
           loggedInAccount.data.username,
           transaction,
+          expiration,
           setErrorMessage,
         );
         if (res) {
@@ -111,7 +112,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
       .required('Required'),
     extensions: yup.array(),
     from: yup.string().required('Required'),
-    memo: yup.string().required('Required'),
+    memo: yup.string(),
     recurrence: yup
       .number()
       .typeError('Must be a number')
