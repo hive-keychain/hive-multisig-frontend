@@ -25,6 +25,8 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
   );
   const keyChainMsg = useAppSelector((state) => state.keychain.message);
   const keyChainError = useAppSelector((state) => state.keychain.error);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
+      if (e.key === 'Enter' && isFocused) {
         redirect();
       }
     };
@@ -93,6 +95,8 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
           aria-label="Username"
           aria-describedby="basic-addon2"
           onChange={(e) => setInput(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           value={input}
         />
         <Button
