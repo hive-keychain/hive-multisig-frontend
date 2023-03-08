@@ -72,7 +72,13 @@ export const RequestSignTx = async (
     try {
       transaction = await _hiveTx.create([operation], getSeconds(expiration));
     } catch (error) {
-      console.log('HiveTx Error: ', error);
+      setErrorMessage({
+        Title: 'HiveTx Error: ',
+        Code: '',
+        ErrorName: 'Transaction Creation:',
+        ErrorMessage: error,
+      });
+      reject(false);
     }
     window.hive_keychain.requestSignTx(
       username,
@@ -116,7 +122,6 @@ export const RequestSignTx = async (
           }
 
           if (signTxResult && verifyAuthResult && broadcastResult) {
-            // console.log('Success');
             resolve(true);
           }
         }
