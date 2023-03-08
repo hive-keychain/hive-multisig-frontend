@@ -1,36 +1,33 @@
-
 import { Button, Container, Form, Stack } from 'react-bootstrap';
 
 interface IArrayFieldProp {
-    remove:Function,
-    fieldKey:string|number,
-    value:string,
-    index:number,
+  remove: Function;
+  fieldKey: string | number;
+  value: string;
+  index: number;
 }
-const  ArrayField: React.FC<IArrayFieldProp> = ({
-    remove,fieldKey,value,index
+const ArrayField: React.FC<IArrayFieldProp> = ({
+  remove,
+  fieldKey,
+  value,
+  index,
 }) => {
   return (
     <Container key={fieldKey} fluid>
-    <Stack direction="horizontal" gap={3}>
-        <Form.Control
-        className='gray-input-outline'
-        value={value}
-        readOnly
-        />
+      <Stack direction="horizontal" gap={3}>
+        <Form.Control className="gray-input-outline" value={value} readOnly />
 
         <Button
-        className='txn-crd-btn'
-        variant="outline-danger"
-        onClick={() => {
-            console.log("delete");
+          className="txn-crd-btn"
+          variant="outline-danger"
+          onClick={() => {
             remove(index);
-        }}>
-            Delete
+          }}>
+          Delete
         </Button>
-    </Stack>
+      </Stack>
     </Container>
-  )
-}
+  );
+};
 
-export default ArrayField
+export default ArrayField;

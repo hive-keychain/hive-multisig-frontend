@@ -15,6 +15,8 @@ import { InputRow } from './InputRow';
 export const CommentOperationCard = () => {
   const loggedInAccount =
     useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -28,12 +30,9 @@ export const CommentOperationCard = () => {
     hours: 0,
     minutes: 0,
   });
-
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -54,7 +53,7 @@ export const CommentOperationCard = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -107,11 +106,10 @@ export const CommentOperationCard = () => {
       <Formik
         validationSchema={schema}
         onSubmit={(values) => {
-          console.log(values);
           handleTransaction(values);
         }}
         initialValues={{
-          author: loggedInAccount.data.username,
+          author: accountDetails ? accountDetails.data.username : '',
           json_metadata: '',
           body: '',
           parent_author: '',

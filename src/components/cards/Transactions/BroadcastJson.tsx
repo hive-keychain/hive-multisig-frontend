@@ -16,6 +16,8 @@ import { InputRow } from './InputRow';
 
 function BroadcastJson() {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [newAuth, setNewAuth] = useState<string>('');
   const [newPostingAuth, setNewPostingAuth] = useState<string>('');
   const [transaction, setTransaction] = useState<object>();
@@ -31,12 +33,9 @@ function BroadcastJson() {
     hours: 0,
     minutes: 0,
   });
-
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -56,7 +55,7 @@ function BroadcastJson() {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,

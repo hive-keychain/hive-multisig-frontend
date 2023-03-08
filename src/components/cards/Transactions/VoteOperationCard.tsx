@@ -15,6 +15,8 @@ import { InputRow } from './InputRow';
 export const VoteOperationCard = () => {
   const loggedInAccount =
     useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -30,10 +32,8 @@ export const VoteOperationCard = () => {
   });
 
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -54,7 +54,7 @@ export const VoteOperationCard = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -111,7 +111,7 @@ export const VoteOperationCard = () => {
         initialValues={{
           author: '',
           permlink: '',
-          voter: loggedInAccount.data.username,
+          voter: accountDetails ? accountDetails.data.username : '',
           weight: 0,
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (

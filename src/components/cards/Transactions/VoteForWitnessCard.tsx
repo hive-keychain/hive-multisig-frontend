@@ -14,6 +14,8 @@ import { InputRow } from './InputRow';
 
 const VoteForWitnessCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -27,12 +29,10 @@ const VoteForWitnessCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
-
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
+
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -52,7 +52,7 @@ const VoteForWitnessCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -99,7 +99,7 @@ const VoteForWitnessCard: React.FC<{}> = () => {
           handleTransaction(values);
         }}
         initialValues={{
-          account: loggedInAccount.data.username,
+          account: accountDetails ? accountDetails.data.username : '',
           approve: false,
           witness: '',
         }}>

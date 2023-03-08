@@ -30,12 +30,6 @@ const PowerDownCard: React.FC<{}> = () => {
   });
 
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
-
-  useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
         Title: '',

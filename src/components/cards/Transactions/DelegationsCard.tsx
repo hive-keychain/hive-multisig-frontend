@@ -19,6 +19,8 @@ import { InputRow } from './InputRow';
 
 const DelegationsCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>('HP');
@@ -33,6 +35,9 @@ const DelegationsCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
+  useEffect(() => {
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
 
   const schema = yup.object().shape({
     delegatee: yup.string().required('Required'),
@@ -44,11 +49,6 @@ const DelegationsCard: React.FC<{}> = () => {
       .required('Required'),
   });
 
-  useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -68,7 +68,7 @@ const DelegationsCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -135,7 +135,7 @@ const DelegationsCard: React.FC<{}> = () => {
         }}
         initialValues={{
           delegatee: '',
-          delegator: loggedInAccount.data.username,
+          delegator: accountDetails ? accountDetails.data.username : '',
           vesting_shares: 0,
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (

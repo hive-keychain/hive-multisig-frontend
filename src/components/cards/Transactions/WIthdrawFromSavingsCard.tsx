@@ -18,6 +18,8 @@ import { InputRow } from './InputRow';
 
 const WithdrawFromSavingsCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
@@ -32,12 +34,9 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
-
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -58,7 +57,7 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -129,7 +128,7 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
         }}
         initialValues={{
           amount: 0,
-          from: loggedInAccount.data.username,
+          from: accountDetails ? accountDetails.data.username : '',
           memo: '',
           request_id: 0,
           to: '',

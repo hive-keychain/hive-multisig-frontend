@@ -8,7 +8,7 @@ import { SignResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import { RequestSignTx } from '../../../utils/hive-keychain.utils';
-import { getSeconds, hiveDecimalFormat } from '../../../utils/utils';
+import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
@@ -35,11 +35,6 @@ function Transfer() {
   useEffect(() => {
     setAccountDetails(loggedInAccount);
   }, [loggedInAccount]);
-  useEffect(() => {
-    if (expiration) {
-      console.log(expiration, getSeconds(expiration));
-    }
-  }, [expiration]);
 
   useEffect(() => {
     if (!onErrorShow) {

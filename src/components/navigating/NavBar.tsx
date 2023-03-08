@@ -42,7 +42,6 @@ const NavBar = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    console.log('Destination: ', destination);
     if (destination !== '') {
       if (expanded) {
         setExpanded(false);
@@ -72,7 +71,6 @@ const NavBar = () => {
   useEffect(() => {
     if (!isLoggedIn && loginTimestamp === 0 && !accountDetails) {
       setDestination('/login');
-      console.log('redirecting');
     }
   }, [isLoggedIn, loginTimestamp, accountDetails]);
   const handleLogout = () => {
@@ -81,7 +79,6 @@ const NavBar = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
-      console.log('logging out');
     }
   };
   return (
@@ -90,7 +87,8 @@ const NavBar = () => {
       expanded={expanded}
       expand="lg"
       bg="dark"
-      variant="dark">
+      variant="dark"
+      sticky="top">
       <Container fluid>
         <Navbar.Brand className="nav-text-color" href="/">
           <img
@@ -198,7 +196,6 @@ const NavSearchBar = ({
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const keyDownHandler = (e: any) => {
     if (e.key === 'Enter' && isFocused) {
-      console.log(username, isFocused);
       if (username !== '') {
         handleDestination();
       }

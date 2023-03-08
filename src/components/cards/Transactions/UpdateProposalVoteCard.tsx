@@ -16,6 +16,8 @@ import { InputRow } from './InputRow';
 
 const UpdateProposalVoteCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [newProposalId, setNewProposalId] = useState<string>('');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
@@ -30,12 +32,9 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
-
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -55,7 +54,7 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -126,7 +125,7 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
           approve: false,
           extensions: [],
           proposal_ids: [],
-          voter: loggedInAccount.data.username,
+          voter: accountDetails ? accountDetails.data.username : '',
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (
           <Card border="secondary">

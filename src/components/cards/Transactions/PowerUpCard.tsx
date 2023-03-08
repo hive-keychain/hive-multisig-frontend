@@ -2,7 +2,6 @@ import * as Hive from '@hiveio/dhive';
 import { Formik } from 'formik';
 import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
 import { SignResponseType } from '../../../interfaces';
@@ -16,6 +15,8 @@ import { InputRow } from './InputRow';
 
 const PowerUpCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -29,13 +30,9 @@ const PowerUpCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
-  const navigate = useNavigate();
   useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
-
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -55,7 +52,7 @@ const PowerUpCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -109,7 +106,7 @@ const PowerUpCard: React.FC<{}> = () => {
         }}
         initialValues={{
           amount: 0,
-          from: loggedInAccount.data.username,
+          from: accountDetails ? accountDetails.data.username : '',
           to: '',
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (

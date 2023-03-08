@@ -66,7 +66,6 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (isFocused) {
-      console.log('login:', isFocused);
       const keyDownHandler = (e: KeyboardEvent) => {
         if (e.key === 'Enter') {
           handleOnLoginSubmit();

@@ -15,6 +15,8 @@ import { InputRow } from './InputRow';
 const RecurrentTransferCard: React.FC<{}> = () => {
   const loggedInAccount =
     useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
@@ -30,11 +32,6 @@ const RecurrentTransferCard: React.FC<{}> = () => {
     minutes: 0,
   });
 
-  useEffect(() => {
-    if (expiration) {
-      console.log(expiration);
-    }
-  }, [expiration]);
   useEffect(() => {
     if (!onErrorShow) {
       setErrorMessage({
@@ -55,7 +52,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
@@ -136,7 +133,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
           amount: 0,
           executions: 2,
           extensions: [],
-          from: loggedInAccount.data.username,
+          from: accountDetails ? accountDetails.data.username : '',
           memo: '',
           recurrence: 24,
           to: '',
