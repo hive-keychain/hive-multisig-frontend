@@ -43,7 +43,6 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
     originalAuthorities.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
       originalAuthorities.active.key_auths.reduce((a, e) => (a += e[1]), 0);
 
-  const [origAuths, setOrigAuths] = useState<Authorities>(originalAuthorities);
   const [isDispatched, setDispatched] = useState<boolean>(false);
   const [updateError, setUpdateError] = useState<boolean>(false);
   const [updateResult, setUpdateResult] = useState<boolean>(isUpdateSucceed);
@@ -106,7 +105,7 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
     return sortedArr;
   };
   const handleUpdate = () => {
-    if (isOwnerUpdate || isPostingUpdate) {
+    if (isOwnerUpdate || isPostingUpdate || !isOriginalActiveSufficient) {
       //usedhive
       const dhiveUpdate: IDHiveAccountUpdateBroadcast = {
         newAuthorities: newAuths,
@@ -227,9 +226,6 @@ const OnwerKeyInput = ({ setOwnerKey }: IOwnerKeyProp) => {
         id="threshInput"
         onChange={(e) => {
           setKey(e.target.value);
-        }}
-        onSubmit={() => {
-          console.log('submit', key);
         }}
         placeholder={'Please enter your owner key.'}
         value={key}
