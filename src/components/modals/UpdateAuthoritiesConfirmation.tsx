@@ -26,6 +26,9 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
   const isUpdateSucceed = useAppSelector(
     (state) => state.updateAuthorities.isUpdateSucces,
   );
+  const originalAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.Authorities,
+  );
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
@@ -35,6 +38,12 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
   const isPostingAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isPostingAuthUpdated,
   );
+
+  const isOriginalActiveSufficient =
+    originalAuthorities?.active.weight_threshold <=
+    originalAuthorities?.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
+      originalAuthorities?.active.key_auths.reduce((a, e) => (a += e[1]), 0);
+
   const [isDispatched, setDispatched] = useState<boolean>(false);
   const [updateError, setUpdateError] = useState<boolean>(false);
   const [updateResult, setUpdateResult] = useState<boolean>(isUpdateSucceed);
@@ -97,7 +106,7 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
     return sortedArr;
   };
   const handleUpdate = () => {
-    if (isOwnerUpdate || isPostingUpdate) {
+    if (isOwnerUpdate || isPostingUpdate || !isOriginalActiveSufficient) {
       //usedhive
       const dhiveUpdate: IDHiveAccountUpdateBroadcast = {
         newAuthorities: newAuths,
@@ -165,7 +174,7 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
               ? 'Update failed! Max number of update reached. Please Try again after 2 hours.'
               : ''}
           </Form.Label>
-          {isOwnerUpdate || isPostingUpdate ? (
+          {isOwnerUpdate || isPostingUpdate || !isOriginalActiveSufficient ? (
             <OnwerKeyInput setOwnerKey={setKey} />
           ) : !updateError ? (
             <Form.Label>Are you sure you wanna update?</Form.Label>
