@@ -209,14 +209,14 @@ const NavSearchBar = ({
     return (
       <InputGroup className={classNames}>
         <InputGroup.Text
-          className=" bg-dark outline-secondary text-secondary"
+          className="bg-dark ps-0 pe-0 outline-secondary text-secondary navbar-input-border-color"
           id="basic-addon1">
           @
         </InputGroup.Text>
         <Form.Control
-          type="search"
+          type="text"
           placeholder="Username"
-          className="navbar-input-group outline-secondary bg-dark text-secondary"
+          className="bg-dark ps-1 pe-0 text-secondary navbar-input-border-color "
           aria-label="Search"
           value={username}
           onChange={(e) => {
@@ -229,13 +229,13 @@ const NavSearchBar = ({
           }}
         />
         <Button
-          variant="outline-light  text-secondary"
+          variant="pe-0 ps-0 text-secondary navbar-search-btn"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onClick={() => {
             username !== '' ? handleDestination() : null;
           }}>
-          Search
+          <i className="fa fa-search "></i>
         </Button>
       </InputGroup>
     );
