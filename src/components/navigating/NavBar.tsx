@@ -229,7 +229,7 @@ const NavSearchBar = ({
           }}
         />
         <Button
-          variant="pe-0 ps-0 text-secondary navbar-search-btn"
+          variant="pe-0 ps-1 text-secondary navbar-search-btn"
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           onClick={() => {
