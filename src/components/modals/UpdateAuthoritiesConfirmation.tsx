@@ -38,10 +38,11 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
   const isPostingAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isPostingAuthUpdated,
   );
+
   const isOriginalActiveSufficient =
-    originalAuthorities.active.weight_threshold <=
-    originalAuthorities.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
-      originalAuthorities.active.key_auths.reduce((a, e) => (a += e[1]), 0);
+    originalAuthorities?.active.weight_threshold <=
+    originalAuthorities?.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
+      originalAuthorities?.active.key_auths.reduce((a, e) => (a += e[1]), 0);
 
   const [isDispatched, setDispatched] = useState<boolean>(false);
   const [updateError, setUpdateError] = useState<boolean>(false);
