@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Form, InputGroup } from "react-bootstrap";
 import { useReadLocalStorage } from "usehooks-ts";
+import { IAccountKeyRowProps } from "../../../interfaces/cardInterfaces";
 import { useAppDispatch } from "../../../redux/app/hooks";
 import { updateAccount } from "../../../redux/features/updateAuthorities/updateAuthoritiesSlice";
 import { useDidMountEffect } from "../../../utils/utils";
-import { IAccountKeyRowProps } from "../interfaces";
 
 export function AuthorityWeightThreshold({authorityName, type, threshold}: IAccountKeyRowProps) {
     const dispatch = useAppDispatch();

@@ -1,6 +1,6 @@
 import { FC, ReactNode, useEffect, useState } from "react";
 import { Card, Container, Stack } from "react-bootstrap";
-import { IAccountKeysCardProps } from "../interfaces";
+import { IAccountKeysCardProps } from "../../../interfaces/cardInterfaces";
 import { SearchAccountKeyRow } from "./SearchAccountKeyRow";
 
 export const SearchAccountKeysCard: FC<IAccountKeysCardProps> = ({authorityName,

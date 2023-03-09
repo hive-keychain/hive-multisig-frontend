@@ -4,7 +4,7 @@ import {
   Container,
   Stack
 } from 'react-bootstrap';
-import { IAccountKeyRowProps, IAccountKeysCardProps, IAuthorityCardProps } from '../interfaces';
+import { IAccountKeyRowProps, IAccountKeysCardProps, IAuthorityCardProps } from '../../../interfaces/cardInterfaces';
 import { AccountKeysCard } from './AccountKeysCard';
 import { AuthorityWeightThreshold } from './AuthorityWeightThresholdRow';
 

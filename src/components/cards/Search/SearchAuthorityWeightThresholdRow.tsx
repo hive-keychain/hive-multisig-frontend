@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Form, InputGroup } from "react-bootstrap";
-import { IAccountKeyRowProps } from "../interfaces";
+import { IAccountKeyRowProps } from "../../../interfaces/cardInterfaces";
 
 
 export const SearchAuthorityWeightThresholdRow: FC<IAccountKeyRowProps> = ({authorityName, type, threshold}) =>{

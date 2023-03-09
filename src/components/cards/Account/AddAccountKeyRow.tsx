@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 import { Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { useReadLocalStorage } from 'usehooks-ts';
 import { SignResponseType } from '../../../interfaces';
+import { IAddAccountKeyProps } from "../../../interfaces/cardInterfaces";
 import { GetPrivateKeyFromSeed } from '../../../utils/hive.utils';
 import { useDidMountEffect } from '../../../utils/utils';
 import NewKeys from '../../modals/NewKeys';
-import { IAddAccountKeyProps } from "../interfaces";
 
   
 export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKeyProps) {
@@ -68,7 +68,8 @@ export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKe
                 value = {accountName}
               />
               {authAccountType==='Keys'?
-              <Button  variant="outline-secondary" onClick={() => {handleNewKeyOnClick()}}>
+              <Button  
+              variant="outline-secondary" onClick={() => {handleNewKeyOnClick()}}>
               New Key
               </Button>
               :<div></div>
@@ -93,7 +94,9 @@ export function AddAccountKeyRow({authAccountType, setNewAccount}: IAddAccountKe
           </Col>
           
           <Col sm="1">
-            <Button variant="outline-primary" onClick={() => {handleAddOnClick()}}>
+            <Button 
+            className="acc-crd-btn" 
+            variant="outline-primary" onClick={() => {handleAddOnClick()}}>
               Add 
             </Button>
           </Col>

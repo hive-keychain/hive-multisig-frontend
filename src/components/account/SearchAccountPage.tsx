@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Stack } from 'react-bootstrap';
-import { Authorities } from '../interfaces';
-import { SearchAuthorityCard } from './cards/Search/SearchAuthorityCard';
+import { Authorities } from '../../interfaces';
+import { SearchAuthorityCard } from '../cards/Search/SearchAuthorityCard';
 
 interface ISearchAccountPageProp {
     authorities: Authorities;

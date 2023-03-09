@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
-import { Config } from '../config';
-import { useAppDispatch, useAppSelector } from '../redux/app/hooks';
-import { hiveKeyChainRequestSign } from '../redux/features/login/loginSlice';
+import { Config } from '../../config';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
   getElapsedTimestampSeconds,
-  getTimestampInSeconds
-} from '../utils/utils';
+  getTimestampInSeconds,
+} from '../../utils/utils';
 const LoginForm = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');
@@ -30,6 +30,7 @@ const LoginForm = () => {
     'loginTimestap',
     null,
   );
+  const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const inputRef = useRef(null);
   useEffect(() => {
@@ -49,7 +50,7 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(`/@${accountDetails.data.username}`);
+      navigate(`/transaction`);
     } else {
       navigate('/login');
     }
@@ -64,15 +65,17 @@ const LoginForm = () => {
   }, [isLoginSucceed]);
 
   useEffect(() => {
-    const keyDownHandler = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        handleOnLoginSubmit();
-      }
-    };
-    document.addEventListener('keydown', keyDownHandler);
-    return () => {
-      document.removeEventListener('keydown', keyDownHandler);
-    };
+    if (isFocused) {
+      const keyDownHandler = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          handleOnLoginSubmit();
+        }
+      };
+      document.addEventListener('keydown', keyDownHandler);
+      return () => {
+        document.removeEventListener('keydown', keyDownHandler);
+      };
+    }
   });
 
   const handleOnLoginSubmit = () => {
@@ -82,7 +85,7 @@ const LoginForm = () => {
   return (
     <div>
       <div className="ms-2 text-start" style={{ color: 'black' }}>
-        Login
+        <h5>Login</h5>
       </div>
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
@@ -91,13 +94,17 @@ const LoginForm = () => {
           aria-label="Username"
           aria-describedby="basic-addon2"
           onChange={(e) => setUsername(e.target.value)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           value={username}
           ref={inputRef}
         />
         <Button
           variant="outline-secondary"
           id="button-addon2"
-          onClick={() => handleOnLoginSubmit()}>
+          onClick={() => handleOnLoginSubmit()}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}>
           Login
         </Button>
       </InputGroup>
