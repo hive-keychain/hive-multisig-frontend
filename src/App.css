@@ -5,6 +5,9 @@
   width: 20% !important;
   position: relative;
 }
+.navbar-avatar-menu {
+  border-radius: 0px;
+}
 .navbar-search-btn {
   border-top: 0px;
   border-right: 0px;

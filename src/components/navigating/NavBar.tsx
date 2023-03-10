@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   Button,
   Container,
+  Dropdown,
   Form,
   InputGroup,
   Nav,
+  NavItem,
+  NavLink,
   Navbar,
   Stack,
 } from 'react-bootstrap';
@@ -117,7 +120,6 @@ const NavBar = () => {
           {isLoggedIn ? (
             <NavUserAvatar
               classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
-              withLogOutBtn={false}
               username={accountDetails.data.username}
             />
           ) : null}
@@ -148,7 +150,7 @@ const NavBar = () => {
           />
           {/*Search bar when not collapsed and logged in*/}
           <NavSearchBar
-            classNames="w-auto  me-auto d-xs-none d-none d-sm-none d-md-none d-lg-flex"
+            classNames="w-auto  d-xs-none d-none d-sm-none d-md-none d-lg-flex"
             isLoggedIn={isLoggedIn}
             setDestination={setDestination}
           />
@@ -169,9 +171,8 @@ const NavBar = () => {
               <Nav.Link href="/login">Login</Nav.Link>
             </Nav>
           ) : (
-            <NavUserAvatar
-              classNames="mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
-              withLogOutBtn={isLoggedIn}
+            <NavUserAvatarDropdown
+              classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
               username={accountDetails.data.username}
               handleLogout={handleLogout}
             />
@@ -246,13 +247,49 @@ const NavSearchBar = ({
 
 interface INavUserAvatarProps {
   classNames: string;
-  withLogOutBtn: boolean;
   username: string;
   handleLogout?: Function;
 }
+const NavUserAvatarDropdown = ({
+  classNames,
+  username,
+  handleLogout,
+}: INavUserAvatarProps) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className={classNames}>
+      <Stack direction="horizontal" gap={1}>
+        <img
+          className="avatar-sm"
+          src={`https://images.hive.blog/u/${username}/avatar`}
+          alt="new"
+          onClick={() => navigate('/')}
+        />
+        <Nav>
+          <Dropdown as={NavItem}>
+            <Dropdown.Toggle className="nav-text-color" as={NavLink}>
+              {username}
+            </Dropdown.Toggle>
+            <Dropdown.Menu
+              className="mt-1 pt-1 navbar-avatar-menu"
+              align="end"
+              variant="dark">
+              <Dropdown.Item
+                className="nav-text-color"
+                onClick={() => handleLogout()}>
+                Logout
+              </Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+        </Nav>
+      </Stack>
+    </div>
+  );
+};
+
 const NavUserAvatar = ({
   classNames,
-  withLogOutBtn,
   username,
   handleLogout,
 }: INavUserAvatarProps) => {
@@ -269,15 +306,6 @@ const NavUserAvatar = ({
         <Nav.Link className="nav-text-color" href="/">
           {username}
         </Nav.Link>
-        {withLogOutBtn ? (
-          <Nav.Link
-            className="nav-text-color"
-            onClick={() => {
-              handleLogout();
-            }}>
-            Logout
-          </Nav.Link>
-        ) : null}
       </Nav>
     </Stack>
   );
