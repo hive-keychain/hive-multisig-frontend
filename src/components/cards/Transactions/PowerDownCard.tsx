@@ -15,6 +15,8 @@ import { InputRow } from './InputRow';
 
 const PowerDownCard: React.FC<{}> = () => {
   let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  const [accountDetails, setAccountDetails] =
+    useState<SignResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -28,6 +30,9 @@ const PowerDownCard: React.FC<{}> = () => {
     hours: 0,
     minutes: 0,
   });
+  useEffect(() => {
+    setAccountDetails(loggedInAccount);
+  }, [loggedInAccount]);
 
   useEffect(() => {
     if (!onErrorShow) {
@@ -48,7 +53,7 @@ const PowerDownCard: React.FC<{}> = () => {
     if (transaction) {
       const sign = async () => {
         const res = await RequestSignTx(
-          loggedInAccount.data.username,
+          accountDetails.data.username,
           transaction,
           expiration,
           setErrorMessage,
