@@ -79,7 +79,8 @@
     "yup": "^0.32.11"
   },
   "scripts": {
-    "pm2-start": "pm2 serve dist 80 --name multisig-frontend",
+    "pm2-start": "pm2 start --name multisig-frontend npm -- start ",
+    "start": "node server.js",
     "dev": "webpack serve --mode development --open --hot",
     "build": "webpack --mode production",
     "predeploy": "npm run build",
