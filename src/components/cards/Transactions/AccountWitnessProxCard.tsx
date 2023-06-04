@@ -67,6 +67,7 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
             ErrorMessage: '',
           });
         }
+        console.log(res);
       };
       sign().catch(() => {});
     }

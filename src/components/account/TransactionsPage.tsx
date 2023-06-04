@@ -3,20 +3,7 @@ import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { SignResponseType } from '../../interfaces';
-import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
-import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
-import BroadcastJson from '../cards/Transactions/BroadcastJson';
-import { CommentOperationCard } from '../cards/Transactions/CommentOperationCard';
-import DelegationsCard from '../cards/Transactions/DelegationsCard';
-import DepositToSavingsCard from '../cards/Transactions/DepositToSavingsCard';
-import PowerDownCard from '../cards/Transactions/PowerDownCard';
-import PowerUpCard from '../cards/Transactions/PowerUpCard';
-import RecurrentTransferCard from '../cards/Transactions/RecurrentTransferCard';
 import Transfer from '../cards/Transactions/TransferCard';
-import UpdateProposalVoteCard from '../cards/Transactions/UpdateProposalVoteCard';
-import VoteForWitnessCard from '../cards/Transactions/VoteForWitnessCard';
-import { VoteOperationCard } from '../cards/Transactions/VoteOperationCard';
-import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCard';
 
 export const TransactionPage = () => {
   const loggedInAccount =
@@ -47,45 +34,45 @@ export const TransactionPage = () => {
       case 'TransferOperation':
         setTransactionCard(<Transfer />);
         break;
-      case 'DelegateVestingSharesOperation':
-        setTransactionCard(<DelegationsCard />);
-        break;
-      case 'TransferToVestingOperation':
-        setTransactionCard(<PowerUpCard />);
-        break;
-      case 'WithdrawVestingOperation':
-        setTransactionCard(<PowerDownCard />);
-        break;
-      case 'TransferToSavingsOperation':
-        setTransactionCard(<DepositToSavingsCard />);
-        break;
-      case 'TransferFromSavingsOperation':
-        setTransactionCard(<WithdrawFromSavingsCard />);
-        break;
-      case 'AccountWitnessVoteOperation':
-        setTransactionCard(<VoteForWitnessCard />);
-        break;
-      case 'AccountWitnessProxyOperation':
-        setTransactionCard(<AccountWitnessProxCard />);
-        break;
-      case 'UpdateProposalVotesOperation':
-        setTransactionCard(<UpdateProposalVoteCard />);
-        break;
-      case 'RecurrentTransferOperation':
-        setTransactionCard(<RecurrentTransferCard />);
-        break;
-      case 'CustomJsonOperation':
-        setTransactionCard(<BroadcastJson />);
-        break;
-      case 'VoteOperation':
-        setTransactionCard(<VoteOperationCard />);
-        break;
-      case 'BlogOperation':
-        setTransactionCard(<BlogpostOperationCard />);
-        break;
-      case 'CommentOperation':
-        setTransactionCard(<CommentOperationCard />);
-        break;
+      // case 'DelegateVestingSharesOperation':
+      //   setTransactionCard(<DelegationsCard />);
+      //   break;
+      // case 'TransferToVestingOperation':
+      //   setTransactionCard(<PowerUpCard />);
+      //   break;
+      // case 'WithdrawVestingOperation':
+      //   setTransactionCard(<PowerDownCard />);
+      //   break;
+      // case 'TransferToSavingsOperation':
+      //   setTransactionCard(<DepositToSavingsCard />);
+      //   break;
+      // case 'TransferFromSavingsOperation':
+      //   setTransactionCard(<WithdrawFromSavingsCard />);
+      //   break;
+      // case 'AccountWitnessVoteOperation':
+      //   setTransactionCard(<VoteForWitnessCard />);
+      //   break;
+      // case 'AccountWitnessProxyOperation':
+      //   setTransactionCard(<AccountWitnessProxCard />);
+      //   break;
+      // case 'UpdateProposalVotesOperation':
+      //   setTransactionCard(<UpdateProposalVoteCard />);
+      //   break;
+      // case 'RecurrentTransferOperation':
+      //   setTransactionCard(<RecurrentTransferCard />);
+      //   break;
+      // case 'CustomJsonOperation':
+      //   setTransactionCard(<BroadcastJson />);
+      //   break;
+      // case 'VoteOperation':
+      //   setTransactionCard(<VoteOperationCard />);
+      //   break;
+      // case 'BlogOperation':
+      //   setTransactionCard(<BlogpostOperationCard />);
+      //   break;
+      // case 'CommentOperation':
+      //   setTransactionCard(<CommentOperationCard />);
+      //   break;
       default:
         setTransactionCard(undefined);
         console.log(transaction);
