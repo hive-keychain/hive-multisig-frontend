@@ -9,8 +9,8 @@ import {
   SignResponseType,
 } from '../interfaces';
 import { ErrorMessage } from '../interfaces/errors.interface';
-import { IExpiration } from '../interfaces/transaction.interface';
 import { getSeconds, getTimestampInSeconds } from './utils';
+import { IExpiration } from '../interfaces/transaction.interface';
 const client = new Hive.Client([
   'https://api.hive.blog',
   'https://api.hivekings.com',

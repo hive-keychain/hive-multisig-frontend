@@ -21,12 +21,12 @@ export enum OperationType {
 
 export interface State extends ITransaction {
   transaction: string | SocketMessageCommand | OperationType;
-  response: object;
+  response: object | string | boolean;
   loading: boolean;
   success: boolean;
   error: string;
 }
-export interface Expiration extends ITransaction {
+export interface IExpiration extends ITransaction {
   days: number;
   hours: number;
   minutes: number;
