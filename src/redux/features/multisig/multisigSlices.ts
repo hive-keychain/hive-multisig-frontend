@@ -106,6 +106,7 @@ const sendSignatureRequestSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(sendSignatureRequest.pending, (state) => {
+      state.transaction = SocketMessageCommand.REQUEST_SIGNATURE;
       state.loading = true;
       state.error = null;
     });
@@ -130,6 +131,7 @@ const signTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(signTransaction.pending, (state) => {
+      state.transaction = SocketMessageCommand.SIGN_TRANSACTION;
       state.loading = true;
       state.error = null;
     });
@@ -154,6 +156,7 @@ const notifyTransactionBroadcasedSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(notifyTransactionBroadcasted.pending, (state) => {
+      state.transaction = SocketMessageCommand.NOTIFY_TRANSACTION_BROADCASTED;
       state.loading = true;
       state.error = null;
     });
@@ -178,6 +181,7 @@ const encodeTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(encodeTransaction.pending, (state) => {
+      state.transaction = 'encode_transaction';
       state.loading = true;
       state.error = null;
     });
@@ -202,6 +206,7 @@ const decodeTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(decodeTransaction.pending, (state) => {
+      state.transaction = 'decode_transaction';
       state.loading = true;
       state.error = null;
     });

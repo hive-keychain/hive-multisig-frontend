@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { logger } from 'redux-logger';
-import keyChainReducer from '../features/keyChain/keyChainSlice';
+import keychainReducers from '../features/keyChain/keyChainReducers';
 import loginReducer from '../features/login/loginSlice';
 import multisigReducers from '../features/multisig/multisigReducers';
 import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice';
 const store = configureStore({
   reducer: {
-    keychain: keyChainReducer,
+    keychain: keychainReducers,
     login: loginReducer,
     updateAuthorities: updateAuthoritiesSlice,
     multisig: multisigReducers,

@@ -1,57 +1,66 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
+import { State } from '../../../interfaces/transaction.interface';
+import { checkKeychain, keychainSignTx } from './keyChainThunks';
 
-export type KeychainCheckType = {
-  loading: boolean;
-  isKeyChainFound: boolean;
-  message: string;
-  error: string;
-};
-
-const initialState: KeychainCheckType = {
+const initialState: State = {
+  transaction: null,
+  response: null,
   loading: false,
-  isKeyChainFound: false,
-  message: '',
-  error: '',
+  success: false,
+  error: null,
 };
 
-export const checkKeychain = createAsyncThunk(
-  'keychain/check',
-  () =>
-    new Promise<boolean>((resolve, reject) => {
-      setTimeout(() => {
-        if (window.hive_keychain) {
-          resolve(true);
-        } else {
-          reject(false);
-        }
-      }, 500);
-    }),
-);
-
-const keyChainSlice = createSlice({
-  name: 'keychain',
+const checkKeychainSlice = createSlice({
+  name: 'check',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(checkKeychain.pending, (state) => {
+      state.transaction = 'check_keychain';
       state.loading = true;
+      state.error = null;
     });
-    builder.addCase(
-      checkKeychain.fulfilled,
-      (state, action: PayloadAction<boolean>) => {
-        state.loading = false;
-        state.isKeyChainFound = action.payload;
-        state.message = 'Hive Keychain Found';
-        state.error = '';
-      },
-    );
+    builder.addCase(checkKeychain.fulfilled, (state, action) => {
+      state.loading = false;
+      state.response = action.payload;
+      state.success = action.payload;
+    });
     builder.addCase(checkKeychain.rejected, (state, action) => {
       state.loading = false;
-      state.isKeyChainFound = false;
-      state.message = '';
-      state.error = 'Please install keychain to login';
+      state.success = false;
+      state.error = 'keychain extension not found';
     });
   },
 });
 
-export default keyChainSlice.reducer;
+const keychainSignTxSlice = createSlice({
+  name: 'signTx',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(keychainSignTx.pending, (state) => {
+      state.transaction = 'ketchain_sign_tx';
+      state.loading = true;
+      state.error = null;
+    });
+
+    builder.addCase(keychainSignTx.fulfilled, (state, action) => {
+      state.loading = false;
+      state.response = action.payload;
+      state.success = true;
+    });
+
+    builder.addCase(keychainSignTx.rejected, (state, action) => {
+      state.loading = false;
+      state.success = false;
+      state.response = null;
+      state.error = 'keychain signTx failed';
+    });
+  },
+});
+
+export const checkKeychainReducer = checkKeychainSlice.reducer;
+export const keychainSignTxReducer = keychainSignTxSlice.reducer;
+
+export const checkKeychainActions = checkKeychainSlice.actions;
+export const keychainSignTxReducerActions = keychainSignTxSlice.actions;
