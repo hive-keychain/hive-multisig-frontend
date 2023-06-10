@@ -10,7 +10,6 @@ import {
   ISearchPageInterface,
   SignResponseType,
 } from '../../interfaces';
-import { useAppSelector } from '../../redux/app/hooks';
 import AccountUtils from '../../utils/hive.utils';
 import AccountPage from './AccountPage';
 import SearchAccountPage from './SearchAccountPage';
@@ -19,19 +18,10 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
   props: ISearchBarInterface,
 ) => {
   const [input, setInput] = useState<string>('');
-  const [isKeychain, setKeychain] = useState<boolean>(true);
-  const isKeyChainFound = useAppSelector<boolean>(
-    (state) => state.keychain.isKeyChainFound,
-  );
-  const keyChainMsg = useAppSelector((state) => state.keychain.message);
-  const keyChainError = useAppSelector((state) => state.keychain.error);
+
   const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setKeychain(isKeyChainFound);
-  }, [isKeyChainFound]);
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
@@ -53,17 +43,6 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
     }
   };
 
-  const DispalyHiveKeyChainError = () => {
-    if (!isKeychain) {
-      return (
-        <div className="ms-2 text-start" style={{ color: 'red' }}>
-          {keyChainError}
-        </div>
-      );
-    } else {
-      return <div></div>;
-    }
-  };
   const DisplayValidity = () => {
     if (props.isValid === false) {
       return (
@@ -86,7 +65,6 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
         <h5>Search Account</h5>
       </div>
       <DisplayValidity />
-      <DispalyHiveKeyChainError />
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
 
