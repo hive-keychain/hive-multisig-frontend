@@ -10,7 +10,7 @@ import {
   SignatureRequestCallback,
   SignerConnect,
   SignerConnectResponse,
-} from 'hive-multisig-sdk/src/interfaces/socket-message.interface';
+} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 const multisig = new HiveMultisigSDK(window);
 
 export const signerConnect = createAsyncThunk<

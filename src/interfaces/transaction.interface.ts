@@ -1,4 +1,4 @@
-import { SocketMessageCommand } from 'hive-multisig-sdk/src/interfaces/socket-message.interface';
+import { SocketMessageCommand } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { Transaction } from 'hive-tx';
 export interface ITransaction {}
 
