@@ -8,7 +8,7 @@ import {
   Authorities,
   ISearchBarInterface,
   ISearchPageInterface,
-  SignResponseType,
+  LoginResponseType,
 } from '../../interfaces';
 import AccountUtils from '../../utils/hive.utils';
 import AccountPage from './AccountPage';
@@ -97,11 +97,11 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   const searchKey = params.id;
   const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
 
   useEffect(() => {
-    AccountUtils.GetAuthorities(setAuthorities, setValid, searchKey);
+    AccountUtils.getAuthorities(setAuthorities, setValid, searchKey);
   }, [searchKey]);
 
   useEffect(() => {

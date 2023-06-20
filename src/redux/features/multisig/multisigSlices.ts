@@ -13,7 +13,10 @@ import {
 } from './multisigThunks';
 
 const initialState: State = {
-  transaction: null,
+  username: '',
+  method: undefined,
+  txName: null,
+  process: null,
   response: null,
   loading: false,
   success: false,
@@ -26,7 +29,7 @@ const signerConnectSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(signerConnect.pending, (state) => {
-      state.transaction = SocketMessageCommand.SIGNER_CONNECT;
+      state.process = SocketMessageCommand.SIGNER_CONNECT;
       state.loading = true;
       state.error = null;
     });
@@ -48,7 +51,7 @@ const subscribeToSignRequestsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(subscribeToSignRequests.pending, (state) => {
-      state.transaction =
+      state.process =
         'subscribe_to_' + SocketMessageCommand.REQUEST_SIGN_TRANSACTION;
       state.loading = true;
       state.error = null;
@@ -73,7 +76,7 @@ const subscribeToBroadcastedTransactionsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(subscribeToBroadcastedTransactions.pending, (state) => {
-      state.transaction =
+      state.process =
         'subscribe_to_' +
         SocketMessageCommand.TRANSACTION_BROADCASTED_NOTIFICATION;
       state.loading = true;
@@ -106,7 +109,7 @@ const sendSignatureRequestSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(sendSignatureRequest.pending, (state) => {
-      state.transaction = SocketMessageCommand.REQUEST_SIGNATURE;
+      state.process = SocketMessageCommand.REQUEST_SIGNATURE;
       state.loading = true;
       state.error = null;
     });
@@ -131,7 +134,7 @@ const signTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(signTransaction.pending, (state) => {
-      state.transaction = SocketMessageCommand.SIGN_TRANSACTION;
+      state.process = SocketMessageCommand.SIGN_TRANSACTION;
       state.loading = true;
       state.error = null;
     });
@@ -156,7 +159,7 @@ const notifyTransactionBroadcasedSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(notifyTransactionBroadcasted.pending, (state) => {
-      state.transaction = SocketMessageCommand.NOTIFY_TRANSACTION_BROADCASTED;
+      state.process = SocketMessageCommand.NOTIFY_TRANSACTION_BROADCASTED;
       state.loading = true;
       state.error = null;
     });
@@ -181,7 +184,7 @@ const encodeTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(encodeTransaction.pending, (state) => {
-      state.transaction = 'encode_transaction';
+      state.process = 'encode_transaction';
       state.loading = true;
       state.error = null;
     });
@@ -206,7 +209,7 @@ const decodeTransactionSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(decodeTransaction.pending, (state) => {
-      state.transaction = 'decode_transaction';
+      state.process = 'decode_transaction';
       state.loading = true;
       state.error = null;
     });

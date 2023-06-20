@@ -3,7 +3,10 @@ import { State } from '../../../interfaces/transaction.interface';
 import { checkKeychain, keychainSignTx } from './keyChainThunks';
 
 const initialState: State = {
-  transaction: null,
+  username: '',
+  method: undefined,
+  txName: null,
+  process: null,
   response: null,
   loading: false,
   success: false,
@@ -16,7 +19,7 @@ const checkKeychainSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(checkKeychain.pending, (state) => {
-      state.transaction = 'check_keychain';
+      state.process = 'check_keychain';
       state.loading = true;
       state.error = null;
     });
@@ -39,7 +42,7 @@ const keychainSignTxSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(keychainSignTx.pending, (state) => {
-      state.transaction = 'ketchain_sign_tx';
+      state.process = 'ketchain_sign_tx';
       state.loading = true;
       state.error = null;
     });

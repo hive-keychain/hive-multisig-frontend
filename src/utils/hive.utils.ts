@@ -9,6 +9,13 @@ const client = new Client([
   'https://api.openhive.network',
 ]);
 
+import * as hiveTx from 'hive-tx';
+import * as math from 'mathjs';
+import {
+  BroadCastResponseType,
+  IHiveAccountUpdateBroadcast,
+} from '../interfaces';
+
 const getAccount = async (username: string) => {
   return client.database.getAccounts([username]);
 };
@@ -38,12 +45,12 @@ const getAccountAuthorities = async (username: string) => {
   return keys;
 };
 
-const GetAuthorities = async (
+const getAuthorities = async (
   setAuthorities: Function,
   setValidUsername: Function,
   searchKey: string,
 ) => {
-  const response = await AccountUtils.getAccountAuthorities(searchKey);
+  const response = await getAccountAuthorities(searchKey);
   setAuthorities(response);
   if (
     response.active ||
@@ -57,23 +64,95 @@ const GetAuthorities = async (
   }
 };
 
-export const BroadcastUpdateAccount = async (
-  props: IDHiveAccountUpdateBroadcast,
-) => {
+const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
   const result = await client.broadcast.updateAccount(
     props.newAuthorities,
     Hive.PrivateKey.from(props.ownerKey),
   );
 };
 
-export const GetPrivateKeyFromSeed = (seed: string): Hive.PrivateKey => {
+const getPrivateKeyFromSeed = (seed: string): Hive.PrivateKey => {
   return PrivateKey.fromSeed(seed);
 };
 
-const AccountUtils = {
-  getAccount,
-  getAccountAuthorities,
-  GetAuthorities,
+const accountUpdateBroadcast = (props: IHiveAccountUpdateBroadcast) => {
+  return new Promise<BroadCastResponseType>((resolve, reject) => {
+    const callback = (response: any) => {
+      if (response.success) {
+        resolve(response);
+      } else {
+        reject(response);
+      }
+    };
+    const keychain = window.hive_keychain;
+    keychain.requestBroadcast(
+      props.newAuthorities.account,
+      [['account_update', props.newAuthorities]],
+      props.targetAuthorityType,
+      callback,
+    );
+  });
 };
 
-export default AccountUtils;
+const getNextRequestID = async (username: string) => {
+  let conversions = await client.database.call('get_conversion_requests', [
+    username,
+  ]);
+  let collateralized_conversions = await client.database.call(
+    'get_collateralized_conversion_requests',
+    [username],
+  );
+  if (!collateralized_conversions) collateralized_conversions = [];
+  const conv = [...conversions, ...collateralized_conversions];
+
+  return Math.max(...conv.map((e) => e.requestid), 0) + 1;
+};
+
+const getDynamicGlobalProperties = async (
+  method: string,
+  params: any[] | object,
+  key?: string,
+) => {
+  const response = await hiveTx.call(
+    'condenser_api.get_dynamic_global_properties',
+  );
+  if (response?.result) {
+    return key ? response.result[key] : response.result;
+  } else
+    throw new Error(
+      `Error while retrieving data from ${method} : ${JSON.stringify(
+        response.error,
+      )}`,
+    );
+};
+
+const fromHP = (
+  hp: number,
+  {
+    total_vesting_fund_hive,
+    total_vesting_shares,
+  }: Hive.DynamicGlobalProperties,
+) => {
+  const vesting_fund_hive = math.bignumber(
+    total_vesting_fund_hive.toString().split(' ')[0],
+  );
+  const vesting_shares = math.bignumber(
+    total_vesting_shares.toString().split(' ')[0],
+  );
+  var res = math.multiply(math.divide(hp, vesting_fund_hive), vesting_shares);
+  return math.format(res, { notation: 'fixed', precision: 6 });
+};
+
+const HiveUtils = {
+  getAccount,
+  getAccountAuthorities,
+  getAuthorities,
+  broadcastUpdateAccount,
+  getPrivateKeyFromSeed,
+  fromHP,
+  getDynamicGlobalProperties,
+  getNextRequestID,
+  accountUpdateBroadcast,
+};
+
+export default HiveUtils;

@@ -1,24 +1,30 @@
 import * as Hive from '@hiveio/dhive';
 import { Formik } from 'formik';
+import { KeychainSDK } from 'keychain-sdk';
 import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { RequestSignTx } from '../../../utils/hive-keychain.utils';
+import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import HiveTxUtils from '../../../utils/hivetx.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 function Transfer() {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
+  const method = useAppSelector(
+    (state) => state.transaction.setAuthority.method,
+  );
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOperation] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -53,26 +59,28 @@ function Transfer() {
   }, [errorMessage]);
 
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          loggedInAccount.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
+    if (operation) {
+      (async () => {
+        //TODO:
+        //1. create transaction from operation
+        //2. signerConnect
+        //3. pass to multisig signtx
+        console.log('Method is ' + method);
+        const transaction = await HiveTxUtils.createTx([operation], expiration);
+        const keychain = new KeychainSDK(window);
+        const signature = await keychain.signTx({
+          username: loggedInAccount.data.username,
+          tx: transaction,
+          method,
+        });
+        if (signature.success) {
+          console.log(signature);
+        } else {
+          console.log(signature.error);
         }
-      };
-      sign().catch(() => {});
+      })();
     }
-  }, [transaction]);
+  }, [operation]);
 
   const handleTransaction = (values: any) => {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
@@ -85,7 +93,7 @@ function Transfer() {
         memo: values.memo,
       },
     };
-    setTransaction(tx);
+    setOperation(tx);
   };
 
   const handleAssetChange = (value: string) => {

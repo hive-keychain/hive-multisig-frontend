@@ -66,3 +66,5 @@ export function hiveDecimalFormat(num: number, precision: number = 3) {
 export function capitalizeFirstLetter(string: String) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+

@@ -4,22 +4,19 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import {
-  GetNextRequestID,
-  RequestSignTx,
-} from '../../../utils/hive-keychain.utils';
+import HiveUtils from '../../../utils/hive.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 const WithdrawFromSavingsCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
@@ -53,31 +50,13 @@ const WithdrawFromSavingsCard: React.FC<{}> = () => {
     }
   }, [errorMessage]);
 
-  useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+  useEffect(() => {}, [transaction]);
 
   const handleTransaction = async (values: any) => {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
-    const rqid = await GetNextRequestID(loggedInAccount.data.username);
+    const rqid = await HiveUtils.getNextRequestID(
+      loggedInAccount.data.username,
+    );
     const tx: Hive.TransferFromSavingsOperation = {
       0: 'transfer_from_savings',
       1: {

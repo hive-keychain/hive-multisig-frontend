@@ -3,6 +3,7 @@ import { logger } from 'redux-logger';
 import keychainReducers from '../features/keyChain/keyChainReducers';
 import loginReducer from '../features/login/loginSlice';
 import multisigReducers from '../features/multisig/multisigReducers';
+import transactionReducers from '../features/transaction/transactionReducers';
 import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice';
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     login: loginReducer,
     updateAuthorities: updateAuthoritiesSlice,
     multisig: multisigReducers,
+    transaction: transactionReducers,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(logger),
 });

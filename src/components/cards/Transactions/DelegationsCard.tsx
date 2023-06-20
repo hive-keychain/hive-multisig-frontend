@@ -4,23 +4,19 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import {
-  RequestSignTx,
-  fromHP,
-  getDynamicGlobalProperties,
-} from '../../../utils/hive-keychain.utils';
+import HiveUtils from '../../../utils/hive.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 const DelegationsCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>('HP');
@@ -64,27 +60,7 @@ const DelegationsCard: React.FC<{}> = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-  useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+  useEffect(() => {}, [transaction]);
 
   const handleAssetChange = (value: string) => {
     switch (value) {
@@ -99,15 +75,17 @@ const DelegationsCard: React.FC<{}> = () => {
   const handleTransaction = async (values: any) => {
     let asset: string;
     if (assetType === 'HP') {
-      await getDynamicGlobalProperties('PowerUp', []).then((response) => {
-        if (response) {
-          var vests = fromHP(
-            parseInt(hiveDecimalFormat(values.vesting_shares, 3)),
-            response,
-          );
-          asset = vests.toString() + ` VESTS`;
-        }
-      });
+      await HiveUtils.getDynamicGlobalProperties('PowerUp', []).then(
+        (response) => {
+          if (response) {
+            var vests = HiveUtils.fromHP(
+              parseInt(hiveDecimalFormat(values.vesting_shares, 3)),
+              response,
+            );
+            asset = vests.toString() + ` VESTS`;
+          }
+        },
+      );
     } else {
       asset = hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
     }

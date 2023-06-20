@@ -1,6 +1,6 @@
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { SignResponseType } from '../../../interfaces';
-import { RequestSignature } from '../../../utils/hive-keychain.utils';
+import { KeychainKeyTypes, KeychainSDK, Login } from 'keychain-sdk';
+import { LoginResponseType } from '../../../interfaces';
 
 export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
@@ -12,7 +12,7 @@ export enum LoginState {
 export type LoginStateType = {
   loginState: LoginState;
   isSignatureSuccess: boolean;
-  accountObject: SignResponseType;
+  accountObject: LoginResponseType;
   error: string;
 };
 const initialState: LoginStateType = {
@@ -25,7 +25,13 @@ const initialState: LoginStateType = {
 export const hiveKeyChainRequestSign = createAsyncThunk(
   'login/request',
   async (username: string) => {
-    const response = await RequestSignature(username);
+    const keychain = new KeychainSDK(window);
+    const userData: Login = {
+      username,
+      method: KeychainKeyTypes.posting,
+    };
+    const response = await keychain.login(userData);
+    console.log(response);
     return response;
   },
 );
@@ -44,7 +50,7 @@ const loginSclice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(
       hiveKeyChainRequestSign.fulfilled,
-      (state, action: PayloadAction<SignResponseType>) => {
+      (state, action: PayloadAction<LoginResponseType>) => {
         if (action.payload.success) {
           state.loginState = LoginState.SIGNATURE_SUCCEEDED;
           state.isSignatureSuccess = action.payload.success;

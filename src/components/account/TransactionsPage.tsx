@@ -1,17 +1,27 @@
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
-import { SignResponseType } from '../../interfaces';
+import { LoginResponseType } from '../../interfaces';
+import { ITransaction } from '../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../redux/app/hooks';
+import {
+  setAuthority,
+  setTransactionMethod,
+  setTransactionName,
+} from '../../redux/features/transaction/transactionThunks';
 import Transfer from '../cards/Transactions/TransferCard';
 
 export const TransactionPage = () => {
   const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
+  const [method, setMethod] = useState<KeychainKeyTypes>();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (loggedInAccount) {
@@ -27,8 +37,17 @@ export const TransactionPage = () => {
   }, [loggedInAccount]);
   useEffect(() => {
     handleSelectOnChange(transactionType);
+    dispatch(setTransactionName(transactionType));
   }, [transactionType]);
 
+  useEffect(() => {
+    const txInfo: ITransaction = {
+      username: loggedInAccount.data.username,
+      method,
+    };
+    dispatch(setTransactionMethod(method));
+    dispatch(setAuthority(txInfo));
+  }, [method]);
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {
       case 'TransferOperation':
@@ -107,6 +126,22 @@ export const TransactionPage = () => {
           <option value="VoteOperation">Vote</option>
           <option value="BlogOperation">Blog Post</option>
           <option value="CommentOperation">Comment</option>
+        </Form.Select>
+      </InputGroup>
+      <br />
+      <InputGroup>
+        <InputGroup.Text id="basic-addon1">Method</InputGroup.Text>
+        <Form.Select
+          aria-label="select"
+          onChange={(e) =>
+            setMethod(
+              e.target.value === 'active'
+                ? KeychainKeyTypes.active
+                : KeychainKeyTypes.posting,
+            )
+          }>
+          <option value="active">Active</option>
+          <option value="posting">Posting</option>
         </Form.Select>
       </InputGroup>
       <br />

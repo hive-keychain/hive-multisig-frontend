@@ -4,19 +4,18 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { RequestSignTx } from '../../../utils/hive-keychain.utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 export const VoteOperationCard = () => {
   const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
   const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -50,28 +49,7 @@ export const VoteOperationCard = () => {
     }
   }, [errorMessage]);
 
-  useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-          'Posting',
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+  useEffect(() => {}, [transaction]);
 
   const handleTransaction = async (values: any) => {
     const tx: Hive.VoteOperation = {

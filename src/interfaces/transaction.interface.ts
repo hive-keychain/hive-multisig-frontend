@@ -1,6 +1,7 @@
+import * as Hive from '@hiveio/dhive';
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { SocketMessageCommand } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { Transaction } from 'hive-tx';
-export interface ITransaction {}
 
 export enum OperationType {
   TRANSFER = 'transfer',
@@ -18,15 +19,21 @@ export enum OperationType {
   BLOG = 'blog_post',
   COMMENT = 'comment',
 }
+export interface ITransaction {
+  txName?: String | OperationType;
+  authority?: Hive.AuthorityType;
+  username: string;
+  method: KeychainKeyTypes;
+}
 
 export interface State extends ITransaction {
-  transaction: string | SocketMessageCommand | OperationType;
+  process: string | SocketMessageCommand;
   response: object | string | boolean;
   loading: boolean;
   success: boolean;
   error: string;
 }
-export interface IExpiration extends ITransaction {
+export interface IExpiration {
   days: number;
   hours: number;
   minutes: number;

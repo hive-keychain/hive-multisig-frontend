@@ -15,7 +15,7 @@ export type SignResponseDataType ={
     type: string
     username: string
 }
-export type SignResponseType = {
+export type LoginResponseType = {
     error: string
     message: string
     publiKey: string
