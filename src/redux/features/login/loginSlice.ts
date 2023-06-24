@@ -31,7 +31,6 @@ export const hiveKeyChainRequestSign = createAsyncThunk(
       method: KeychainKeyTypes.posting,
     };
     const response = await keychain.login(userData);
-    console.log(response);
     return response;
   },
 );

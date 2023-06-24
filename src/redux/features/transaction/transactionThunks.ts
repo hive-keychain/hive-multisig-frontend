@@ -1,33 +1,23 @@
 import * as Hive from '@hiveio/dhive';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { State } from '../../../interfaces/transaction.interface';
-import AccountUtils from '../../../utils/hive.utils';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { ITransaction, State } from '../../../interfaces/transaction.interface';
+
 export const setAuthority = createAsyncThunk<
   State,
-  State,
+  ITransaction,
   { rejectValue: string }
->('transaction/setAuthority', async (state: State) => {
+>('transaction/setAuthority', async (txInfo: ITransaction, { getState }) => {
   try {
-    const authorities = await AccountUtils.getAccountAuthorities(
-      state.username,
+    const currentState = getState() as State;
+    const multisig = new HiveMultisigSDK(window);
+    const authority = await multisig.getSigners(
+      txInfo.username.toString(),
+      txInfo.method,
     );
-
-    let authority: Hive.AuthorityType;
-    switch (state.method) {
-      case KeychainKeyTypes.active:
-        authority = authorities.active;
-        break;
-      case KeychainKeyTypes.posting:
-        authority = authorities.posting;
-        break;
-      default:
-        authority = null;
-        break;
-    }
-
     const newState: State = {
-      ...state,
+      ...currentState,
       authority,
     };
 
@@ -38,16 +28,100 @@ export const setAuthority = createAsyncThunk<
 });
 
 export const setTransactionName = createAsyncThunk<
-  string,
+  State,
   string,
   { rejectValue: string }
->('setTransactionName', async (txName: string) => {
-  return txName;
+>('transaction/setTransactionName', async (txName: string, { getState }) => {
+  const currentState = getState() as State;
+  const newState: State = {
+    ...currentState,
+    txName,
+  };
+  return newState;
 });
+
 export const setTransactionMethod = createAsyncThunk<
+  State,
   KeychainKeyTypes,
+  { rejectValue: string }
+>(
+  'transaction/setTransactionMethod',
+  async (method: KeychainKeyTypes, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      method,
+    };
+    return newState;
+  },
+);
+
+export const setUsername = createAsyncThunk<
+  State,
   string,
   { rejectValue: string }
->('setTransactionMethod', async (method: KeychainKeyTypes) => {
-  return method;
+>('transaction/setUsername', async (username: string, { getState }) => {
+  const currentState = getState() as State;
+  const newState: State = {
+    ...currentState,
+    username,
+  };
+  return newState;
+});
+export const setReceiver = createAsyncThunk<
+  State,
+  string | Hive.PublicKey,
+  { rejectValue: string }
+>(
+  'transaction/setReceiver',
+  async (receiver: string | Hive.PublicKey, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      receiver,
+    };
+    return newState;
+  },
+);
+
+export const setSigner = createAsyncThunk<
+  State,
+  string | Hive.PublicKey,
+  { rejectValue: string }
+>(
+  'transaction/setSigner',
+  async (signer: string | Hive.PublicKey, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      signer,
+    };
+    return newState;
+  },
+);
+
+export const setExpiration = createAsyncThunk<
+  State,
+  string,
+  { rejectValue: string }
+>('transaction/setExpiration', async (date: string, { getState }) => {
+  const currentState = getState() as State;
+  const newState: State = {
+    ...currentState,
+    expiration: date,
+  };
+  return newState;
+});
+
+export const setPublicKey = createAsyncThunk<
+  State,
+  string,
+  { rejectValue: string }
+>('transaction/setPublicKey', async (publicKey: string, { getState }) => {
+  const currentState = getState() as State;
+  const newState: State = {
+    ...currentState,
+    publicKey,
+  };
+  return newState;
 });

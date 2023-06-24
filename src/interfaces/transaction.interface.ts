@@ -23,6 +23,10 @@ export interface ITransaction {
   txName?: String | OperationType;
   authority?: Hive.AuthorityType;
   username: string;
+  publicKey: string | Hive.PublicKey;
+  receiver?: string | Hive.PublicKey;
+  signer?: string | Hive.PublicKey;
+  expiration: string;
   method: KeychainKeyTypes;
 }
 
@@ -37,6 +41,7 @@ export interface IExpiration {
   days: number;
   hours: number;
   minutes: number;
+  date?: string;
 }
 
 export interface TransactionMessage extends ITransaction {

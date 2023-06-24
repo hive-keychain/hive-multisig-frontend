@@ -1,14 +1,8 @@
 import { combineReducers } from '@reduxjs/toolkit';
-import {
-  setAuthorityReducer,
-  setTransactionMethodReducer,
-  setTransactionNameReducer,
-} from './transactionSlices';
+import { transactionReducer } from './transactionSlices';
 
 const transactionReducers = combineReducers({
-  setAuthority: setAuthorityReducer,
-  setTransactionName: setTransactionNameReducer,
-  setTransactionMethod: setTransactionMethodReducer,
+  transaction: transactionReducer,
 });
 
 export default transactionReducers;

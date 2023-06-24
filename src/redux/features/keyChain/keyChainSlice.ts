@@ -4,6 +4,8 @@ import { checkKeychain, keychainSignTx } from './keyChainThunks';
 
 const initialState: State = {
   username: '',
+  publicKey: '',
+  expiration: null,
   method: undefined,
   txName: null,
   process: null,

@@ -1,3 +1,18 @@
+@media (min-width: 576px) {
+  .w-lg-50 {
+    width: 50% !important;
+  }
+}
+@media (min-width: 768px) {
+  .w-md-50 {
+    width: 50% !important;
+  }
+}
+@media (min-width: 1200px) {
+  .w-xl-50 {
+    width: 50% !important;
+  }
+}
 .nav-text-color {
   color: rgba(255, 255, 255, 0.55);
 }

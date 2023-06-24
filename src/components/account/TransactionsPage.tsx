@@ -5,27 +5,33 @@ import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { LoginResponseType } from '../../interfaces';
 import { ITransaction } from '../../interfaces/transaction.interface';
-import { useAppDispatch } from '../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   setAuthority,
+  setPublicKey,
   setTransactionMethod,
   setTransactionName,
+  setUsername,
 } from '../../redux/features/transaction/transactionThunks';
 import Transfer from '../cards/Transactions/TransferCard';
 
 export const TransactionPage = () => {
+  const transactionState = useAppSelector((state) => state.transaction);
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
-  const [method, setMethod] = useState<KeychainKeyTypes>();
+  const [method, setMethod] = useState<KeychainKeyTypes>(
+    KeychainKeyTypes.active,
+  );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
+      dispatch(setPublicKey(loggedInAccount.publicKey));
     } else {
       navigate('/login');
     }
@@ -41,13 +47,28 @@ export const TransactionPage = () => {
   }, [transactionType]);
 
   useEffect(() => {
-    const txInfo: ITransaction = {
-      username: loggedInAccount.data.username,
-      method,
-    };
-    dispatch(setTransactionMethod(method));
-    dispatch(setAuthority(txInfo));
+    console.log(`Method: ${method}`);
+    dispatchTxAsync();
   }, [method]);
+
+  const dispatchTxAsync = async () => {
+    try {
+      const txInfo: ITransaction = {
+        username: loggedInAccount.data.username,
+        publicKey: '',
+        receiver: '',
+        expiration: undefined,
+        method,
+      };
+
+      await dispatch(setUsername(txInfo.username));
+      await dispatch(setTransactionMethod(method));
+      dispatch(setAuthority(txInfo));
+    } catch (error) {
+      // Handle any potential errors
+      console.log('Error while dispatching transaction details');
+    }
+  };
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {
       case 'TransferOperation':
