@@ -6,6 +6,10 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
+  signerConenctPosting,
+  signerConnectActive,
+} from '../../redux/features/multisig/multisigThunks';
+import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
 } from '../../utils/utils';
@@ -50,6 +54,11 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
+      //TODO: dispatch(signerConnectActive)
+      //TODO: dispatch(signerConnectPosting)
+      console.log('------------------------------');
+      console.log('LOGGED IN');
+      signerConnectAsync();
       navigate(`/transaction`);
     } else {
       navigate('/login');
@@ -63,7 +72,10 @@ const LoginForm = () => {
       setLoginTimestamp(getTimestampInSeconds());
     }
   }, [isLoginSucceed]);
-
+  const signerConnectAsync = async () => {
+    await dispatch(signerConnectActive(username));
+    await dispatch(signerConenctPosting(username));
+  };
   useEffect(() => {
     if (isFocused) {
       const keyDownHandler = (e: KeyboardEvent) => {

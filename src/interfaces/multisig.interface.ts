@@ -1,9 +1,13 @@
-export enum SocketMessageCommand {
-  SIGNER_CONNECT = 'signer_connect',
-  REQUEST_SIGNATURE = 'request_signature',
-  REQUEST_SIGN_TRANSACTION = 'request_sign_transaction',
-  SIGN_TRANSACTION = 'sign_transaction',
-  REQUEST_LOCK = 'request_lock',
-  NOTIFY_TRANSACTION_BROADCASTED = 'notify_transaction_broadcasted',
-  TRANSACTION_BROADCASTED_NOTIFICATION = 'transaction_broadcasted_notification',
+import { SignerConnectResponse } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
+
+export interface IMultisig {
+  signerConnect: {
+    active: SignerConnectResponse;
+    posting: SignerConnectResponse;
+  };
+}
+
+export interface State extends IMultisig {
+  success: boolean;
+  error: string;
 }

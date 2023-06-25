@@ -1,6 +1,5 @@
 import * as Hive from '@hiveio/dhive';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { SocketMessageCommand } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { Transaction } from 'hive-tx';
 
 export enum OperationType {
@@ -31,7 +30,7 @@ export interface ITransaction {
 }
 
 export interface State extends ITransaction {
-  process: string | SocketMessageCommand;
+  process: string;
   response: object | string | boolean;
   loading: boolean;
   success: boolean;
