@@ -1,9 +1,3 @@
-//TODO: signer connect
-//TODO: subscribe to connect
-//TODO: subsctibe to transaction broadcasted notification
-//TODO: subscribe to disconnect
-//TODO: subscribe to request sign transaction
-
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
@@ -25,12 +19,12 @@ export const signerConnectActive = createAsyncThunk<
     keyType: KeychainKeyTypes.active,
   };
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
+  console.log('------------------------');
+  console.log(signerConnectResponse);
+  console.log(currentState);
   const newState: State = {
     ...currentState,
-    signerConnect: {
-      active: { ...signerConnectResponse },
-      posting: { ...currentState.signerConnect.posting },
-    },
+    signerConnectActive: signerConnectResponse,
   };
   return newState;
 });
@@ -49,10 +43,7 @@ export const signerConenctPosting = createAsyncThunk<
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
   const newState: State = {
     ...currentState,
-    signerConnect: {
-      posting: { ...signerConnectResponse },
-      active: { ...currentState.signerConnect.active },
-    },
+    signerConnectPosting: signerConnectResponse,
   };
   return newState;
 });

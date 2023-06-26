@@ -73,8 +73,9 @@ const LoginForm = () => {
     }
   }, [isLoginSucceed]);
   const signerConnectAsync = async () => {
-    await dispatch(signerConnectActive(username));
-    await dispatch(signerConenctPosting(username));
+    await dispatch(signerConnectActive(username)).then(() => {
+      dispatch(signerConenctPosting(username));
+    });
   };
   useEffect(() => {
     if (isFocused) {
