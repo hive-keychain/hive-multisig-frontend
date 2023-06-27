@@ -29,7 +29,7 @@ export const signerConnectActive = createAsyncThunk<
   return newState;
 });
 
-export const signerConenctPosting = createAsyncThunk<
+export const signerConnectPosting = createAsyncThunk<
   State,
   string,
   { rejectValue: string }

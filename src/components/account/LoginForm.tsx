@@ -6,8 +6,8 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
-  signerConenctPosting,
   signerConnectActive,
+  signerConnectPosting,
 } from '../../redux/features/multisig/multisigThunks';
 import {
   getElapsedTimestampSeconds,
@@ -74,7 +74,7 @@ const LoginForm = () => {
   }, [isLoginSucceed]);
   const signerConnectAsync = async () => {
     await dispatch(signerConnectActive(username)).then(() => {
-      dispatch(signerConenctPosting(username));
+      dispatch(signerConnectPosting(username));
     });
   };
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
-import { signerConenctPosting, signerConnectActive } from './multisigThunks';
+import { signerConnectActive, signerConnectPosting } from './multisigThunks';
 
 const initialState: State = {
   signerConnectActive: undefined,
@@ -20,6 +20,8 @@ const multisigSlice = createSlice({
       state.error = undefined;
     });
     builder.addCase(signerConnectActive.fulfilled, (state, action) => {
+      console.log('=================================');
+      console.log(action.payload.signerConnectActive);
       state.signerConnectActive = action.payload.signerConnectActive;
       state.success = true;
     });
@@ -29,16 +31,18 @@ const multisigSlice = createSlice({
         'Error during signer connect active. ' + JSON.stringify(action.error);
     });
 
-    builder.addCase(signerConenctPosting.pending, (state) => {
+    builder.addCase(signerConnectPosting.pending, (state) => {
       state.signerConnectPosting = undefined;
       state.success = false;
       state.error = undefined;
     });
-    builder.addCase(signerConenctPosting.fulfilled, (state, action) => {
+    builder.addCase(signerConnectPosting.fulfilled, (state, action) => {
+      console.log('=================================');
+      console.log(action.payload.signerConnectPosting);
       state.signerConnectPosting = action.payload.signerConnectPosting;
       state.success = true;
     });
-    builder.addCase(signerConenctPosting.rejected, (state, action) => {
+    builder.addCase(signerConnectPosting.rejected, (state, action) => {
       state.signerConnectPosting = undefined;
       state.success = false;
       state.error = 'Error during signer connect active.';
