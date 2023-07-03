@@ -1,4 +1,6 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +41,11 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (!loggedInAccount) {
       navigate('/login');
+    } else {
+      const multisig = new HiveMultisigSDK(window);
+      multisig.subscribeToSignRequests((signatureRequest: SignatureRequest) => {
+        console.log(signatureRequest);
+      });
     }
   }, [loggedInAccount]);
   useEffect(() => {
