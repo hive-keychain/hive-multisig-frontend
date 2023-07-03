@@ -1,4 +1,6 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -27,15 +29,28 @@ export const TransactionPage = () => {
   );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const multisig = new HiveMultisigSDK(window);
 
+  const testCallback = (message: SignatureRequest) => {
+    console.log('Got request');
+    console.log(message);
+  };
+  const sub = async () => {
+    const res = await multisig.subscribeToSignRequests(testCallback);
+    console.log(`****************************************`);
+    console.log(`Subscribed to sig requests: ${res}`);
+    console.log(`****************************************`);
+  };
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
       dispatch(setPublicKey(loggedInAccount.publicKey));
+      sub();
     } else {
       navigate('/login');
     }
   }, []);
+
   useEffect(() => {
     if (!loggedInAccount) {
       navigate('/login');

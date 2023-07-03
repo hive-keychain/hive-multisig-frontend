@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import {
   SignatureRequestCallback,
   SignerConnect,
@@ -48,16 +49,29 @@ export const signerConnectPosting = createAsyncThunk<
   return newState;
 });
 
-export const subscribeToSignRequests = createAsyncThunk<
-  boolean,
-  SignatureRequestCallback,
-  { rejectValue: string }
->(
+export const subscribeToSignRequests = createAsyncThunk(
   'multisig/subscribeToSignRequests',
-  async (callback: SignatureRequestCallback) => {
+  async () => {
+    const testCallback = (message: SignatureRequest) => {
+      console.log(message);
+    };
     const multisig = new HiveMultisigSDK(window);
-    const response = await multisig.subscribeToSignRequests(callback);
+    const response = await multisig.subscribeToSignRequests(testCallback);
     return response;
+  },
+);
+
+export const signRequestCallBack = createAsyncThunk(
+  'multisig/signRequests',
+  async (message: SignatureRequest, { getState }) => {
+    console.log('Got signature request');
+    console.log(message);
+    const currentState = getState() as State;
+    const newState = {
+      ...currentState,
+      signRequests: [...currentState.signRequests, message],
+    };
+    return newState;
   },
 );
 

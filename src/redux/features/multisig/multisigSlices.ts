@@ -1,10 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
-import { signerConnectActive, signerConnectPosting } from './multisigThunks';
+import {
+  signRequestCallBack,
+  signerConnectActive,
+  signerConnectPosting,
+  subscribeToSignRequests,
+} from './multisigThunks';
 
 const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
+  subscribeToSignRequests: false,
+  signRequests: undefined,
   success: false,
   error: undefined,
 };
@@ -20,8 +27,6 @@ const multisigSlice = createSlice({
       state.error = undefined;
     });
     builder.addCase(signerConnectActive.fulfilled, (state, action) => {
-      console.log('=================================');
-      console.log(action.payload.signerConnectActive);
       state.signerConnectActive = action.payload.signerConnectActive;
       state.success = true;
     });
@@ -37,8 +42,6 @@ const multisigSlice = createSlice({
       state.error = undefined;
     });
     builder.addCase(signerConnectPosting.fulfilled, (state, action) => {
-      console.log('=================================');
-      console.log(action.payload.signerConnectPosting);
       state.signerConnectPosting = action.payload.signerConnectPosting;
       state.success = true;
     });
@@ -46,6 +49,34 @@ const multisigSlice = createSlice({
       state.signerConnectPosting = undefined;
       state.success = false;
       state.error = 'Error during signer connect active.';
+    });
+
+    builder.addCase(subscribeToSignRequests.pending, (state) => {
+      state.subscribeToSignRequests = false;
+      state.success = false;
+      state.error = undefined;
+    });
+    builder.addCase(subscribeToSignRequests.fulfilled, (state, action) => {
+      state.subscribeToSignRequests = action.payload;
+      state.success = action.payload;
+    });
+    builder.addCase(subscribeToSignRequests.rejected, (state, action) => {
+      state.subscribeToSignRequests = false;
+      state.success = false;
+      state.error = JSON.stringify(action.error);
+    });
+
+    builder.addCase(signRequestCallBack.pending, (state) => {
+      state.success = false;
+      state.error = undefined;
+    });
+    builder.addCase(signRequestCallBack.fulfilled, (state, action) => {
+      state.signRequests = action.payload.signRequests;
+      state.success = true;
+    });
+    builder.addCase(signRequestCallBack.rejected, (state, action) => {
+      state.success = false;
+      state.error = JSON.stringify(action.error);
     });
   },
 });
