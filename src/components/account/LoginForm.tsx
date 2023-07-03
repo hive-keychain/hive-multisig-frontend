@@ -5,10 +5,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
-import {
-  signerConnectActive,
-  signerConnectPosting,
-} from '../../redux/features/multisig/multisigThunks';
+import { signerConnectPosting } from '../../redux/features/multisig/multisigThunks';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -73,9 +70,9 @@ const LoginForm = () => {
     }
   }, [isLoginSucceed]);
   const signerConnectAsync = async () => {
-    await dispatch(signerConnectActive(username)).then(() => {
-      dispatch(signerConnectPosting(username));
-    });
+    // await dispatch(signerConnectActive(username)).then(() => {
+    await dispatch(signerConnectPosting(username));
+    // });
   };
   useEffect(() => {
     if (isFocused) {

@@ -54,6 +54,11 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (!loggedInAccount) {
       navigate('/login');
+    } else {
+      const multisig = new HiveMultisigSDK(window);
+      multisig.subscribeToSignRequests((signatureRequest: SignatureRequest) => {
+        console.log(signatureRequest);
+      });
     }
   }, [loggedInAccount]);
   useEffect(() => {

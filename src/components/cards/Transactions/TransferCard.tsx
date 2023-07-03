@@ -80,6 +80,7 @@ function Transfer() {
           authority: transactionState.authority,
         };
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
+        console.log(`Encoded Object: ${JSON.stringify(encodedTxObj)}`);
         const requestSignatureObj: RequestSignatureMessage = {
           signatureRequest: encodedTxObj.signRequestData,
           initialSigner: {
