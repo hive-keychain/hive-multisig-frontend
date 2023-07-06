@@ -3,6 +3,7 @@ import { SignerConnectResponse } from 'hive-multisig-sdk/src/interfaces/socket-m
 export interface IMultisig {
   signerConnectActive: SignerConnectResponse;
   signerConnectPosting: SignerConnectResponse;
+  subscribeToSignRequest: boolean;
 }
 
 export interface State extends IMultisig {

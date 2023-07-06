@@ -1,10 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
-import { signerConnectActive, signerConnectPosting } from './multisigThunks';
+import {
+  signerConnectActive,
+  signerConnectPosting,
+  subscribeToSignRequests,
+} from './multisigThunks';
 
 const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
+  subscribeToSignRequest: false,
   success: false,
   error: undefined,
 };
@@ -20,8 +25,6 @@ const multisigSlice = createSlice({
       state.error = undefined;
     });
     builder.addCase(signerConnectActive.fulfilled, (state, action) => {
-      console.log('=================================');
-      console.log(action.payload.signerConnectActive);
       state.signerConnectActive = action.payload.signerConnectActive;
       state.success = true;
     });
@@ -37,8 +40,6 @@ const multisigSlice = createSlice({
       state.error = undefined;
     });
     builder.addCase(signerConnectPosting.fulfilled, (state, action) => {
-      console.log('=================================');
-      console.log(action.payload.signerConnectPosting);
       state.signerConnectPosting = action.payload.signerConnectPosting;
       state.success = true;
     });
@@ -46,6 +47,22 @@ const multisigSlice = createSlice({
       state.signerConnectPosting = undefined;
       state.success = false;
       state.error = 'Error during signer connect active.';
+    });
+
+    builder.addCase(subscribeToSignRequests.pending, (state) => {
+      state.subscribeToSignRequest = undefined;
+      state.success = false;
+      state.error = undefined;
+    });
+
+    builder.addCase(subscribeToSignRequests.fulfilled, (state, action) => {
+      state.subscribeToSignRequest = action.payload;
+      state.success = true;
+    });
+    builder.addCase(subscribeToSignRequests.rejected, (state, action) => {
+      state.subscribeToSignRequest = false;
+      state.success = false;
+      state.error = JSON.stringify(action.error);
     });
   },
 });
