@@ -1,7 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
+<<<<<<< HEAD
   signRequestCallBack,
+=======
+>>>>>>> 06997f0b98ad852e00b8bd5eaf667bec7150c707
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
@@ -10,8 +13,12 @@ import {
 const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
+<<<<<<< HEAD
   subscribeToSignRequests: false,
   signRequests: undefined,
+=======
+  subscribeToSignRequest: false,
+>>>>>>> 06997f0b98ad852e00b8bd5eaf667bec7150c707
   success: false,
   error: undefined,
 };
@@ -52,6 +59,7 @@ const multisigSlice = createSlice({
     });
 
     builder.addCase(subscribeToSignRequests.pending, (state) => {
+<<<<<<< HEAD
       state.subscribeToSignRequests = false;
       state.success = false;
       state.error = undefined;
@@ -75,6 +83,19 @@ const multisigSlice = createSlice({
       state.success = true;
     });
     builder.addCase(signRequestCallBack.rejected, (state, action) => {
+=======
+      state.subscribeToSignRequest = undefined;
+      state.success = false;
+      state.error = undefined;
+    });
+
+    builder.addCase(subscribeToSignRequests.fulfilled, (state, action) => {
+      state.subscribeToSignRequest = action.payload;
+      state.success = true;
+    });
+    builder.addCase(subscribeToSignRequests.rejected, (state, action) => {
+      state.subscribeToSignRequest = false;
+>>>>>>> 06997f0b98ad852e00b8bd5eaf667bec7150c707
       state.success = false;
       state.error = JSON.stringify(action.error);
     });
