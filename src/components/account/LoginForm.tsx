@@ -54,10 +54,6 @@ const LoginForm = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      //TODO: dispatch(signerConnectActive)
-      //TODO: dispatch(signerConnectPosting)
-      console.log('------------------------------');
-      console.log('LOGGED IN');
       signerConnectAsync();
       navigate(`/transaction`);
     } else {

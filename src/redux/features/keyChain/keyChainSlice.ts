@@ -8,6 +8,7 @@ const initialState: State = {
   expiration: null,
   method: undefined,
   txName: null,
+  operation: undefined,
   process: null,
   response: null,
   loading: false,

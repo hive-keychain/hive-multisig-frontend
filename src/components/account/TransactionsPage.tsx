@@ -1,4 +1,9 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import {
+  IEncodeTransaction,
+  RequestSignatureMessage,
+} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -13,10 +18,19 @@ import {
   setTransactionName,
   setUsername,
 } from '../../redux/features/transaction/transactionThunks';
+import HiveTxUtils from '../../utils/hivetx.utils';
+import { getISOStringDate } from '../../utils/utils';
 import Transfer from '../cards/Transactions/TransferCard';
 
 export const TransactionPage = () => {
-  const transactionState = useAppSelector((state) => state.transaction);
+  const transactionState = useAppSelector(
+    (state) => state.transaction.transaction,
+  );
+  const multisig = new HiveMultisigSDK(window);
+
+  const operation = useAppSelector(
+    (state) => state.transaction.transaction.operation,
+  );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [transactionType, setTransactionType] =
@@ -27,23 +41,11 @@ export const TransactionPage = () => {
   );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const multisig = new HiveMultisigSDK(window);
 
-  const testCallback = (message: SignatureRequest) => {
-    console.log('Got request');
-    console.log(message);
-  };
-  const sub = async () => {
-    const res = await multisig.subscribeToSignRequests(testCallback);
-    console.log(`****************************************`);
-    console.log(`Subscribed to sig requests: ${res}`);
-    console.log(`****************************************`);
-  };
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
       dispatch(setPublicKey(loggedInAccount.publicKey));
-      sub();
     } else {
       navigate('/login');
     }
@@ -60,7 +62,6 @@ export const TransactionPage = () => {
   }, [transactionType]);
 
   useEffect(() => {
-    console.log(`Method: ${method}`);
     dispatchTxAsync();
   }, [method]);
 
@@ -73,15 +74,48 @@ export const TransactionPage = () => {
         expiration: undefined,
         method,
       };
-
       await dispatch(setUsername(txInfo.username));
       await dispatch(setTransactionMethod(method));
       dispatch(setAuthority(txInfo));
     } catch (error) {
-      // Handle any potential errors
       console.log('Error while dispatching transaction details');
     }
   };
+
+  useEffect(() => {
+    if (operation) {
+      (async () => {
+        const transaction = await HiveTxUtils.createTx(
+          [operation],
+          transactionState.expiration,
+        );
+        const txEncode: IEncodeTransaction = {
+          transaction: transaction,
+          method: transactionState.method,
+          expirationDate: new Date(
+            getISOStringDate(transactionState.expiration),
+          ),
+          receiver: transactionState.receiver.toString(),
+          initiator: transactionState.username.toString(),
+          authority: transactionState.authority,
+        };
+        const encodedTxObj = await multisig.encodeTransaction(txEncode);
+        console.log(`Encoded Object: ${JSON.stringify(encodedTxObj)}`);
+        const requestSignatureObj: RequestSignatureMessage = {
+          signatureRequest: encodedTxObj.signRequestData,
+          initialSigner: {
+            username: transactionState.username,
+            publicKey: transactionState.publicKey.toString(),
+            signature: encodedTxObj.signedTransaction.signatures[0],
+            weight: transactionState.authority.key_auths[0][1],
+          },
+        };
+        const result = await multisig.sendSignatureRequest(requestSignatureObj);
+        console.log(result);
+      })();
+    }
+  }, [operation]);
+
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {
       case 'TransferOperation':

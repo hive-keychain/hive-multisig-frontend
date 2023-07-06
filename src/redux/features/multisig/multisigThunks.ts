@@ -64,7 +64,6 @@ export const signRequestCallBack = createAsyncThunk(
     const currentState = getState() as State;
     const newState = {
       ...currentState,
-      signRequests: [...currentState.signRequests, message],
     };
     return newState;
   },

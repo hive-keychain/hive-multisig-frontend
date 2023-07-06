@@ -20,12 +20,13 @@ export enum OperationType {
 }
 export interface ITransaction {
   txName?: String | OperationType;
+  operation?: object;
   authority?: Hive.AuthorityType;
   username: string;
   publicKey: string | Hive.PublicKey;
   receiver?: string | Hive.PublicKey;
   signer?: string | Hive.PublicKey;
-  expiration: string;
+  expiration: IExpiration;
   method: KeychainKeyTypes;
 }
 

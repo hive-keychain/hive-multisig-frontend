@@ -1,16 +1,16 @@
 import * as Hive from '@hiveio/dhive';
+import * as moment from 'moment';
 import { useEffect, useRef } from 'react';
 import { IExpiration } from '../interfaces/transaction.interface';
-
-export function delay(ms: number) {
+export const delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-export function getTimestampInSeconds() {
+};
+export const getTimestampInSeconds = () => {
   return Math.floor(Date.now() / 1000);
-}
-export function getElapsedTimestampSeconds(old_t: number, new_t: number) {
+};
+export const getElapsedTimestampSeconds = (old_t: number, new_t: number) => {
   return new_t - old_t;
-}
+};
 export const useDidMountEffect = (func: Function, deps: [any]) => {
   const didMount = useRef(false);
 
@@ -19,11 +19,19 @@ export const useDidMountEffect = (func: Function, deps: [any]) => {
     else didMount.current = true;
   }, deps);
 };
-export function getSeconds(expiration: IExpiration) {
+export const getSeconds = (expiration: IExpiration) => {
   return (
     expiration.days * 86400 + expiration.hours * 3600 + expiration.minutes * 60
   );
-}
+};
+export const getISOStringDate = (expiration: IExpiration) => {
+  const expDate = moment()
+    .add(expiration.days, 'd')
+    .add(expiration.hours, 'h')
+    .add(expiration.minutes, 'm')
+    .toDate();
+  return expDate.toISOString();
+};
 export const removeStringElement = (
   array: string[],
   element: string,
@@ -39,7 +47,7 @@ export const castToString = (k: string | Hive.PublicKey): string => {
   return k.toString();
 };
 
-export function copyTextToClipboard(text: string): boolean {
+export const copyTextToClipboard = (text: string): boolean => {
   var textArea = document.createElement('textarea');
   textArea.style.background = 'transparent';
   textArea.value = text;
@@ -55,16 +63,14 @@ export function copyTextToClipboard(text: string): boolean {
     document.body.removeChild(textArea);
     return false;
   }
-}
-export function isNumeric(n: string) {
+};
+export const isNumeric = (n: string) => {
   return !isNaN(parseFloat(n)) && isFinite(parseFloat(n));
-}
+};
 
-export function hiveDecimalFormat(num: number, precision: number = 3) {
+export const hiveDecimalFormat = (num: number, precision: number = 3) => {
   return ((num * 100) / 100).toFixed(precision);
-}
-export function capitalizeFirstLetter(string: String) {
+};
+export const capitalizeFirstLetter = (string: String) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-
+};

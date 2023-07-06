@@ -1,11 +1,5 @@
 import * as Hive from '@hiveio/dhive';
 import { Formik } from 'formik';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
-import {
-  IEncodeTransaction,
-  RequestSignatureMessage,
-} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
-import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
@@ -14,8 +8,10 @@ import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { setExpiration } from '../../../redux/features/transaction/transactionThunks';
-import HiveTxUtils from '../../../utils/hivetx.utils';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
@@ -31,7 +27,7 @@ function Transfer() {
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
-  const [operation, setOperation] = useState<Hive.TransferOperation>();
+  const [operation, setOps] = useState<Hive.TransferOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -65,49 +61,14 @@ function Transfer() {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-
   useEffect(() => {
-    if (operation) {
-      (async () => {
-        const transaction = await HiveTxUtils.createTx([operation], expiration);
-        const multisig = new HiveMultisigSDK(window);
-        const txEncode: IEncodeTransaction = {
-          transaction: transaction,
-          method: transactionState.method,
-          expirationDate: new Date(transactionState.expiration),
-          receiver: transactionState.receiver.toString(),
-          initiator: transactionState.username.toString(),
-          authority: transactionState.authority,
-        };
-        const encodedTxObj = await multisig.encodeTransaction(txEncode);
-        console.log(`Encoded Object: ${JSON.stringify(encodedTxObj)}`);
-        const requestSignatureObj: RequestSignatureMessage = {
-          signatureRequest: encodedTxObj.signRequestData,
-          initialSigner: {
-            username: transactionState.username,
-            publicKey: transactionState.publicKey.toString(),
-            signature: encodedTxObj.signedTransaction.signatures[0],
-            weight: transactionState.authority.key_auths[0][1],
-          },
-        };
-        const result = await multisig.sendSignatureRequest(requestSignatureObj);
-        console.log(result);
-      })();
-    }
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
   }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const expDate = moment()
-      .add(expiration.days, 'd')
-      .add(expiration.hours, 'h')
-      .add(expiration.minutes, 'm')
-      .toDate();
-    console.log(expDate);
-    setTxExpiration({
-      ...expiration,
-      date: expDate.toISOString(),
-    });
-    await dispatch(setExpiration(expDate.toISOString()));
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
     const op: Hive.TransferOperation = {
       0: 'transfer',
@@ -118,7 +79,7 @@ function Transfer() {
         memo: values.memo,
       },
     };
-    setOperation(op);
+    setOps(op);
   };
 
   const handleAssetChange = (value: string) => {
@@ -150,7 +111,6 @@ function Transfer() {
         setShow={setOnErrorShow}
         error={errorMessage}
       />
-
       <Formik
         validationSchema={schema}
         onSubmit={(values) => {

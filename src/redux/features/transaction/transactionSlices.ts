@@ -3,6 +3,7 @@ import { State } from '../../../interfaces/transaction.interface';
 import {
   setAuthority,
   setExpiration,
+  setOperation,
   setPublicKey,
   setReceiver,
   setSigner,
@@ -16,6 +17,7 @@ const initialState: State = {
   publicKey: '',
   receiver: '',
   signer: '',
+  operation: undefined,
   method: undefined,
   expiration: undefined,
   txName: null,
@@ -59,6 +61,22 @@ const transactionSlice = createSlice({
     builder.addCase(setTransactionName.rejected, (state, action) => {
       state.loading = false;
       state.error = 'Error setting transaction name';
+    });
+
+    builder.addCase(setOperation.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(setOperation.fulfilled, (state, action) => {
+      state.operation = action.payload.operation;
+      state.loading = false;
+      state.success = true;
+    });
+    builder.addCase(setOperation.rejected, (state, action) => {
+      state.operation = undefined;
+      state.loading = false;
+      state.success = false;
+      state.error = 'Error setting operation object';
     });
 
     builder.addCase(setTransactionMethod.pending, (state) => {
