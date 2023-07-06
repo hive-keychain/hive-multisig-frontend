@@ -6,7 +6,6 @@ import { useReadLocalStorage } from 'usehooks-ts';
 import { LoginResponseType } from '../../interfaces';
 import { ITransaction } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { subscribeToSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
   setAuthority,
   setPublicKey,
@@ -33,7 +32,6 @@ export const TransactionPage = () => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
       dispatch(setPublicKey(loggedInAccount.publicKey));
-      dispatch(subscribeToSignRequests());
     } else {
       navigate('/login');
     }
