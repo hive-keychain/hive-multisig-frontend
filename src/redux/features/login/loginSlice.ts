@@ -1,7 +1,6 @@
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { KeychainKeyTypes, KeychainSDK, Login } from 'keychain-sdk';
 import { LoginResponseType } from '../../../interfaces';
-
 export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
   SIGNATURE_SUCCEEDED = 'SIGNATURE_SUCCEEDED',

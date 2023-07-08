@@ -37,6 +37,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   const redirect = () => {
     if (input && input !== '') {
+      console.log(`SearchBar: ${input}`);
       navigate(`/@${input}`);
     } else {
       navigate('/');
@@ -99,6 +100,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
+  console.log(`HomePage: ${searchKey}`);
 
   useEffect(() => {
     AccountUtils.getAuthorities(setAuthorities, setValid, searchKey);

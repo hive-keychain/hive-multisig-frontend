@@ -48,10 +48,14 @@ export const signerConnectPosting = createAsyncThunk<
   return newState;
 });
 
-export const subscribeToSignRequests = createAsyncThunk(
+export const subscribeToSignRequests = createAsyncThunk<
+  boolean,
+  SignatureRequestCallback,
+  { rejectValue: string }
+>(
   'multisig/subscribeToSignRequests',
-  async () => {
-    const response = await multisig.subscribeToSignRequests();
+  async (callback: SignatureRequestCallback) => {
+    const response = await multisig.subscribeToSignRequests(callback);
     return response;
   },
 );

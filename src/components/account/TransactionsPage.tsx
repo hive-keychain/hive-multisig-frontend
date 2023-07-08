@@ -100,7 +100,6 @@ export const TransactionPage = () => {
           authority: transactionState.authority,
         };
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
-        console.log(`Encoded Object: ${JSON.stringify(encodedTxObj)}`);
         const requestSignatureObj: RequestSignatureMessage = {
           signatureRequest: encodedTxObj.signRequestData,
           initialSigner: {
@@ -111,7 +110,6 @@ export const TransactionPage = () => {
           },
         };
         const result = await multisig.sendSignatureRequest(requestSignatureObj);
-        console.log(result);
       })();
     }
   }, [operation]);

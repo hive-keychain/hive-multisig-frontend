@@ -1,6 +1,8 @@
 import * as Hive from '@hiveio/dhive';
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import * as moment from 'moment';
 import { useEffect, useRef } from 'react';
+import { Authorities } from '../interfaces';
 import { IExpiration } from '../interfaces/transaction.interface';
 export const delay = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -73,4 +75,22 @@ export const hiveDecimalFormat = (num: number, precision: number = 3) => {
 };
 export const capitalizeFirstLetter = (string: String) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
+export const getPublicKeys = (
+  keyType: KeychainKeyTypes,
+  authorities: Authorities,
+) => {
+  if (authorities) {
+    switch (keyType) {
+      case KeychainKeyTypes.active:
+        return authorities.active.key_auths.map((key) => {
+          return key[0];
+        });
+      case KeychainKeyTypes.posting:
+        return authorities.posting.key_auths.map((key) => {
+          return key[0];
+        });
+    }
+  }
 };
