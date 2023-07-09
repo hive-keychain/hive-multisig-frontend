@@ -8,6 +8,7 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
+  signRequests,
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
@@ -24,7 +25,6 @@ const LoginForm = () => {
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
   );
-
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -42,7 +42,6 @@ const LoginForm = () => {
     null,
   );
   const [isFocused, setIsFocused] = useState<boolean>(false);
-
   const inputRef = useRef(null);
   useEffect(() => {
     inputRef.current.focus();
@@ -84,39 +83,24 @@ const LoginForm = () => {
     setStorageAccountDetails(signedAccountObj);
     setLoginTimestamp(getTimestampInSeconds());
   };
+
   const sigRequestCallback = async (message: SignatureRequest) => {
     const authorities = await HiveUtils.getAccountAuthorities(username);
     const myPublickeys = getPublicKeys(message.keyType, authorities);
-    const signRequests: Signer[] = [];
+    const _signRequests: Signer[] = [];
     myPublickeys.forEach((key) => {
       for (var i = 0; i < message.signers.length; i++) {
         if (
           message.signers[i].publicKey === key &&
           message.signers[i].signature === null
         ) {
-          signRequests.push(message.signers[i]);
+          _signRequests.push(message.signers[i]);
         }
       }
     });
-    if (signRequests.length > 0) {
-      console.log(
-        `You have pending signature request ${JSON.stringify(signRequests)}`,
-      );
-    } else {
-      console.log(`You dont have pending signature request`);
+    if (_signRequests.length > 0) {
+      await dispatch(signRequests(_signRequests));
     }
-    // console.log(`Signature Request: ${JSON.stringify(message)}`);
-
-    //a function that will search wether the logged in user is in the signature request list
-    //if the user is in the list,
-    //  dispatch a thunk that will notify the user
-    //  ask the user for transaction
-    //  broadcast?
-    //if not, ignore
-
-    //requirements
-    // 1. public keys of the logged in user
-    //
   };
 
   useEffect(() => {

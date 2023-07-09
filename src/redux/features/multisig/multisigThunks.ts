@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
-import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
+import { Signer } from 'hive-multisig-sdk/src/interfaces/signer';
 import {
   SignatureRequestCallback,
   SignerConnect,
@@ -20,7 +20,7 @@ export const signerConnectActive = createAsyncThunk<
     keyType: KeychainKeyTypes.active,
   };
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
-  console.log('------------------------');
+  console.log('activeConnect------------------------');
   console.log(signerConnectResponse);
   console.log(currentState);
   const newState: State = {
@@ -41,6 +41,9 @@ export const signerConnectPosting = createAsyncThunk<
     keyType: KeychainKeyTypes.posting,
   };
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
+  console.log('postingConnect------------------------');
+  console.log(signerConnectResponse);
+  console.log(currentState);
   const newState: State = {
     ...currentState,
     signerConnectPosting: signerConnectResponse,
@@ -60,14 +63,13 @@ export const subscribeToSignRequests = createAsyncThunk<
   },
 );
 
-export const signRequestCallBack = createAsyncThunk(
+export const signRequests = createAsyncThunk(
   'multisig/signRequests',
-  async (message: SignatureRequest, { getState }) => {
-    console.log('Got signature request');
-    console.log(message);
+  async (signers: Signer[], { getState }) => {
     const currentState = getState() as State;
     const newState = {
       ...currentState,
+      signRequests: signers,
     };
     return newState;
   },

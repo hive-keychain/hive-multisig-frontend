@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
+  signRequests,
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
@@ -9,6 +10,7 @@ import {
 const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
+  signRequests: undefined,
   subscribeToSignRequest: false,
   success: false,
   error: undefined,
@@ -63,6 +65,22 @@ const multisigSlice = createSlice({
       state.subscribeToSignRequest = false;
       state.success = false;
       state.error = JSON.stringify(action.error);
+    });
+
+    builder.addCase(signRequests.pending, (state) => {
+      state.signRequests = undefined;
+      state.success = false;
+    });
+
+    builder.addCase(signRequests.fulfilled, (state, action) => {
+      console.log(`Slice sign requests: ${action.payload.signRequests}`);
+      state.signRequests = action.payload.signRequests;
+      state.success = true;
+    });
+
+    builder.addCase(signRequests.rejected, (state, action) => {
+      state.signRequests = undefined;
+      state.success = false;
     });
   },
 });

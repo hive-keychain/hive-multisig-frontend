@@ -31,6 +31,9 @@ export const TransactionPage = () => {
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
+  const signRequests = useAppSelector(
+    (state) => state.multisig.multisig.signRequests,
+  );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [transactionType, setTransactionType] =
@@ -39,9 +42,17 @@ export const TransactionPage = () => {
   const [method, setMethod] = useState<KeychainKeyTypes>(
     KeychainKeyTypes.active,
   );
+
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  useEffect(() => {
+    if (signRequests) {
+      if (signRequests.length > 0) {
+        alert('signature request receive!');
+      }
+    }
+  }, [signRequests]);
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
