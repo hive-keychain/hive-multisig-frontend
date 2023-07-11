@@ -11,6 +11,7 @@ import { useReadLocalStorage } from 'usehooks-ts';
 import { LoginResponseType } from '../../interfaces';
 import { ITransaction } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
   setAuthority,
   setPublicKey,
@@ -21,6 +22,7 @@ import {
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { getISOStringDate } from '../../utils/utils';
 import Transfer from '../cards/Transactions/TransferCard';
+import { SignRequests } from '../modals/SignRequests';
 
 export const TransactionPage = () => {
   const transactionState = useAppSelector(
@@ -32,7 +34,7 @@ export const TransactionPage = () => {
     (state) => state.transaction.transaction.operation,
   );
   const signRequests = useAppSelector(
-    (state) => state.multisig.multisig.signRequests,
+    (state) => state.multisig.multisig.signRequest,
   );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -48,8 +50,8 @@ export const TransactionPage = () => {
 
   useEffect(() => {
     if (signRequests) {
-      if (signRequests.length > 0) {
-        alert('signature request receive!');
+      if (signRequests.signers.length > 0) {
+        dispatch(showSignRequests(true));
       }
     }
   }, [signRequests]);
@@ -178,6 +180,9 @@ export const TransactionPage = () => {
 
   return (
     <div>
+      <div>
+        <SignRequests />
+      </div>
       <InputGroup>
         <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
         <Form.Select

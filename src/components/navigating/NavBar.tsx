@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Badge,
   Button,
   Container,
   Dropdown,
@@ -16,6 +17,7 @@ import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { logout } from '../../redux/features/login/loginSlice';
+import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -27,6 +29,12 @@ const NavBar = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
+  );
+  const signRequest = useAppSelector(
+    (state) => state.multisig.multisig.signRequest,
+  );
+  const setSignRequestCount = useAppSelector(
+    (state) => state.multisig.multisig.signRequestCount,
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage(
@@ -137,6 +145,16 @@ const NavBar = () => {
                   setDestination(`@${accountDetails.data.username}`)
                 }>
                 Update Account
+              </Nav.Link>
+            ) : null}
+            {isLoggedIn ? (
+              <Nav.Link onClick={() => dispatch(showSignRequests(true))}>
+                Sign Requests{' '}
+                {signRequest ? (
+                  <Badge bg="danger">
+                    {setSignRequestCount > 0 ? setSignRequestCount : ''}
+                  </Badge>
+                ) : null}
               </Nav.Link>
             ) : null}
           </Nav>

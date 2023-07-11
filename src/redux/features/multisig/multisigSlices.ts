@@ -1,7 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
-  signRequests,
+  setSignRequestCount,
+  showSignRequests,
+  signRequest,
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
@@ -10,8 +12,10 @@ import {
 const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
-  signRequests: undefined,
+  signRequest: undefined,
   subscribeToSignRequest: false,
+  showSignRequests: false,
+  signRequestCount: 0,
   success: false,
   error: undefined,
 };
@@ -67,19 +71,38 @@ const multisigSlice = createSlice({
       state.error = JSON.stringify(action.error);
     });
 
-    builder.addCase(signRequests.pending, (state) => {
-      state.signRequests = undefined;
+    builder.addCase(signRequest.pending, (state) => {
+      state.signRequest = undefined;
       state.success = false;
     });
 
-    builder.addCase(signRequests.fulfilled, (state, action) => {
-      console.log(`Slice sign requests: ${action.payload.signRequests}`);
-      state.signRequests = action.payload.signRequests;
+    builder.addCase(signRequest.fulfilled, (state, action) => {
+      console.log(`Slice sign requests: ${action.payload.signRequest}`);
+      state.signRequest = action.payload.signRequest;
       state.success = true;
     });
 
-    builder.addCase(signRequests.rejected, (state, action) => {
-      state.signRequests = undefined;
+    builder.addCase(signRequest.rejected, (state, action) => {
+      state.signRequest = undefined;
+      state.success = false;
+    });
+
+    builder.addCase(showSignRequests.fulfilled, (state, action) => {
+      state.showSignRequests = action.payload;
+      state.success = action.payload;
+    });
+
+    builder.addCase(showSignRequests.rejected, (state) => {
+      state.showSignRequests = false;
+      state.success = false;
+    });
+
+    builder.addCase(setSignRequestCount.fulfilled, (state, action) => {
+      state.signRequestCount += action.payload;
+      state.success = true;
+    });
+    builder.addCase(setSignRequestCount.rejected, (state) => {
+      state.signRequestCount = 0;
       state.success = false;
     });
   },

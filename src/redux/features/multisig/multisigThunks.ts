@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
-import { Signer } from 'hive-multisig-sdk/src/interfaces/signer';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import {
   SignatureRequestCallback,
   SignerConnect,
@@ -20,9 +20,6 @@ export const signerConnectActive = createAsyncThunk<
     keyType: KeychainKeyTypes.active,
   };
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
-  console.log('activeConnect------------------------');
-  console.log(signerConnectResponse);
-  console.log(currentState);
   const newState: State = {
     ...currentState,
     signerConnectActive: signerConnectResponse,
@@ -41,9 +38,6 @@ export const signerConnectPosting = createAsyncThunk<
     keyType: KeychainKeyTypes.posting,
   };
   const signerConnectResponse = await multisig.singleSignerConnect(connObj);
-  console.log('postingConnect------------------------');
-  console.log(signerConnectResponse);
-  console.log(currentState);
   const newState: State = {
     ...currentState,
     signerConnectPosting: signerConnectResponse,
@@ -63,18 +57,31 @@ export const subscribeToSignRequests = createAsyncThunk<
   },
 );
 
-export const signRequests = createAsyncThunk(
+export const signRequest = createAsyncThunk(
   'multisig/signRequests',
-  async (signers: Signer[], { getState }) => {
+  async (signRequest: SignatureRequest, { getState }) => {
     const currentState = getState() as State;
     const newState = {
       ...currentState,
-      signRequests: signers,
+      signRequest: signRequest,
     };
     return newState;
   },
 );
 
+export const showSignRequests = createAsyncThunk(
+  'multisig/showSignRequests',
+  async (show: boolean) => {
+    return show;
+  },
+);
+
+export const setSignRequestCount = createAsyncThunk(
+  'multisig/setSignRequestCount',
+  async (count: number) => {
+    return count;
+  },
+);
 export const subscribeToBroadcastedTransactions = createAsyncThunk<
   boolean,
   SignatureRequestCallback,

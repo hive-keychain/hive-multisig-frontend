@@ -1,5 +1,4 @@
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
-import { Signer } from 'hive-multisig-sdk/src/interfaces/signer';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +7,8 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
-  signRequests,
+  setSignRequestCount,
+  signRequest,
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
@@ -87,19 +87,20 @@ const LoginForm = () => {
   const sigRequestCallback = async (message: SignatureRequest) => {
     const authorities = await HiveUtils.getAccountAuthorities(username);
     const myPublickeys = getPublicKeys(message.keyType, authorities);
-    const _signRequests: Signer[] = [];
+    let requestsNum: number = 0;
     myPublickeys.forEach((key) => {
       for (var i = 0; i < message.signers.length; i++) {
         if (
           message.signers[i].publicKey === key &&
           message.signers[i].signature === null
         ) {
-          _signRequests.push(message.signers[i]);
+          requestsNum++;
         }
       }
     });
-    if (_signRequests.length > 0) {
-      await dispatch(signRequests(_signRequests));
+    if (requestsNum > 0) {
+      await dispatch(signRequest(message));
+      await dispatch(setSignRequestCount(requestsNum));
     }
   };
 
@@ -126,6 +127,7 @@ const LoginForm = () => {
       <div className="ms-2 text-start" style={{ color: 'black' }}>
         <h5>Login</h5>
       </div>
+
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
         <Form.Control
