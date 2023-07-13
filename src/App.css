@@ -1,3 +1,6 @@
+a.nounderline {
+  text-decoration: none;
+}
 @media (min-width: 576px) {
   .w-lg-50 {
     width: 50% !important;
@@ -8,6 +11,7 @@
     width: 50% !important;
   }
 }
+
 @media (min-width: 1200px) {
   .w-xl-50 {
     width: 50% !important;

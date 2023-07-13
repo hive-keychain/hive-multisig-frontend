@@ -17,7 +17,6 @@ import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { logout } from '../../redux/features/login/loginSlice';
-import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -31,7 +30,7 @@ const NavBar = () => {
     (state) => state.login.isSignatureSuccess,
   );
   const signRequest = useAppSelector(
-    (state) => state.multisig.multisig.signRequest,
+    (state) => state.multisig.multisig.signRequests,
   );
   const setSignRequestCount = useAppSelector(
     (state) => state.multisig.multisig.signRequestCount,
@@ -148,7 +147,7 @@ const NavBar = () => {
               </Nav.Link>
             ) : null}
             {isLoggedIn ? (
-              <Nav.Link onClick={() => dispatch(showSignRequests(true))}>
+              <Nav.Link onClick={() => setDestination('/signRequest')}>
                 Sign Requests{' '}
                 {signRequest ? (
                   <Badge bg="danger">

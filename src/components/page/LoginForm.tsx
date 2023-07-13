@@ -1,4 +1,9 @@
+import { Transaction } from '@hiveio/dhive';
+
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
+import { IDecodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
+
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -7,13 +12,14 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
+  addSignRequest,
   setSignRequestCount,
-  signRequest,
   signerConnectActive,
   signerConnectPosting,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import HiveUtils from '../../utils/hive.utils';
+
 import {
   getElapsedTimestampSeconds,
   getPublicKeys,
@@ -87,20 +93,26 @@ const LoginForm = () => {
   const sigRequestCallback = async (message: SignatureRequest) => {
     const authorities = await HiveUtils.getAccountAuthorities(username);
     const myPublickeys = getPublicKeys(message.keyType, authorities);
-    let requestsNum: number = 0;
-    myPublickeys.forEach((key) => {
+    let transactions: Transaction[] = [];
+
+    for (var k = 0; k < myPublickeys.length; k++) {
       for (var i = 0; i < message.signers.length; i++) {
-        if (
-          message.signers[i].publicKey === key &&
-          message.signers[i].signature === null
-        ) {
-          requestsNum++;
+        const data: IDecodeTransaction = {
+          signatureRequest: message,
+          username: username,
+          publicKey: myPublickeys[k].toString(),
+        };
+        const multisig = new HiveMultisigSDK(window);
+        const tx = await multisig.decodeTransaction(data);
+        if (tx) {
+          transactions.push(tx);
         }
       }
-    });
-    if (requestsNum > 0) {
-      await dispatch(signRequest(message));
-      await dispatch(setSignRequestCount(requestsNum));
+
+      if (transactions.length > 0) {
+        await dispatch(addSignRequest(transactions));
+        await dispatch(setSignRequestCount(transactions.length));
+      }
     }
   };
 

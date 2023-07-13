@@ -104,6 +104,7 @@ function Transfer() {
     memo: yup.string(),
     day: yup.number().typeError('Must be a number').required('Required'),
   });
+
   return (
     <div>
       <ErrorModal

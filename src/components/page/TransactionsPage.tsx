@@ -34,7 +34,7 @@ export const TransactionPage = () => {
     (state) => state.transaction.transaction.operation,
   );
   const signRequests = useAppSelector(
-    (state) => state.multisig.multisig.signRequest,
+    (state) => state.multisig.multisig.signRequests,
   );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -50,7 +50,7 @@ export const TransactionPage = () => {
 
   useEffect(() => {
     if (signRequests) {
-      if (signRequests.signers.length > 0) {
+      if (signRequests.length > 0) {
         dispatch(showSignRequests(true));
       }
     }

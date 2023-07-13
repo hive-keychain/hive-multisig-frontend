@@ -6,16 +6,19 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 // each request must have a Sign and Reject button
 import { Modal } from 'react-bootstrap';
 import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
-
 // active and posting
 export const SignRequests = () => {
   const [show, setShow] = useState<boolean>(false);
   const showSignRequestModal = useAppSelector(
     (state) => state.multisig.multisig.showSignRequests,
   );
+  const signRequests = useAppSelector(
+    (state) => state.multisig.multisig.signRequests,
+  );
   const dispatch = useAppDispatch();
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
+
   useEffect(() => {
     if (showSignRequestModal) handleShow();
     else handleClose();
@@ -26,12 +29,13 @@ export const SignRequests = () => {
       dispatch(showSignRequests(show));
     }
   }, [show]);
+
   return (
     <Modal show={show} onHide={handleClose} backdrop="static">
       <Modal.Header closeButton>
         <Modal.Title>Signature Requests</Modal.Title>
       </Modal.Header>
-      <Modal.Body>You have a request</Modal.Body>
+      <Modal.Body>{}</Modal.Body>
     </Modal>
   );
 };
