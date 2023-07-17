@@ -1,3 +1,5 @@
+import { Transaction } from '@hiveio/dhive';
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
   ISignTransaction,
@@ -41,39 +43,61 @@ const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
           signRequests.map((req) => {
             return (
               <div>
-                <TransactionCard prop={req} key={req.id} />
+                <TransactionCard
+                  transaction={req.transaction}
+                  signerId={req.id}
+                  signatureRequestId={req.signatureRequestId}
+                  username={req.username}
+                  method={req.method}
+                  key={req.id}
+                />
                 <br />
               </div>
             );
           })
         )}
-        <TransactionCard prop={null} />
       </Card.Body>
     </Card>
   );
 };
 
-interface ITransactionProp {
-  prop: ITransaction;
+interface ITransactionCardProp {
+  transaction: Transaction;
+  signerId: number;
+  signatureRequestId: number;
+  username: string;
+  method: KeychainKeyTypes;
 }
-const TransactionCard = ({ prop }: ITransactionProp) => {
+const TransactionCard = ({
+  transaction,
+  signerId,
+  signatureRequestId,
+  username,
+  method,
+}: ITransactionCardProp) => {
   const [showContent, setShowContent] = useState<boolean>(false);
-  const opName = prop.transaction
-    ? prop.transaction.operations[0][0].charAt(0).toUpperCase() +
-      prop.transaction.operations[0][0].slice(1)
+  const opName = transaction
+    ? transaction.operations[0][0].charAt(0).toUpperCase() +
+      transaction.operations[0][0].slice(1)
     : 'Transfer';
 
-  const handleSign = () => {
+  const handleSign = async () => {
     const multisig = new HiveMultisigSDK(window);
     const data: ISignTransaction = {
-      decodedTransaction: prop.transaction,
-      signerId: prop.id,
-      signatureRequestId: prop.signatureRequestId,
-      username: prop.username,
-      method: prop.method,
+      decodedTransaction: transaction,
+      signerId: signerId,
+      signatureRequestId: signatureRequestId,
+      username: username,
+      method: method,
     };
-    const res = multisig.signTransaction(data);
-    console.log(`Sign Transaction Result ${res}`);
+    multisig
+      .signTransaction(data)
+      .then((res) => {
+        console.log(`Sign Transaction Result ${res}`);
+      })
+      .catch((reason: any) => {
+        console.log(`Sign Transaction Rejected ${reason}`);
+      });
   };
 
   return (
@@ -97,7 +121,7 @@ const TransactionCard = ({ prop }: ITransactionProp) => {
           <Card>
             <Card.Body>
               <div id="example-collapse-text">
-                {JSON.stringify(prop.transaction)}
+                {JSON.stringify(transaction)}
               </div>
             </Card.Body>
           </Card>
