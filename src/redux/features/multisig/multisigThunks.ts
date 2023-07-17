@@ -1,8 +1,8 @@
-import { Transaction } from '@hiveio/dhive';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
+  ITransaction,
   SignatureRequestCallback,
   SignerConnect,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
@@ -60,7 +60,7 @@ export const subscribeToSignRequests = createAsyncThunk<
 
 export const addSignRequest = createAsyncThunk(
   'multisig/signRequests',
-  async (signRequest: Transaction[]) => {
+  async (signRequest: ITransaction[]) => {
     return signRequest;
   },
 );

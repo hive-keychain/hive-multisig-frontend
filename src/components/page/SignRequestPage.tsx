@@ -1,4 +1,8 @@
-import { Transaction } from '@hiveio/dhive';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import {
+  ISignTransaction,
+  ITransaction,
+} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { useState } from 'react';
 import { Button, Card, Collapse } from 'react-bootstrap';
 import { useAppSelector } from '../../redux/app/hooks';
@@ -11,6 +15,7 @@ export const SignRequestsPage = () => {
   const signRequests = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
   );
+
   return (
     <div>
       <SignRequestCard signRequests={signRequests} />
@@ -19,7 +24,7 @@ export const SignRequestsPage = () => {
 };
 
 interface ISignRequestCardProps {
-  signRequests: Transaction[];
+  signRequests: ITransaction[];
 }
 
 const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
@@ -36,27 +41,41 @@ const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
           signRequests.map((req) => {
             return (
               <div>
-                <TransactionCard transaction={req} key={req.ref_block_num} />
+                <TransactionCard prop={req} key={req.id} />
                 <br />
               </div>
             );
           })
         )}
-        <TransactionCard transaction={null} />
+        <TransactionCard prop={null} />
       </Card.Body>
     </Card>
   );
 };
 
 interface ITransactionProp {
-  transaction: Transaction;
+  prop: ITransaction;
 }
-const TransactionCard = ({ transaction }: ITransactionProp) => {
+const TransactionCard = ({ prop }: ITransactionProp) => {
   const [showContent, setShowContent] = useState<boolean>(false);
-  const opName = transaction
-    ? transaction.operations[0][0].charAt(0).toUpperCase() +
-      transaction.operations[0][0].slice(1)
+  const opName = prop.transaction
+    ? prop.transaction.operations[0][0].charAt(0).toUpperCase() +
+      prop.transaction.operations[0][0].slice(1)
     : 'Transfer';
+
+  const handleSign = () => {
+    const multisig = new HiveMultisigSDK(window);
+    const data: ISignTransaction = {
+      decodedTransaction: prop.transaction,
+      signerId: prop.id,
+      signatureRequestId: prop.signatureRequestId,
+      username: prop.username,
+      method: prop.method,
+    };
+    const res = multisig.signTransaction(data);
+    console.log(`Sign Transaction Result ${res}`);
+  };
+
   return (
     <Card>
       <Card.Body>
@@ -78,14 +97,23 @@ const TransactionCard = ({ transaction }: ITransactionProp) => {
           <Card>
             <Card.Body>
               <div id="example-collapse-text">
-                {JSON.stringify(transaction)}
+                {JSON.stringify(prop.transaction)}
               </div>
             </Card.Body>
           </Card>
         </Collapse>
         <div className="mt-2 d-flex justify-content-end">
-          <Button variant="success">Sign</Button>
-        </div>
+          <Button className="me-2" variant="danger">
+            Refuse
+          </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              handleSign();
+            }}>
+            Sign
+          </Button>
+        </div>{' '}
       </Card.Body>
     </Card>
   );

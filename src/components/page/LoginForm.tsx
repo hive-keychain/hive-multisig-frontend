@@ -1,8 +1,9 @@
-import { Transaction } from '@hiveio/dhive';
-
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
-import { IDecodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
+import {
+  IDecodeTransaction,
+  ITransaction,
+} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
@@ -93,7 +94,7 @@ const LoginForm = () => {
   const sigRequestCallback = async (message: SignatureRequest) => {
     const authorities = await HiveUtils.getAccountAuthorities(username);
     const myPublickeys = getPublicKeys(message.keyType, authorities);
-    let transactions: Transaction[] = [];
+    let transactions: ITransaction[] = [];
 
     for (var k = 0; k < myPublickeys.length; k++) {
       for (var i = 0; i < message.signers.length; i++) {

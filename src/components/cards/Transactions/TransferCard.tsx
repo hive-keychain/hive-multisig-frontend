@@ -16,7 +16,6 @@ import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-import { SignerRow } from './SignerRow';
 function Transfer() {
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -182,39 +181,6 @@ function Transfer() {
                     error={errors.to}
                   />
 
-                  {transactionState.authority ? (
-                    <div>
-                      Signers
-                      <div className="mt-2">
-                        {transactionState.authority.account_auths.map(
-                          (auth) => {
-                            return (
-                              <SignerRow
-                                name={auth[0]}
-                                weight={auth[1]}
-                                key={auth[0]}
-                              />
-                            );
-                          },
-                        )}
-                      </div>
-                      <div>
-                        {transactionState.authority.key_auths.map((auth) => {
-                          return (
-                            <SignerRow
-                              name={auth[0].toString()}
-                              weight={auth[1]}
-                              key={auth[0].toString()}
-                            />
-                          );
-                        })}
-                      </div>
-                      <div>
-                        Weight Threshold:{' '}
-                        {transactionState.authority.weight_threshold}
-                      </div>
-                    </div>
-                  ) : null}
                   <div className="d-flex justify-content-end">
                     <Button type="submit" className="" variant="success">
                       Submit

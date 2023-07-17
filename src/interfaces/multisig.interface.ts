@@ -1,12 +1,12 @@
-import { Transaction } from '@hiveio/dhive';
-
-import { SignerConnectResponse } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
-
+import {
+  ITransaction,
+  SignerConnectResponse,
+} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 export interface IMultisig {
   signerConnectActive: SignerConnectResponse;
   signerConnectPosting: SignerConnectResponse;
   subscribeToSignRequest: boolean;
-  signRequests: Transaction[];
+  signRequests: ITransaction[];
 }
 
 export interface State extends IMultisig {
