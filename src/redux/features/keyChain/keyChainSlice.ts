@@ -1,10 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/transaction.interface';
-import { checkKeychain, keychainSignTx } from './keyChainThunks';
+import { checkKeychain } from './keyChainThunks';
 
 const initialState: State = {
   username: '',
-  publicKey: '',
   expiration: null,
   method: undefined,
   txName: null,
@@ -39,34 +38,6 @@ const checkKeychainSlice = createSlice({
   },
 });
 
-const keychainSignTxSlice = createSlice({
-  name: 'signTx',
-  initialState,
-  reducers: {},
-  extraReducers: (builder) => {
-    builder.addCase(keychainSignTx.pending, (state) => {
-      state.process = 'ketchain_sign_tx';
-      state.loading = true;
-      state.error = null;
-    });
-
-    builder.addCase(keychainSignTx.fulfilled, (state, action) => {
-      state.loading = false;
-      state.response = action.payload;
-      state.success = true;
-    });
-
-    builder.addCase(keychainSignTx.rejected, (state, action) => {
-      state.loading = false;
-      state.success = false;
-      state.response = null;
-      state.error = 'keychain signTx failed';
-    });
-  },
-});
-
 export const checkKeychainReducer = checkKeychainSlice.reducer;
-export const keychainSignTxReducer = keychainSignTxSlice.reducer;
 
 export const checkKeychainActions = checkKeychainSlice.actions;
-export const keychainSignTxReducerActions = keychainSignTxSlice.actions;

@@ -1,10 +1,10 @@
-import * as Hive from '@hiveio/dhive';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
   IExpiration,
   ITransaction,
+  Initiator,
   State,
 } from '../../../interfaces/transaction.interface';
 
@@ -84,37 +84,6 @@ export const setUsername = createAsyncThunk<
   };
   return newState;
 });
-export const setReceiver = createAsyncThunk<
-  State,
-  string | Hive.PublicKey,
-  { rejectValue: string }
->(
-  'transaction/setReceiver',
-  async (receiver: string | Hive.PublicKey, { getState }) => {
-    const currentState = getState() as State;
-    const newState: State = {
-      ...currentState,
-      receiver,
-    };
-    return newState;
-  },
-);
-
-export const setSigner = createAsyncThunk<
-  State,
-  string | Hive.PublicKey,
-  { rejectValue: string }
->(
-  'transaction/setSigner',
-  async (signer: string | Hive.PublicKey, { getState }) => {
-    const currentState = getState() as State;
-    const newState: State = {
-      ...currentState,
-      signer,
-    };
-    return newState;
-  },
-);
 
 export const setExpiration = createAsyncThunk<
   State,
@@ -132,15 +101,17 @@ export const setExpiration = createAsyncThunk<
   },
 );
 
-export const setPublicKey = createAsyncThunk<
+export const setInitiator = createAsyncThunk<
   State,
-  string,
+  Initiator,
   { rejectValue: string }
->('transaction/setPublicKey', async (publicKey: string, { getState }) => {
+>('transaction/setInitiator', async (initiator: Initiator, { getState }) => {
   const currentState = getState() as State;
   const newState: State = {
     ...currentState,
-    publicKey,
+    initiator: {
+      ...initiator,
+    },
   };
   return newState;
 });

@@ -1,12 +1,14 @@
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { KeychainKeyTypes, KeychainSDK, Login } from 'keychain-sdk';
+import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { LoginResponseType } from '../../../interfaces';
+import HiveUtils from '../../../utils/hive.utils';
 export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
   SIGNATURE_SUCCEEDED = 'SIGNATURE_SUCCEEDED',
   SIGNATURE_FAILED = 'SIGNATURE_FAILED',
   LOGGED_OUT = 'LOGGED_OUT',
 }
+const multisig = new HiveMultisigSDK(window);
 
 export type LoginStateType = {
   loginState: LoginState;
@@ -24,12 +26,7 @@ const initialState: LoginStateType = {
 export const hiveKeyChainRequestSign = createAsyncThunk(
   'login/request',
   async (username: string) => {
-    const keychain = new KeychainSDK(window);
-    const userData: Login = {
-      username,
-      method: KeychainKeyTypes.posting,
-    };
-    const response = await keychain.login(userData);
+    const response = await HiveUtils.requestSignature(username);
     return response;
   },
 );

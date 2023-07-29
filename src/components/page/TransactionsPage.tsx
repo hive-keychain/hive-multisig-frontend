@@ -1,24 +1,24 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
-import {
-  IEncodeTransaction,
-  RequestSignatureMessage,
-} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
+import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { LoginResponseType } from '../../interfaces';
-import { ITransaction } from '../../interfaces/transaction.interface';
+import {
+  ITransaction,
+  Initiator,
+} from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
   setAuthority,
-  setPublicKey,
+  setInitiator,
   setTransactionMethod,
   setTransactionName,
-  setUsername,
 } from '../../redux/features/transaction/transactionThunks';
+import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { getISOStringDate } from '../../utils/utils';
 import Transfer from '../cards/Transactions/TransferCard';
@@ -58,7 +58,7 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
-      dispatch(setPublicKey(loggedInAccount.publicKey));
+      handleSetInitiator('Active');
     } else {
       navigate('/login');
     }
@@ -69,6 +69,7 @@ export const TransactionPage = () => {
       navigate('/login');
     }
   }, [loggedInAccount]);
+
   useEffect(() => {
     handleSelectOnChange(transactionType);
     dispatch(setTransactionName(transactionType));
@@ -82,17 +83,28 @@ export const TransactionPage = () => {
     try {
       const txInfo: ITransaction = {
         username: loggedInAccount.data.username,
-        publicKey: '',
-        receiver: '',
         expiration: undefined,
         method,
       };
-      await dispatch(setUsername(txInfo.username));
       await dispatch(setTransactionMethod(method));
+      await handleSetInitiator(method);
       dispatch(setAuthority(txInfo));
     } catch (error) {
       console.log('Error while dispatching transaction details');
     }
+  };
+
+  const handleSetInitiator = async (keyType: string) => {
+    const auth = await HiveUtils.getAccountPublicKeyAuthority(
+      loggedInAccount.data.username,
+      keyType,
+    );
+    const initiator: Initiator = {
+      username: loggedInAccount.data.username,
+      publicKey: auth[0].toString(),
+      weight: auth[1].toString(),
+    };
+    await dispatch(setInitiator(initiator));
   };
 
   useEffect(() => {
@@ -108,21 +120,14 @@ export const TransactionPage = () => {
           expirationDate: new Date(
             getISOStringDate(transactionState.expiration),
           ),
-          receiver: transactionState.receiver.toString(),
-          initiator: transactionState.username.toString(),
+          initiator: transactionState.initiator,
           authority: transactionState.authority,
         };
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
-        const requestSignatureObj: RequestSignatureMessage = {
-          signatureRequest: encodedTxObj.signRequestData,
-          initialSigner: {
-            username: transactionState.username,
-            publicKey: transactionState.publicKey.toString(),
-            signature: encodedTxObj.signedTransaction.signatures[0],
-            weight: transactionState.authority.key_auths[0][1],
-          },
-        };
-        const result = await multisig.sendSignatureRequest(requestSignatureObj);
+
+        const result = await multisig.sendSignatureRequest(encodedTxObj);
+        console.log('Send signature request:');
+        console.log(result);
       })();
     }
   }, [operation]);

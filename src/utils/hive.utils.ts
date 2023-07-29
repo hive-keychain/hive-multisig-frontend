@@ -2,6 +2,10 @@ import * as Hive from '@hiveio/dhive';
 import { Client, PrivateKey } from '@hiveio/dhive';
 import { Authorities } from '../interfaces/account.interface';
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';
+import {
+  IHiveSignatureInterface,
+  LoginResponseType,
+} from '../interfaces/hive-keychain.interface';
 const client = new Client([
   'https://api.hive.blog',
   'https://api.hivekings.com',
@@ -15,11 +19,82 @@ import {
   BroadCastResponseType,
   IHiveAccountUpdateBroadcast,
 } from '../interfaces';
+import { getTimestampInSeconds } from './utils';
 
 const getAccount = async (username: string) => {
   return client.database.getAccounts([username]);
 };
 
+const getPublicKey = async (username: string, keyType: string) => {
+  var account = await getAccount(username);
+  try {
+    switch (keyType.toLowerCase()) {
+      case 'posting':
+        return account[0].posting.key_auths[0][0].toString();
+      case 'active':
+        return account[0].active.key_auths[0][0].toString();
+    }
+  } catch {
+    throw Error(`Cannot find public key for ${username}`);
+  }
+};
+
+const getAccountPublicKeyAuthority = async (
+  username: string,
+  keyType: string,
+): Promise<[string, number]> => {
+  try {
+    const account = await getAccount(username);
+    switch (keyType.toLowerCase()) {
+      case 'posting':
+        return [
+          account[0].posting.key_auths[0][0].toString(),
+          account[0].posting.key_auths[0][1],
+        ];
+      case 'active':
+        return [
+          account[0].active.key_auths[0][0].toString(),
+          account[0].active.key_auths[0][1],
+        ];
+    }
+  } catch (error) {
+    throw new Error(`Cannot find public key for ${username}`);
+  }
+};
+
+const createSignatureObject = (
+  username: string,
+  setValidLogIn: Function,
+): IHiveSignatureInterface => {
+  return {
+    username: username,
+    message: {
+      username: username,
+      timestamp: getTimestampInSeconds(),
+      message: 'sign in from hive multisig',
+    },
+    key: 'Posting',
+    responseCallback: setValidLogIn,
+  };
+};
+const requestSignature = (username: string) => {
+  return new Promise<LoginResponseType>((resolve, reject) => {
+    const callback = (response: LoginResponseType) => {
+      if (response.success) {
+        resolve(response);
+      } else {
+        reject(response);
+      }
+    };
+    const sigObj = createSignatureObject(username, callback);
+    window.hive_keychain.requestSignBuffer(
+      sigObj.username,
+      JSON.stringify(sigObj.message),
+      sigObj.key,
+      sigObj.responseCallback,
+    );
+  });
+};
 const getAccountAuthorities = async (username: string) => {
   let keys: Authorities = {
     account: '',
@@ -153,6 +228,9 @@ const HiveUtils = {
   getDynamicGlobalProperties,
   getNextRequestID,
   accountUpdateBroadcast,
+  requestSignature,
+  getAccountPublicKeyAuthority,
+  getPublicKey,
 };
 
 export default HiveUtils;

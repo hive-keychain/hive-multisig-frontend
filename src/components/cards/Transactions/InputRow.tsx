@@ -1,8 +1,6 @@
-import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from 'react';
 import { Form, InputGroup, Row } from 'react-bootstrap';
 import { useAppDispatch } from '../../../redux/app/hooks';
-import { setReceiver } from '../../../redux/features/transaction/transactionThunks';
 
 interface IInputRow {
   rowKey: string;
@@ -53,9 +51,7 @@ export const InputRow = ({
   const handleSelectionChange = (value: string) => {
     setSelection(value);
   };
-  const handleReceiverUsername = (value: string | Hive.PublicKey) => {
-    dispatch(setReceiver(value));
-  };
+
   return (
     <div key={rowKey}>
       <Row className="mb-3">
@@ -74,11 +70,6 @@ export const InputRow = ({
               placeholder={placeholder}
               value={String(value)}
               onChange={onChangeFunc}
-              onBlur={
-                rowName === 'to'
-                  ? (event) => handleReceiverUsername(event.target.value)
-                  : null
-              }
               isInvalid={invalidFlag}
             />
             {append && append !== '' ? (

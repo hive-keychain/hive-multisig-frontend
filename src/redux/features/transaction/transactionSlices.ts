@@ -3,10 +3,8 @@ import { State } from '../../../interfaces/transaction.interface';
 import {
   setAuthority,
   setExpiration,
+  setInitiator,
   setOperation,
-  setPublicKey,
-  setReceiver,
-  setSigner,
   setTransactionMethod,
   setTransactionName,
   setUsername,
@@ -14,12 +12,10 @@ import {
 
 const initialState: State = {
   username: '',
-  publicKey: '',
-  receiver: '',
-  signer: '',
   operation: undefined,
   method: undefined,
   expiration: undefined,
+  initiator: undefined,
   txName: null,
   process: null,
   response: null,
@@ -107,34 +103,6 @@ const transactionSlice = createSlice({
       state.error = 'Error setting username';
     });
 
-    builder.addCase(setReceiver.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(setReceiver.fulfilled, (state, action) => {
-      state.receiver = action.payload.receiver;
-      state.loading = false;
-      state.success = true;
-    });
-    builder.addCase(setReceiver.rejected, (state, action) => {
-      state.loading = false;
-      state.error = 'Error setting receiver';
-    });
-
-    builder.addCase(setSigner.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(setSigner.fulfilled, (state, action) => {
-      state.signer = action.payload.signer;
-      state.loading = false;
-      state.success = true;
-    });
-    builder.addCase(setSigner.rejected, (state, action) => {
-      state.loading = false;
-      state.error = 'Error setting signer name';
-    });
-
     builder.addCase(setExpiration.pending, (state) => {
       state.loading = true;
       state.error = null;
@@ -149,16 +117,16 @@ const transactionSlice = createSlice({
       state.error = 'Error setting expiration date';
     });
 
-    builder.addCase(setPublicKey.pending, (state) => {
+    builder.addCase(setInitiator.pending, (state) => {
       state.loading = true;
       state.error = null;
     });
-    builder.addCase(setPublicKey.fulfilled, (state, action) => {
-      state.publicKey = action.payload.publicKey;
+    builder.addCase(setInitiator.fulfilled, (state, action) => {
+      state.initiator = action.payload.initiator;
       state.loading = false;
       state.success = true;
     });
-    builder.addCase(setPublicKey.rejected, (state, action) => {
+    builder.addCase(setInitiator.rejected, (state, action) => {
       state.loading = false;
       state.error = 'Error setting public key';
     });

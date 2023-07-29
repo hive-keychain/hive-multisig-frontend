@@ -18,14 +18,17 @@ export enum OperationType {
   BLOG = 'blog_post',
   COMMENT = 'comment',
 }
+export interface Initiator {
+  username: string;
+  publicKey: string;
+  weight: string;
+}
 export interface ITransaction {
   txName?: String | OperationType;
   operation?: object;
   authority?: Hive.AuthorityType;
+  initiator?: Initiator;
   username: string;
-  publicKey: string | Hive.PublicKey;
-  receiver?: string | Hive.PublicKey;
-  signer?: string | Hive.PublicKey;
   expiration: IExpiration;
   method: KeychainKeyTypes;
 }
