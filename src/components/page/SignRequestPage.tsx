@@ -9,10 +9,6 @@ import { useState } from 'react';
 import { Button, Card, Collapse } from 'react-bootstrap';
 import { useAppSelector } from '../../redux/app/hooks';
 
-//TODO: create a ISignTransaction as data
-// send data to multisig.SignTransaction(data);
-// broadcast..
-// notify backend..
 export const SignRequestsPage = () => {
   const signRequests = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
@@ -76,7 +72,6 @@ const TransactionCard = ({
 }: ITransactionCardProp) => {
   const multisig = new HiveMultisigSDK(window);
   const [showContent, setShowContent] = useState<boolean>(false);
-
   const opName = transaction
     ? transaction.operations[0][0].charAt(0).toUpperCase() +
       transaction.operations[0][0].slice(1)

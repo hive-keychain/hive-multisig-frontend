@@ -92,27 +92,31 @@ const LoginForm = () => {
   };
 
   const sigRequestCallback = async (message: SignatureRequest) => {
-    const authorities = await HiveUtils.getAccountAuthorities(username);
-    const myPublickeys = getPublicKeys(message.keyType, authorities);
-    let transactions: ITransaction[] = [];
-
-    for (var k = 0; k < myPublickeys.length; k++) {
-      for (var i = 0; i < message.signers.length; i++) {
-        const data: IDecodeTransaction = {
-          signatureRequest: message,
-          username: username,
-          publicKey: myPublickeys[k].toString(),
-        };
-        const multisig = new HiveMultisigSDK(window);
-        const tx = await multisig.decodeTransaction(data);
-        if (tx) {
-          transactions.push(tx);
+    console.log('signrequestcCallback');
+    console.log(message);
+    if (message) {
+      const authorities = await HiveUtils.getAccountAuthorities(username);
+      const myPublickeys = getPublicKeys(message.keyType, authorities);
+      let transactions: ITransaction[] = [];
+      if (message.initiator !== username) {
+        for (var i = 0; i < message.signers.length; i++) {
+          if (myPublickeys.includes(message.signers[i].publicKey)) {
+            const data: IDecodeTransaction = {
+              signatureRequest: message,
+              username: username,
+              publicKey: message.signers[i].publicKey.toString(),
+            };
+            const multisig = new HiveMultisigSDK(window);
+            const tx = await multisig.decodeTransaction(data);
+            if (tx) {
+              transactions.push(tx);
+            }
+          }
         }
-      }
-
-      if (transactions.length > 0) {
-        await dispatch(addSignRequest(transactions));
-        await dispatch(setSignRequestCount(transactions.length));
+        if (transactions.length > 0) {
+          await dispatch(addSignRequest(transactions));
+          await dispatch(setSignRequestCount(transactions.length));
+        }
       }
     }
   };
