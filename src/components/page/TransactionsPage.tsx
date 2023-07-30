@@ -58,7 +58,7 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
-      handleSetInitiator('Active');
+      // handleSetInitiator('Active');
     } else {
       navigate('/login');
     }
@@ -124,10 +124,7 @@ export const TransactionPage = () => {
           authority: transactionState.authority,
         };
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
-
-        const result = await multisig.sendSignatureRequest(encodedTxObj);
-        console.log('Send signature request:');
-        console.log(result);
+        await multisig.sendSignatureRequest(encodedTxObj);
       })();
     }
   }, [operation]);
