@@ -7,7 +7,7 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { useAppDispatch } from '../../../redux/app/hooks';
 import {
   setExpiration,
   setOperation,
@@ -16,13 +16,11 @@ import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
+
 function Transfer() {
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const dispatch = useAppDispatch();
-  const transactionState = useAppSelector(
-    (state) => state.transaction.transaction,
-  );
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
