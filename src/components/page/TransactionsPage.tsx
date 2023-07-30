@@ -58,7 +58,6 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
-      // handleSetInitiator('Active');
     } else {
       navigate('/login');
     }

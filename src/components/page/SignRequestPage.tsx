@@ -1,4 +1,4 @@
-import { Transaction } from '@hiveio/dhive';
+import { SignedTransaction } from '@hiveio/dhive';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
@@ -30,7 +30,6 @@ interface ISignRequestCardProps {
 }
 
 const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
-  console.log(`SignRequestsLEngth:${signRequests.length}`);
   return (
     <Card>
       <Card.Body>
@@ -45,11 +44,11 @@ const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
               <div>
                 <TransactionCard
                   transaction={req.transaction}
-                  signerId={req.id}
+                  signerId={req.signerId}
                   signatureRequestId={req.signatureRequestId}
                   username={req.username}
                   method={req.method}
-                  key={req.id}
+                  key={req.signerId}
                 />
                 <br />
               </div>
@@ -62,7 +61,7 @@ const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
 };
 
 interface ITransactionCardProp {
-  transaction: Transaction;
+  transaction: SignedTransaction;
   signerId: number;
   signatureRequestId: number;
   username: string;
@@ -75,14 +74,15 @@ const TransactionCard = ({
   username,
   method,
 }: ITransactionCardProp) => {
+  const multisig = new HiveMultisigSDK(window);
   const [showContent, setShowContent] = useState<boolean>(false);
+
   const opName = transaction
     ? transaction.operations[0][0].charAt(0).toUpperCase() +
       transaction.operations[0][0].slice(1)
     : 'Transfer';
 
   const handleSign = async () => {
-    const multisig = new HiveMultisigSDK(window);
     const data: ISignTransaction = {
       decodedTransaction: transaction,
       signerId: signerId,
@@ -92,14 +92,33 @@ const TransactionCard = ({
     };
     multisig
       .signTransaction(data)
-      .then((res) => {
-        console.log(`Sign Transaction Result ${res}`);
+      .then(async (res) => {
+        await broadcast(res);
       })
       .catch((reason: any) => {
         console.log(`Sign Transaction Rejected ${reason}`);
       });
   };
 
+  const broadcast = async (signatures: string[]) => {
+    try {
+      let tx: SignedTransaction = { ...transaction };
+      tx.signatures = [...signatures];
+      const txToBroadcast: ITransaction = {
+        signerId,
+        signatureRequestId,
+        transaction: tx,
+        method,
+        username,
+      };
+      const broadcastResult = await multisig.broadcastTransaction(
+        txToBroadcast,
+      );
+      console.log(`Broadcast Result: ${broadcastResult}`);
+    } catch (error) {
+      console.log(`Broadcast Error: ${error}`);
+    }
+  };
   return (
     <Card>
       <Card.Body>

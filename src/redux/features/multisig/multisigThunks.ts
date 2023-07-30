@@ -59,7 +59,7 @@ export const subscribeToSignRequests = createAsyncThunk<
 );
 
 export const addSignRequest = createAsyncThunk(
-  'multisig/signRequests',
+  'multisig/addSignRequest',
   async (signRequest: ITransaction[]) => {
     return signRequest;
   },
