@@ -7,16 +7,21 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 export const VoteOperationCard = () => {
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.VoteOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -24,10 +29,11 @@ export const VoteOperationCard = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
 
   useEffect(() => {
@@ -49,10 +55,15 @@ export const VoteOperationCard = () => {
     }
   }, [errorMessage]);
 
-  useEffect(() => {}, [transaction]);
+  useEffect(() => {
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const tx: Hive.VoteOperation = {
+    const op: Hive.VoteOperation = {
       0: 'vote',
       1: {
         author: values.author,
@@ -61,7 +72,7 @@ export const VoteOperationCard = () => {
         weight: parseInt(values.weight),
       },
     };
-    setTransaction(tx);
+    setOps(op);
   };
 
   const schema = yup.object().shape({
@@ -144,13 +155,12 @@ export const VoteOperationCard = () => {
                     invalidFlag={touched.weight && !!errors.weight}
                     error={errors.weight}
                   />
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

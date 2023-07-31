@@ -7,16 +7,23 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 const PowerUpCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.TransferToVestingOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -24,10 +31,11 @@ const PowerUpCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -47,11 +55,16 @@ const PowerUpCard: React.FC<{}> = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-  useEffect(() => {}, [transaction]);
+  useEffect(() => {
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
     const asset = hiveDecimalFormat(values.amount, 3) + ` HIVE`;
-    const tx: Hive.TransferToVestingOperation = {
+    const op: Hive.TransferToVestingOperation = {
       0: 'transfer_to_vesting',
       1: {
         from: values.from,
@@ -59,7 +72,7 @@ const PowerUpCard: React.FC<{}> = () => {
         amount: asset,
       },
     };
-    setTransaction(tx);
+    setOps(op);
   };
 
   const schema = yup.object().shape({
@@ -130,13 +143,12 @@ const PowerUpCard: React.FC<{}> = () => {
                     invalidFlag={touched.amount && !!errors.amount}
                     error={errors.amount}
                   />
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

@@ -7,6 +7,11 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { AddArrayFieldType } from './AddArrayField';
 import { Expiration } from './Expiration';
@@ -14,11 +19,13 @@ import { FieldArrayCard } from './FieldArrayCard';
 import { InputRow } from './InputRow';
 
 const UpdateProposalVoteCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
   const [newProposalId, setNewProposalId] = useState<string>('');
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.UpdateProposalVotesOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -26,10 +33,11 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -49,13 +57,17 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-  useEffect(() => {}, [transaction]);
-
+  useEffect(() => {
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
   const handleTransaction = async (values: any) => {
     var p_ids: number[] = values.proposal_ids.map((x: string) => {
       return parseInt(x, 10);
     });
-    const tx: Hive.UpdateProposalVotesOperation = {
+    const op: Hive.UpdateProposalVotesOperation = {
       0: 'update_proposal_votes',
       1: {
         approve: values.approve,
@@ -64,7 +76,7 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
         voter: values.voter,
       },
     };
-    setTransaction(tx);
+    setOps(op);
   };
 
   const addProposalIdBtnHandler = (push: Function) => {
@@ -149,13 +161,12 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
                       />
                     </Form.Group>
                   </Row>
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

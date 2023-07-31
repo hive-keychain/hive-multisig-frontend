@@ -7,16 +7,21 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 export const CommentOperationCard = () => {
+  const dispatch = useAppDispatch();
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.CommentOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -24,10 +29,11 @@ export const CommentOperationCard = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -47,14 +53,15 @@ export const CommentOperationCard = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-
   useEffect(() => {
-    if (transaction) {
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const tx: Hive.CommentOperation = {
+    const op: Hive.CommentOperation = {
       0: 'comment',
       1: {
         parent_author: values.parent_author,
@@ -66,7 +73,7 @@ export const CommentOperationCard = () => {
         json_metadata: values.json_metadata,
       },
     };
-    setTransaction(tx);
+    setOps(op);
   };
   const schema = yup.object().shape({
     author: yup.string().required('Required'),
@@ -180,14 +187,13 @@ export const CommentOperationCard = () => {
                     }
                     error={errors.json_metadata}
                   />
-                  <Expiration setExpiration={setExpiration} />
+                  <Expiration setExpiration={setTxExpiration} />
 
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

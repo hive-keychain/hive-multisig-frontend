@@ -7,16 +7,23 @@ import * as yup from 'yup';
 import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 const PowerDownCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
     useState<LoginResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.WithdrawVestingOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -24,10 +31,11 @@ const PowerDownCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -48,19 +56,25 @@ const PowerDownCard: React.FC<{}> = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-  useEffect(() => {}, [transaction]);
+
+  useEffect(() => {
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = (values: any) => {
     const asset: string =
       hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
-    const tx: Hive.WithdrawVestingOperation = {
+    const op: Hive.WithdrawVestingOperation = {
       0: 'withdraw_vesting',
       1: {
         account: values.account,
         vesting_shares: asset,
       },
     };
-    setTransaction(tx);
+    setOps(op);
   };
 
   const schema = yup.object().shape({
@@ -119,13 +133,12 @@ const PowerDownCard: React.FC<{}> = () => {
                     }
                     error={errors.vesting_shares}
                   />
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>
