@@ -1,9 +1,5 @@
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
-import {
-  IDecodeTransaction,
-  ITransaction,
-} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
@@ -19,14 +15,14 @@ import {
   signerConnectPosting,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
-import HiveUtils from '../../utils/hive.utils';
 
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import {
   getElapsedTimestampSeconds,
-  getPublicKeys,
   getTimestampInSeconds,
 } from '../../utils/utils';
 const LoginForm = () => {
+  const [multisig, setMultisig] = useState<HiveMultisigSDK>(undefined);
   const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');
   const isLoginSucceed = useAppSelector(
@@ -68,7 +64,8 @@ const LoginForm = () => {
   useEffect(() => {
     if (isLoggedIn) {
       navigate(`/transaction`);
-      multisigInitAsync();
+      subToSignReqequests();
+      signerConnect();
     } else {
       navigate('/login');
     }
@@ -80,43 +77,80 @@ const LoginForm = () => {
     }
   }, [isLoginSucceed]);
 
-  const multisigInitAsync = async () => {
-    await dispatch(signerConnectActive(username));
-    await dispatch(signerConnectPosting(username));
-    dispatch(subscribeToSignRequests(sigRequestCallback));
+  const subToSignReqequests = async () => {
+    const subscribeRes = await multisig.subscribeToSignRequests(
+      signRequestCallback,
+    );
+    dispatch(subscribeToSignRequests(subscribeRes));
+  };
+
+  const signerConnect = async () => {
+    await connectActive();
+    await connectPosting();
+  };
+  const connectActive = async () => {
+    const signerConnectResponse = await multisig.signerConnect({
+      username,
+      keyType: KeychainKeyTypes.active,
+    });
+    if (signerConnectResponse.result) {
+      if (signerConnectResponse.result.pendingSignatureRequests) {
+        const pendingReqs =
+          signerConnectResponse.result.pendingSignatureRequests[username];
+        if (pendingReqs.length > 0) {
+          const decodedTxs = await multisig.decodeTransaction({
+            signatureRequest: pendingReqs,
+            username,
+          });
+          await dispatch(addSignRequest(decodedTxs));
+          await dispatch(setSignRequestCount(decodedTxs.length));
+        }
+      }
+    }
+    await dispatch(signerConnectActive(signerConnectResponse));
+  };
+  const connectPosting = async () => {
+    const signerConnectResponse = await multisig.signerConnect({
+      username,
+      keyType: KeychainKeyTypes.posting,
+    });
+    if (signerConnectResponse.result) {
+      if (signerConnectResponse.result.pendingSignatureRequests) {
+        const pendingReqs =
+          signerConnectResponse.result.pendingSignatureRequests[username];
+        if (pendingReqs.length > 0) {
+          const decodedTxs = await multisig.decodeTransaction({
+            signatureRequest: pendingReqs,
+            username,
+          });
+
+          await dispatch(addSignRequest(decodedTxs));
+          await dispatch(setSignRequestCount(decodedTxs.length));
+        }
+      }
+    }
+    await dispatch(signerConnectPosting(signerConnectResponse));
   };
   const loginInitAsync = async () => {
+    if (!multisig) {
+      setMultisig(new HiveMultisigSDK(window));
+    }
     setStorageIsLoggedIn(isLoginSucceed);
     setStorageAccountDetails(signedAccountObj);
     setLoginTimestamp(getTimestampInSeconds());
   };
 
-  const sigRequestCallback = async (message: SignatureRequest) => {
+  const signRequestCallback = async (message: SignatureRequest) => {
     console.log('signrequestcCallback');
     console.log(message);
     if (message) {
-      const authorities = await HiveUtils.getAccountAuthorities(username);
-      const myPublickeys = getPublicKeys(message.keyType, authorities);
-      let transactions: ITransaction[] = [];
-      if (message.initiator !== username) {
-        for (var i = 0; i < message.signers.length; i++) {
-          if (myPublickeys.includes(message.signers[i].publicKey)) {
-            const data: IDecodeTransaction = {
-              signatureRequest: message,
-              username: username,
-              publicKey: message.signers[i].publicKey.toString(),
-            };
-            const multisig = new HiveMultisigSDK(window);
-            const tx = await multisig.decodeTransaction(data);
-            if (tx) {
-              transactions.push(tx);
-            }
-          }
-        }
-        if (transactions.length > 0) {
-          await dispatch(addSignRequest(transactions));
-          await dispatch(setSignRequestCount(transactions.length));
-        }
+      const decodedTxs = await multisig.decodeTransaction({
+        signatureRequest: [message],
+        username,
+      });
+      if (decodedTxs.length > 0) {
+        await dispatch(addSignRequest(decodedTxs));
+        await dispatch(setSignRequestCount(decodedTxs.length));
       }
     }
   };

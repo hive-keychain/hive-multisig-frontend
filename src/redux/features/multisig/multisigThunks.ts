@@ -1,62 +1,50 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
   ITransaction,
-  SignatureRequestCallback,
-  SignerConnect,
+  SignerConnectResponse,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 
 import { State } from '../../../interfaces/multisig.interface';
-const multisig = new HiveMultisigSDK(window);
 
 export const signerConnectActive = createAsyncThunk<
   State,
-  string,
+  SignerConnectResponse,
   { rejectValue: string }
->('multisig/signerConnectActive', async (username: string, { getState }) => {
-  const currentState = getState() as State;
-  const connObj: SignerConnect = {
-    username,
-    keyType: KeychainKeyTypes.active,
-  };
-  const signerConnectResponse = await multisig.singleSignerConnect(connObj);
-  const newState: State = {
-    ...currentState,
-    signerConnectActive: signerConnectResponse,
-  };
-  return newState;
-});
+>(
+  'multisig/signerConnectActive',
+  async (connectResponse: SignerConnectResponse, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      signerConnectActive: connectResponse,
+    };
+    return newState;
+  },
+);
 
 export const signerConnectPosting = createAsyncThunk<
   State,
-  string,
+  SignerConnectResponse,
   { rejectValue: string }
->('multisig/signerConnectPosting', async (username: string, { getState }) => {
-  const currentState = getState() as State;
-  const connObj: SignerConnect = {
-    username,
-    keyType: KeychainKeyTypes.posting,
-  };
-  const signerConnectResponse = await multisig.singleSignerConnect(connObj);
-  const newState: State = {
-    ...currentState,
-    signerConnectPosting: signerConnectResponse,
-  };
-  return newState;
-});
+>(
+  'multisig/signerConnectPosting',
+  async (connectResponse: SignerConnectResponse, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      signerConnectPosting: connectResponse,
+    };
+    return newState;
+  },
+);
 
 export const subscribeToSignRequests = createAsyncThunk<
   boolean,
-  SignatureRequestCallback,
+  boolean,
   { rejectValue: string }
->(
-  'multisig/subscribeToSignRequests',
-  async (callback: SignatureRequestCallback) => {
-    const response = await multisig.subscribeToSignRequests(callback);
-    return response;
-  },
-);
+>('multisig/subscribeToSignRequests', async (subResponse: boolean) => {
+  return subResponse;
+});
 
 export const addSignRequest = createAsyncThunk(
   'multisig/addSignRequest',
@@ -78,16 +66,16 @@ export const setSignRequestCount = createAsyncThunk(
     return count;
   },
 );
-export const subscribeToBroadcastedTransactions = createAsyncThunk<
-  boolean,
-  SignatureRequestCallback,
-  { rejectValue: string }
->(
-  'multisig/subscribeToBroadcastedTransactions',
-  async (callback: SignatureRequestCallback) => {
-    const response = await multisig.subscribeToBroadcastedTransactions(
-      callback,
-    );
-    return response;
-  },
-);
+// export const subscribeToBroadcastedTransactions = createAsyncThunk<
+//   boolean,
+//   SignatureRequestCallback,
+//   { rejectValue: string }
+// >(
+//   'multisig/subscribeToBroadcastedTransactions',
+//   async (callback: SignatureRequestCallback) => {
+//     const response = await multisig.subscribeToBroadcastedTransactions(
+//       callback,
+//     );
+//     return response;
+//   },
+// );
