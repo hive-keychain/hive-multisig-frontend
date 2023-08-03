@@ -100,7 +100,11 @@ const NavBar = () => {
       variant="dark"
       sticky="top">
       <Container fluid>
-        <Navbar.Brand className="nav-text-color" href="/">
+        <Navbar.Brand
+          className="nav-text-color"
+          onClick={() => {
+            isLoggedIn ? setDestination('/transaction') : setDestination('/');
+          }}>
           <img
             alt=""
             src="img/logohive.png"
