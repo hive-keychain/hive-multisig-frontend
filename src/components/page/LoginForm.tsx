@@ -175,10 +175,6 @@ const LoginForm = () => {
 
   return (
     <div>
-      <div className="ms-2 text-start" style={{ color: 'black' }}>
-        <h5>Login</h5>
-      </div>
-
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
         <Form.Control

@@ -1,13 +1,13 @@
-import { SignedTransaction } from '@hiveio/dhive';
-import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import {
   ISignTransaction,
   ITransaction,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, Card, Collapse } from 'react-bootstrap';
-import { useAppSelector } from '../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { removeSignRequest } from '../../redux/features/multisig/multisigThunks';
 
 export const SignRequestsPage = () => {
   const signRequests = useAppSelector(
@@ -16,7 +16,17 @@ export const SignRequestsPage = () => {
 
   return (
     <div>
-      <SignRequestCard signRequests={signRequests} />
+      <div>
+        <PendingSignRequestCard signRequests={signRequests} key={1} />
+      </div>
+      <br />
+      <div>
+        <SignedTransactionsCard signRequests={signRequests} key="2" />
+      </div>
+      <br />
+      <div>
+        <PendingTransactionsCard key="3" />
+      </div>
     </div>
   );
 };
@@ -25,30 +35,32 @@ interface ISignRequestCardProps {
   signRequests: ITransaction[];
 }
 
-const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
+const PendingSignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
   return (
-    <Card>
+    <Card key={signRequests.length}>
       <Card.Body>
-        <Card.Title>Sign Requests</Card.Title>
+        <Card.Title>Pending Sign Requests</Card.Title>
         {signRequests.length === 0 ? (
           <Card.Text className="text-center text-secondary">
             No signature requests
           </Card.Text>
         ) : (
           signRequests.map((req) => {
-            return (
-              <div>
-                <TransactionCard
-                  transaction={req.transaction}
-                  signerId={req.signerId}
-                  signatureRequestId={req.signatureRequestId}
-                  username={req.username}
-                  method={req.method}
-                  key={req.signerId}
-                />
-                <br />
-              </div>
-            );
+            if (!req.signer.signature) {
+              return (
+                <div key={req.signer.id}>
+                  <RequestCard
+                    signer={req.signer}
+                    signatureRequestId={req.signatureRequestId}
+                    transaction={req.transaction}
+                    method={req.method}
+                    username={req.username}
+                    key={req.signatureRequestId}
+                  />
+                  <br />
+                </div>
+              );
+            }
           })
         )}
       </Card.Body>
@@ -56,63 +68,158 @@ const SignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
   );
 };
 
-interface ITransactionCardProp {
-  transaction: SignedTransaction;
-  signerId: number;
-  signatureRequestId: number;
-  username: string;
-  method: KeychainKeyTypes;
-}
-const TransactionCard = ({
-  transaction,
-  signerId,
-  signatureRequestId,
-  username,
-  method,
-}: ITransactionCardProp) => {
-  const multisig = new HiveMultisigSDK(window);
+const SignedTransactionsCard = ({ signRequests }: ISignRequestCardProps) => {
+  return (
+    <Card key={signRequests.length}>
+      <Card.Body>
+        <Card.Title>Signed Transactions</Card.Title>
+        {signRequests.length === 0 ? (
+          <Card.Text className="text-center text-secondary">
+            No signature requests
+          </Card.Text>
+        ) : (
+          signRequests.map((req) => {
+            if (req.signer.signature) {
+              return (
+                <div key={req.signer.id}>
+                  <RequestCard
+                    signer={req.signer}
+                    signatureRequestId={req.signatureRequestId}
+                    transaction={req.transaction}
+                    method={req.method}
+                    username={req.username}
+                    key={req.signatureRequestId}
+                  />
+                  <br />
+                </div>
+              );
+            }
+          })
+        )}
+      </Card.Body>
+    </Card>
+  );
+};
+
+const PendingTransactionsCard = () => {
   const [showContent, setShowContent] = useState<boolean>(false);
-  const opName = transaction
-    ? transaction.operations[0][0].charAt(0).toUpperCase() +
-      transaction.operations[0][0].slice(1)
-    : 'Transfer';
+  const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
+  const [transactionIds, setTtransactionIds] = useState<number[]>([]);
+  const activeTransactions = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectActive.result,
+  );
+  const postingTransactions = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectPosting.result,
+  );
+  const accountobj = useAppSelector((state) => state.login.accountObject);
+
+  useEffect(() => {
+    const activeTxs: SignatureRequest[] = [];
+    const postingTxs: SignatureRequest[] = [];
+    const txIds: number[] = [];
+    if (activeTransactions.pendingSignatureRequests[accountobj.data.username]) {
+      const txs =
+        activeTransactions.pendingSignatureRequests[accountobj.data.username];
+      for (var i = 0; i < txs.length; i++) {
+        if (!txIds.includes(txs[i].id)) {
+          txIds.push(txs[i].id);
+          if (txs[i].initiator === accountobj.data.username) {
+            activeTxs.push(txs[i]);
+          }
+        }
+      }
+    }
+
+    if (
+      postingTransactions.pendingSignatureRequests[accountobj.data.username]
+    ) {
+      const txs =
+        postingTransactions.pendingSignatureRequests[accountobj.data.username];
+      for (var i = 0; i < txs.length; i++) {
+        if (txs[i].initiator === accountobj.data.username) {
+          postingTxs.push(txs[i]);
+        }
+      }
+    }
+    setTransactions([...activeTxs, ...postingTxs]);
+  }, [activeTransactions, postingTransactions]);
+
+  useEffect(() => {
+    console.log(transactions);
+  }, [transactions]);
+
+  return (
+    <Card>
+      <Card.Body>
+        <Card.Title>Pending Transaction</Card.Title>
+        <Card.Subtitle className="mb-2 text-muted">
+          <a
+            id="myLink"
+            href="#"
+            className="nounderline  text-muted"
+            onClick={() => {
+              setShowContent(!showContent);
+            }}>
+            See Transaction Details
+          </a>
+        </Card.Subtitle>
+        <Collapse in={showContent}>
+          <Card>
+            <Card.Body>
+              {transactions ? JSON.stringify(transactions) : ''}
+            </Card.Body>
+          </Card>
+        </Collapse>
+      </Card.Body>
+    </Card>
+  );
+};
+
+const RequestCard = (prop: ITransaction) => {
+  const multisig = new HiveMultisigSDK(window);
+  const dispatch = useAppDispatch();
+  const [showContent, setShowContent] = useState<boolean>(false);
+  const opName = prop.transaction
+    ? prop.transaction.operations[0][0].charAt(0).toUpperCase() +
+      prop.transaction.operations[0][0].slice(1)
+    : '';
 
   const handleSign = async () => {
     const data: ISignTransaction = {
-      decodedTransaction: transaction,
-      signerId: signerId,
-      signatureRequestId: signatureRequestId,
-      username: username,
-      method: method,
+      decodedTransaction: prop.transaction,
+      signerId: prop.signer.id,
+      signatureRequestId: prop.signatureRequestId,
+      username: prop.username,
+      method: prop.method,
     };
     multisig
       .signTransaction(data)
-      .then(async (res) => {
-        await broadcast(res);
+      .then(async (signatures) => {
+        const txToBroadcast = { ...prop };
+        txToBroadcast.transaction.signatures = [...signatures];
+        const broadcastRes = await broadcast(txToBroadcast);
+        console.log(`broadcastRes ${broadcastRes}`);
+        if (broadcastRes) {
+          console.log(`signrequestId ${prop.signatureRequestId}`);
+          dispatch(removeSignRequest(prop.signatureRequestId));
+        }
       })
       .catch((reason: any) => {
         console.log(`Sign Transaction Rejected ${reason}`);
       });
   };
 
-  const broadcast = async (signatures: string[]) => {
-    try {
-      let tx: SignedTransaction = { ...transaction };
-      tx.signatures = [...signatures];
-      const txToBroadcast: ITransaction = {
-        signerId,
-        signatureRequestId,
-        transaction: tx,
-        method,
-        username,
-      };
-      const broadcastResult = await multisig.broadcastTransaction(
-        txToBroadcast,
-      );
-      console.log(`Broadcast Result: ${broadcastResult}`);
-    } catch (error) {
-      console.log(`Broadcast Error: ${error}`);
-    }
+  const broadcast = async (txToBroadcast: ITransaction): Promise<boolean> => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const broadcastResult = await multisig.broadcastTransaction(
+          txToBroadcast,
+        );
+        resolve(broadcastResult);
+      } catch (error) {
+        reject(`Broadcast Error: ${error}`);
+      }
+    });
   };
   return (
     <Card>
@@ -135,23 +242,27 @@ const TransactionCard = ({
           <Card>
             <Card.Body>
               <div id="example-collapse-text">
-                {JSON.stringify(transaction)}
+                {JSON.stringify(prop.transaction)}
               </div>
             </Card.Body>
           </Card>
         </Collapse>
-        <div className="mt-2 d-flex justify-content-end">
-          <Button className="me-2" variant="danger">
-            Refuse
-          </Button>
-          <Button
-            variant="success"
-            onClick={() => {
-              handleSign();
-            }}>
-            Sign
-          </Button>
-        </div>{' '}
+        <div>
+          {!prop.signer.signature ? (
+            <div className="mt-2 d-flex justify-content-end">
+              <Button className="me-2" variant="danger">
+                Refuse
+              </Button>
+              <Button
+                variant="success"
+                onClick={() => {
+                  handleSign();
+                }}>
+                Sign
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </Card.Body>
     </Card>
   );

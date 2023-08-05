@@ -25,6 +25,7 @@ import {
 const NavBar = () => {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [destination, setDestination] = useState<string>('');
+  const [displayLoginBtn, setDisplayLoginBtn] = useState(false);
   const loginExpirationInSec = Config.login.expirationInSec;
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
@@ -89,6 +90,7 @@ const NavBar = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
+      setDestination('/');
     }
   };
   return (
@@ -101,7 +103,7 @@ const NavBar = () => {
       sticky="top">
       <Container fluid>
         <Navbar.Brand
-          className="nav-text-color"
+          className="nav-text-color ms-0 me-1"
           onClick={() => {
             isLoggedIn ? setDestination('/transaction') : setDestination('/');
           }}>
@@ -110,7 +112,7 @@ const NavBar = () => {
             src="img/logohive.png"
             width="30"
             height="30"
-            className="d-inline-block align-top"
+            className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
           Hive Multisig
@@ -123,8 +125,13 @@ const NavBar = () => {
           className="mt-2 mt-sm-2 mt-md-3 mt-lg-0"
           id="responsive-navbar-nav ">
           {/*Search bar when not collapsed and logged out*/}
+          {!isLoggedIn ? (
+            <div className="text-secondary ms-2">{'Search'}</div>
+          ) : (
+            ''
+          )}
           <NavSearchBar
-            classNames="w-auto me-auto"
+            classNames="w-auto ms-1 me-auto"
             isLoggedIn={!isLoggedIn}
             setDestination={setDestination}
           />
@@ -134,7 +141,6 @@ const NavBar = () => {
               username={accountDetails.data.username}
             />
           ) : null}
-
           {/*Navs*/}
           <Nav className="me-2">
             {isLoggedIn ? (
@@ -159,11 +165,13 @@ const NavBar = () => {
                   </Badge>
                 ) : null}
               </Nav.Link>
-            ) : null}
+            ) : (
+              <Nav className="ms-auto">
+                <Nav.Link href="/login">Login</Nav.Link>
+              </Nav>
+            )}
           </Nav>
-
           {/*Search bar when collapsed and logged in*/}
-
           <NavSearchBar
             classNames="w-auto mt-2 me-auto d-md d-lg-none d-xl-none d-xxl-none"
             isLoggedIn={isLoggedIn}
@@ -187,17 +195,13 @@ const NavBar = () => {
             </div>
           ) : null}
           {/* Login button when logged out */}
-          {!isLoggedIn ? (
-            <Nav className="ms-auto">
-              <Nav.Link href="/login">Login</Nav.Link>
-            </Nav>
-          ) : (
+          {isLoggedIn ? (
             <NavUserAvatarDropdown
               classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
               username={accountDetails.data.username}
               handleLogout={handleLogout}
             />
-          )}
+          ) : null}
         </Navbar.Collapse>
       </Container>
     </Navbar>
@@ -238,7 +242,7 @@ const NavSearchBar = ({
         <Form.Control
           type="text"
           placeholder="Username"
-          className="bg-dark ps-1 pe-0 text-secondary navbar-input-border-color "
+          className="bg-dark ps-0 pe-0 text-secondary navbar-input-border-color "
           aria-label="Search"
           value={username}
           onChange={(e) => {

@@ -79,6 +79,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
           value={input}
         />
         <Button
+          type="button"
           variant="outline-secondary"
           id="button-addon2"
           onClick={(e) => handleOnClick()}>
@@ -94,20 +95,30 @@ export const HomePage: React.FC<ISearchPageInterface> = (
 ) => {
   const [authorities, setAuthorities] = useState<Authorities>();
   const [isValid, setValid] = useState<boolean>();
+  const [searchKey, setSearchKey] = useState<string>();
   const params = useParams();
-  const searchKey = params.id;
   const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
-  console.log(`HomePage: ${searchKey}`);
+  const getAuth = async () => {
+    const auth = await AccountUtils.getAccountAuthorities(searchKey);
+    console.log(auth);
+    if (auth) {
+      setAuthorities(auth);
+    }
+  };
+  useEffect(() => {
+    setSearchKey(params.id.replace('@', ''));
+  }, [params.id]);
 
   useEffect(() => {
-    AccountUtils.getAuthorities(setAuthorities, setValid, searchKey);
+    getAuth();
   }, [searchKey]);
 
   useEffect(() => {
     if (authorities) {
+      setValid(true);
       if (loggedInAccount) {
         if (loggedInAccount.data.username === searchKey) {
           setAccountSearch(false);
@@ -121,6 +132,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
       setAccountSearch(false);
     }
   }, [authorities]);
+
   return (
     <div>
       <SearchBar username={searchKey} isValid={isValid} />

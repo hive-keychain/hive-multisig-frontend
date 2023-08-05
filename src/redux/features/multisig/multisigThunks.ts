@@ -52,6 +52,12 @@ export const addSignRequest = createAsyncThunk(
     return signRequest;
   },
 );
+export const removeSignRequest = createAsyncThunk(
+  'multisig/removeSignRequest',
+  async (signatureRequestId: number) => {
+    return signatureRequestId;
+  },
+);
 
 export const showSignRequests = createAsyncThunk(
   'multisig/showSignRequests',

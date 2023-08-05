@@ -32,7 +32,6 @@ function SearchAccountPage({ authorities }: ISearchAccountPageProp) {
     },[cards])
   useEffect(() =>{
     if (authorities) {
-      console.log("authorities",authorities)
         let newCards:ReactNode[] = []
         newCards =authNames.map(
             (auth) =>{

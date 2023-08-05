@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
   addSignRequest,
+  removeSignRequest,
   setSignRequestCount,
   showSignRequests,
   signerConnectActive,
@@ -16,6 +17,7 @@ const initialState: State = {
   subscribeToSignRequest: false,
   showSignRequests: false,
   signRequestCount: 0,
+  newSignRequestCount: 0,
   success: false,
   error: undefined,
 };
@@ -78,6 +80,14 @@ const multisigSlice = createSlice({
       state.success = true;
     });
 
+    builder.addCase(removeSignRequest.fulfilled, (state, action) => {
+      state.signRequests = state.signRequests.filter(
+        (item) => item.signatureRequestId !== action.payload,
+      );
+      state.signRequestCount = state.signRequests.length;
+      state.success = true;
+    });
+
     builder.addCase(showSignRequests.fulfilled, (state, action) => {
       state.showSignRequests = action.payload;
       state.success = action.payload;
@@ -90,6 +100,7 @@ const multisigSlice = createSlice({
 
     builder.addCase(setSignRequestCount.fulfilled, (state, action) => {
       state.signRequestCount += action.payload;
+      state.newSignRequestCount = action.payload;
       state.success = true;
     });
     builder.addCase(setSignRequestCount.rejected, (state) => {

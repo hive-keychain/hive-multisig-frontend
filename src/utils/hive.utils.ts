@@ -1,6 +1,5 @@
 import * as Hive from '@hiveio/dhive';
 import { Client, PrivateKey } from '@hiveio/dhive';
-import { Authorities } from '../interfaces/account.interface';
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';
 import {
   IHiveSignatureInterface,
@@ -96,20 +95,12 @@ const requestSignature = (username: string) => {
   });
 };
 const getAccountAuthorities = async (username: string) => {
-  let keys: Authorities = {
-    account: '',
-    owner: null,
-    active: null,
-    posting: null,
-    memo_key: '',
-    json_metadata: '',
-  };
   const account = await getAccount(username);
 
   if (account.length === 0) {
-    return keys;
+    return undefined;
   }
-  keys = {
+  const auths = {
     account: account[0].name,
     owner: account[0].owner,
     active: account[0].active,
@@ -117,26 +108,7 @@ const getAccountAuthorities = async (username: string) => {
     memo_key: account[0].memo_key,
     json_metadata: account[0].json_metadata,
   };
-  return keys;
-};
-
-const getAuthorities = async (
-  setAuthorities: Function,
-  setValidUsername: Function,
-  searchKey: string,
-) => {
-  const response = await getAccountAuthorities(searchKey);
-  setAuthorities(response);
-  if (
-    response.active ||
-    response.owner ||
-    response.posting ||
-    searchKey === ''
-  ) {
-    setValidUsername(true);
-  } else {
-    setValidUsername(false);
-  }
+  return auths;
 };
 
 const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
@@ -221,7 +193,6 @@ const fromHP = (
 const HiveUtils = {
   getAccount,
   getAccountAuthorities,
-  getAuthorities,
   broadcastUpdateAccount,
   getPrivateKeyFromSeed,
   fromHP,

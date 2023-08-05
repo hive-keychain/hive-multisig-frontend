@@ -180,7 +180,7 @@ function Transfer() {
                   />
 
                   <div className="d-flex justify-content-end">
-                    <Button type="submit" className="" variant="success">
+                    <Button type="submit" variant="success">
                       Submit
                     </Button>
                   </div>
