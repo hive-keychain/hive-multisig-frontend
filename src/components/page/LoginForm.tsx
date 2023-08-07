@@ -49,6 +49,9 @@ const LoginForm = () => {
   useEffect(() => {
     inputRef.current.focus();
     if (isLoggedIn) {
+      if (!multisig) {
+        setMultisig(new HiveMultisigSDK(window));
+      }
       const loggedinDuration = getElapsedTimestampSeconds(
         loginTimestamp,
         getTimestampInSeconds(),

@@ -25,7 +25,7 @@ const initialState: State = {
 const multisigSlice = createSlice({
   name: 'multisig',
   initialState,
-  reducers: {},
+  reducers: { resetState: () => initialState },
   extraReducers: (builder) => {
     builder.addCase(signerConnectActive.pending, (state) => {
       state.signerConnectActive = undefined;
@@ -107,8 +107,9 @@ const multisigSlice = createSlice({
       state.signRequestCount = 0;
       state.success = false;
     });
+    builder.addCase(multisigSlice.actions.resetState, () => initialState);
   },
 });
 
 export const multisigReducer = multisigSlice.reducer;
-export const transactionActions = multisigSlice.actions;
+export const multisigActions = multisigSlice.actions;

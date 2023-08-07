@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/transaction.interface';
-import { checkKeychain } from './keyChainThunks';
+import { checkKeychain, clearKeychainState } from './keyChainThunks';
 
 const initialState: State = {
   username: '',
@@ -34,6 +34,9 @@ const checkKeychainSlice = createSlice({
       state.loading = false;
       state.success = false;
       state.error = 'keychain extension not found';
+    });
+    builder.addCase(clearKeychainState.fulfilled, (state, action) => {
+      state = { ...initialState };
     });
   },
 });

@@ -17,6 +17,9 @@ import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { logout } from '../../redux/features/login/loginSlice';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
+import { transactionActions } from '../../redux/features/transaction/transactionSlices';
+import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -84,13 +87,16 @@ const NavBar = () => {
       setDestination('/login');
     }
   }, [isLoggedIn, loginTimestamp, accountDetails]);
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (isLoggedIn) {
       dispatch(logout(null));
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
       setDestination('/');
+      await dispatch(multisigActions.resetState());
+      await dispatch(transactionActions.resetState());
+      await dispatch(updateAuthorityActions.resetState());
     }
   };
   return (
@@ -318,9 +324,12 @@ const NavUserAvatar = ({
   username,
   handleLogout,
 }: INavUserAvatarProps) => {
+  const navigate = useNavigate();
   return (
     <Stack className={classNames} direction="horizontal">
-      <Navbar.Brand className="me-md-2 me-lg-1" href="/">
+      <Navbar.Brand
+        className="me-md-2 me-lg-1"
+        onClick={() => navigate('/transaction')}>
         <img
           className="avatar-sm"
           src={`https://images.hive.blog/u/${username}/avatar`}
@@ -328,7 +337,9 @@ const NavUserAvatar = ({
         />
       </Navbar.Brand>
       <Nav>
-        <Nav.Link className="nav-text-color" href="/">
+        <Nav.Link
+          className="nav-text-color"
+          onClick={() => navigate('/transaction')}>
           {username}
         </Nav.Link>
       </Nav>

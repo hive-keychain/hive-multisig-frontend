@@ -1,4 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { State } from '../../../interfaces/transaction.interface';
 
 export const checkKeychain = createAsyncThunk(
   'keychain/check',
@@ -12,4 +13,11 @@ export const checkKeychain = createAsyncThunk(
         }
       }, 500);
     }),
+);
+
+export const clearKeychainState = createAsyncThunk(
+  'keychain/clearKeychainState',
+  () => {
+    return {} as State;
+  },
 );

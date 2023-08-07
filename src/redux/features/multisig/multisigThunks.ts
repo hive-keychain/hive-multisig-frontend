@@ -85,3 +85,10 @@ export const setSignRequestCount = createAsyncThunk(
 //     return response;
 //   },
 // );
+
+export const clearMultisigState = createAsyncThunk(
+  'multisig/clearMultisigState',
+  async () => {
+    return {} as State;
+  },
+);

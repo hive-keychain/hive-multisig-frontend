@@ -27,7 +27,7 @@ const initialState: State = {
 const transactionSlice = createSlice({
   name: 'transaction',
   initialState,
-  reducers: {},
+  reducers: { resetState: () => initialState },
   extraReducers: (builder) => {
     builder.addCase(setAuthority.pending, (state, action) => {
       state.authority = null;
@@ -130,6 +130,8 @@ const transactionSlice = createSlice({
       state.loading = false;
       state.error = 'Error setting public key';
     });
+
+    builder.addCase(transactionSlice.actions.resetState, () => initialState);
   },
 });
 

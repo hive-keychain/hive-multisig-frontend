@@ -105,11 +105,15 @@ const PendingTransactionsCard = () => {
   const [showContent, setShowContent] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
   const [transactionIds, setTtransactionIds] = useState<number[]>([]);
-  const activeTransactions = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectActive.result,
+  const activeTransactions = useAppSelector((state) =>
+    state.multisig.multisig.signerConnectActive
+      ? state.multisig.multisig.signerConnectActive.result
+      : null,
   );
-  const postingTransactions = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectPosting.result,
+  const postingTransactions = useAppSelector((state) =>
+    state.multisig.multisig.signerConnectPosting
+      ? state.multisig.multisig.signerConnectPosting.result
+      : null,
   );
   const accountobj = useAppSelector((state) => state.login.accountObject);
 
@@ -117,36 +121,40 @@ const PendingTransactionsCard = () => {
     const activeTxs: SignatureRequest[] = [];
     const postingTxs: SignatureRequest[] = [];
     const txIds: number[] = [];
-    if (activeTransactions.pendingSignatureRequests[accountobj.data.username]) {
-      const txs =
-        activeTransactions.pendingSignatureRequests[accountobj.data.username];
-      for (var i = 0; i < txs.length; i++) {
-        if (!txIds.includes(txs[i].id)) {
-          txIds.push(txs[i].id);
-          if (txs[i].initiator === accountobj.data.username) {
-            activeTxs.push(txs[i]);
+    if (activeTransactions) {
+      if (
+        activeTransactions.pendingSignatureRequests[accountobj.data.username]
+      ) {
+        const txs =
+          activeTransactions.pendingSignatureRequests[accountobj.data.username];
+        for (var i = 0; i < txs.length; i++) {
+          if (!txIds.includes(txs[i].id)) {
+            txIds.push(txs[i].id);
+            if (txs[i].initiator === accountobj.data.username) {
+              activeTxs.push(txs[i]);
+            }
           }
         }
       }
     }
 
-    if (
-      postingTransactions.pendingSignatureRequests[accountobj.data.username]
-    ) {
-      const txs =
-        postingTransactions.pendingSignatureRequests[accountobj.data.username];
-      for (var i = 0; i < txs.length; i++) {
-        if (txs[i].initiator === accountobj.data.username) {
-          postingTxs.push(txs[i]);
+    if (postingTransactions) {
+      if (
+        postingTransactions.pendingSignatureRequests[accountobj.data.username]
+      ) {
+        const txs =
+          postingTransactions.pendingSignatureRequests[
+            accountobj.data.username
+          ];
+        for (var i = 0; i < txs.length; i++) {
+          if (txs[i].initiator === accountobj.data.username) {
+            postingTxs.push(txs[i]);
+          }
         }
       }
     }
     setTransactions([...activeTxs, ...postingTxs]);
   }, [activeTransactions, postingTransactions]);
-
-  useEffect(() => {
-    console.log(transactions);
-  }, [transactions]);
 
   return (
     <Card>
@@ -195,7 +203,7 @@ const RequestCard = (prop: ITransaction) => {
     multisig
       .signTransaction(data)
       .then(async (signatures) => {
-        const txToBroadcast = { ...prop };
+        let txToBroadcast = { ...prop };
         txToBroadcast.transaction.signatures = [...signatures];
         const broadcastRes = await broadcast(txToBroadcast);
         console.log(`broadcastRes ${broadcastRes}`);

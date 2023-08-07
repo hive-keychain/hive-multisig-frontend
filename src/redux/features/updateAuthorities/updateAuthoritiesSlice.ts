@@ -92,6 +92,13 @@ export const removeAuthorityAccount = (
   }
   return [...array];
 };
+
+export const clearAuthorityState = createAsyncThunk(
+  'updateAuthority/clearAuthorityState',
+  async () => {
+    return {} as AuthorityUpdateStateType;
+  },
+);
 const updateAuthoritySlice = createSlice({
   name: 'updateAuthority',
   initialState,
@@ -301,6 +308,7 @@ const updateAuthoritySlice = createSlice({
     setOwnerKey(state, action: PayloadAction<string>) {
       state.ownerKey = action.payload;
     },
+    resetState: () => initialState,
   },
   extraReducers: (builder) => {
     builder.addCase(
@@ -329,6 +337,10 @@ const updateAuthoritySlice = createSlice({
       state.isUpdateSucces = false;
       state.error = 'DHive Update Error';
     });
+    builder.addCase(
+      updateAuthoritySlice.actions.resetState,
+      () => initialState,
+    );
   },
 });
 
@@ -339,4 +351,6 @@ export const {
   setOwnerKey,
   addAccount,
   deleteAccount,
+  resetState,
 } = updateAuthoritySlice.actions;
+export const updateAuthorityActions = updateAuthoritySlice.actions;
