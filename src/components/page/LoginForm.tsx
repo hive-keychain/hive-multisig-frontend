@@ -9,10 +9,12 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
+  addBroadcastedTransaction,
   addSignRequest,
   setSignRequestCount,
   signerConnectActive,
   signerConnectPosting,
+  subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 
@@ -68,6 +70,7 @@ const LoginForm = () => {
     if (isLoggedIn) {
       navigate(`/transaction`);
       subToSignReqequests();
+      subToBroadcastedTransactions();
       signerConnect();
     } else {
       navigate('/login');
@@ -85,6 +88,13 @@ const LoginForm = () => {
       signRequestCallback,
     );
     dispatch(subscribeToSignRequests(subscribeRes));
+  };
+
+  const subToBroadcastedTransactions = async () => {
+    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+      broadcastedTransactionCallback,
+    );
+    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
   };
 
   const signerConnect = async () => {
@@ -158,6 +168,19 @@ const LoginForm = () => {
     }
   };
 
+  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
+    console.log('broadcastedTransactinoCallback');
+    console.log(message);
+    if (message) {
+      const decodedTxs = await multisig.decodeTransaction({
+        signatureRequest: [message],
+        username,
+      });
+      if (decodedTxs.length > 0) {
+        await dispatch(addBroadcastedTransaction(decodedTxs));
+      }
+    }
+  };
   useEffect(() => {
     if (isFocused) {
       const keyDownHandler = (e: KeyboardEvent) => {

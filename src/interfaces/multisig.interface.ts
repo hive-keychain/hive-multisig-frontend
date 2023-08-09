@@ -6,7 +6,9 @@ export interface IMultisig {
   signerConnectActive: SignerConnectResponse;
   signerConnectPosting: SignerConnectResponse;
   subscribeToSignRequest: boolean;
+  subscribeToBroadcast: boolean;
   signRequests: ITransaction[];
+  broadcastedTransactions: ITransaction[];
 }
 
 export interface State extends IMultisig {

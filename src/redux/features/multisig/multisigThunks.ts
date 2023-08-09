@@ -59,6 +59,23 @@ export const removeSignRequest = createAsyncThunk(
   },
 );
 
+export const subscribeToBroadcastedTransactions = createAsyncThunk<
+  boolean,
+  boolean,
+  { rejectValue: string }
+>(
+  'multisig/subscribeToBroadcastedTransactions',
+  async (subResponse: boolean) => {
+    return subResponse;
+  },
+);
+
+export const addBroadcastedTransaction = createAsyncThunk(
+  'multisig/addBroadcastedTransaction',
+  async (transaction: ITransaction[]) => {
+    return transaction;
+  },
+);
 export const showSignRequests = createAsyncThunk(
   'multisig/showSignRequests',
   async (show: boolean) => {
@@ -72,19 +89,6 @@ export const setSignRequestCount = createAsyncThunk(
     return count;
   },
 );
-// export const subscribeToBroadcastedTransactions = createAsyncThunk<
-//   boolean,
-//   SignatureRequestCallback,
-//   { rejectValue: string }
-// >(
-//   'multisig/subscribeToBroadcastedTransactions',
-//   async (callback: SignatureRequestCallback) => {
-//     const response = await multisig.subscribeToBroadcastedTransactions(
-//       callback,
-//     );
-//     return response;
-//   },
-// );
 
 export const clearMultisigState = createAsyncThunk(
   'multisig/clearMultisigState',

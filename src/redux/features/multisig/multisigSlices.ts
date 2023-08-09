@@ -1,12 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
+  addBroadcastedTransaction,
   addSignRequest,
   removeSignRequest,
   setSignRequestCount,
   showSignRequests,
   signerConnectActive,
   signerConnectPosting,
+  subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from './multisigThunks';
 
@@ -14,7 +16,9 @@ const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
   signRequests: [],
+  broadcastedTransactions: [],
   subscribeToSignRequest: false,
+  subscribeToBroadcast: false,
   showSignRequests: false,
   signRequestCount: 0,
   newSignRequestCount: 0,
@@ -62,7 +66,6 @@ const multisigSlice = createSlice({
       state.success = false;
       state.error = undefined;
     });
-
     builder.addCase(subscribeToSignRequests.fulfilled, (state, action) => {
       state.subscribeToSignRequest = action.payload;
       state.success = true;
@@ -73,6 +76,17 @@ const multisigSlice = createSlice({
       state.error = JSON.stringify(action.error);
     });
 
+    builder.addCase(
+      subscribeToBroadcastedTransactions.fulfilled,
+      (state, action) => {
+        state.subscribeToBroadcast = action.payload;
+      },
+    );
+    builder.addCase(addBroadcastedTransaction.fulfilled, (state, action) => {
+      state.broadcastedTransactions = action.payload
+        ? [...state.broadcastedTransactions, ...action.payload]
+        : action.payload;
+    });
     builder.addCase(addSignRequest.fulfilled, (state, action) => {
       state.signRequests = action.payload
         ? [...state.signRequests, ...action.payload]
