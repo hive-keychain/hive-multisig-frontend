@@ -93,8 +93,9 @@ export const CommentOperationCard = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           author: accountDetails ? accountDetails.data.username : '',

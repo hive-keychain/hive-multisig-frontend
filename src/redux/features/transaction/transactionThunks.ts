@@ -56,6 +56,13 @@ export const setOperation = createAsyncThunk<
   };
   return newState;
 });
+export const resetOperation = createAsyncThunk(
+  'transaction/resetOperation',
+  async () => {
+    return {};
+  },
+);
+
 export const setTransactionMethod = createAsyncThunk<
   State,
   KeychainKeyTypes,

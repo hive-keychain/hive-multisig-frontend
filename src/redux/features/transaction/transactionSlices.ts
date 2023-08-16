@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/transaction.interface';
 import {
+  resetOperation,
   setAuthority,
   setExpiration,
   setInitiator,
@@ -74,7 +75,9 @@ const transactionSlice = createSlice({
       state.success = false;
       state.error = 'Error setting operation object';
     });
-
+    builder.addCase(resetOperation.fulfilled, (state, action) => {
+      state.operation = undefined;
+    });
     builder.addCase(setTransactionMethod.pending, (state) => {
       state.loading = true;
       state.error = null;

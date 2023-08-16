@@ -13,6 +13,7 @@ import {
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
 import {
+  resetOperation,
   setAuthority,
   setInitiator,
   setTransactionMethod,
@@ -41,7 +42,7 @@ export const TransactionPage = () => {
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
-  const multisig = new HiveMultisigSDK(window);
+  const multisig = HiveMultisigSDK.getInstance(window);
 
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
@@ -136,7 +137,9 @@ export const TransactionPage = () => {
           authority: transactionState.authority,
         };
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
-        await multisig.sendSignatureRequest(encodedTxObj);
+        multisig.sendSignatureRequest(encodedTxObj).then(() => {
+          dispatch(resetOperation());
+        });
       })();
     }
   }, [operation]);

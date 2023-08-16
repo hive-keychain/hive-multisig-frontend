@@ -93,8 +93,9 @@ const PowerUpCard: React.FC<{}> = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           amount: 0,

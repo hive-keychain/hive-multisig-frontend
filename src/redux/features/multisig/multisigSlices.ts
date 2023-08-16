@@ -3,6 +3,7 @@ import { State } from '../../../interfaces/multisig.interface';
 import {
   addBroadcastedTransaction,
   addSignRequest,
+  addUserNotifications,
   removeSignRequest,
   setSignRequestCount,
   showSignRequests,
@@ -16,6 +17,7 @@ const initialState: State = {
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
   signRequests: [],
+  userNotifications: [],
   broadcastedTransactions: [],
   subscribeToSignRequest: false,
   subscribeToBroadcast: false,
@@ -91,12 +93,16 @@ const multisigSlice = createSlice({
       state.signRequests = action.payload
         ? [...state.signRequests, ...action.payload]
         : action.payload;
-      state.success = true;
     });
 
+    builder.addCase(addUserNotifications.fulfilled, (state, action) => {
+      state.userNotifications = action.payload
+        ? [...state.userNotifications, ...action.payload]
+        : action.payload;
+    });
     builder.addCase(removeSignRequest.fulfilled, (state, action) => {
       state.signRequests = state.signRequests.filter(
-        (item) => item.signatureRequestId !== action.payload,
+        (item) => item.id !== action.payload,
       );
       state.signRequestCount = state.signRequests.length;
       state.success = true;

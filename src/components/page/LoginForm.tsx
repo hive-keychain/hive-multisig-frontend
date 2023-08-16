@@ -9,9 +9,8 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
-  addBroadcastedTransaction,
   addSignRequest,
-  setSignRequestCount,
+  addUserNotifications,
   signerConnectActive,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
@@ -52,7 +51,7 @@ const LoginForm = () => {
     inputRef.current.focus();
     if (isLoggedIn) {
       if (!multisig) {
-        setMultisig(new HiveMultisigSDK(window));
+        setMultisig(HiveMultisigSDK.getInstance(window));
       }
       const loggedinDuration = getElapsedTimestampSeconds(
         loginTimestamp,
@@ -110,13 +109,15 @@ const LoginForm = () => {
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
           signerConnectResponse.result.pendingSignatureRequests[username];
-        if (pendingReqs.length > 0) {
-          const decodedTxs = await multisig.decodeTransaction({
-            signatureRequest: pendingReqs,
-            username,
-          });
-          await dispatch(addSignRequest(decodedTxs));
-          await dispatch(setSignRequestCount(decodedTxs.length));
+        if (pendingReqs?.length > 0) {
+          await dispatch(addSignRequest(pendingReqs));
+        }
+      }
+      if (signerConnectResponse.result.notifications) {
+        const notifications =
+          signerConnectResponse.result.notifications[username];
+        if (notifications?.length > 0) {
+          await dispatch(addUserNotifications(notifications));
         }
       }
     }
@@ -132,13 +133,14 @@ const LoginForm = () => {
         const pendingReqs =
           signerConnectResponse.result.pendingSignatureRequests[username];
         if (pendingReqs.length > 0) {
-          const decodedTxs = await multisig.decodeTransaction({
-            signatureRequest: pendingReqs,
-            username,
-          });
-
-          await dispatch(addSignRequest(decodedTxs));
-          await dispatch(setSignRequestCount(decodedTxs.length));
+          await dispatch(addSignRequest(pendingReqs));
+        }
+      }
+      if (signerConnectResponse.result.notifications) {
+        const notifications =
+          signerConnectResponse.result.notifications[username];
+        if (notifications?.length > 0) {
+          await dispatch(addUserNotifications(notifications));
         }
       }
     }
@@ -146,7 +148,7 @@ const LoginForm = () => {
   };
   const loginInitAsync = async () => {
     if (!multisig) {
-      setMultisig(new HiveMultisigSDK(window));
+      setMultisig(HiveMultisigSDK.getInstance(window));
     }
     setStorageIsLoggedIn(isLoginSucceed);
     setStorageAccountDetails(signedAccountObj);
@@ -157,29 +159,22 @@ const LoginForm = () => {
     console.log('signrequestcCallback');
     console.log(message);
     if (message) {
-      const decodedTxs = await multisig.decodeTransaction({
-        signatureRequest: [message],
-        username,
-      });
-      if (decodedTxs.length > 0) {
-        await dispatch(addSignRequest(decodedTxs));
-        await dispatch(setSignRequestCount(decodedTxs.length));
-      }
+      await dispatch(addSignRequest([message]));
     }
   };
 
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    console.log('broadcastedTransactinoCallback');
+    console.log('broadcastedTransactionCallback');
     console.log(message);
-    if (message) {
-      const decodedTxs = await multisig.decodeTransaction({
-        signatureRequest: [message],
-        username,
-      });
-      if (decodedTxs.length > 0) {
-        await dispatch(addBroadcastedTransaction(decodedTxs));
-      }
-    }
+    // if (message) {
+    //   const decodedTxs = await multisig.decodeTransaction({
+    //     signatureRequest: [message],
+    //     username,
+    //   });
+    //   if (decodedTxs.length > 0) {
+    //     await dispatch(addBroadcastedTransaction(decodedTxs));
+    //   }
+    // }
   };
   useEffect(() => {
     if (isFocused) {

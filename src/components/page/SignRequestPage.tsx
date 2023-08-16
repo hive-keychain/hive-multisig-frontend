@@ -6,210 +6,118 @@ import {
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { useEffect, useState } from 'react';
 import { Button, Card, Collapse } from 'react-bootstrap';
-import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { removeSignRequest } from '../../redux/features/multisig/multisigThunks';
+import { LoginResponseType } from '../../interfaces';
+import { useAppSelector } from '../../redux/app/hooks';
+
+export enum TransactionStatus {
+  PENDING = 'pending',
+  REQUEST = 'request',
+  BROADCASTED = 'broadcasted',
+  EXPIRED = 'expired',
+  INVALID = 'invalid',
+}
 
 export const SignRequestsPage = () => {
-  const signRequests = useAppSelector(
+  const account = useAppSelector((state) => state.login.accountObject);
+  const requests = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
   );
+  const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
 
+  useEffect(() => {
+    if (requests) {
+      let newRequests: SignatureRequest[] = [];
+      for (var i = 0; i < requests.length; i++) {
+        if (newRequests.find((req) => req.id === requests[i].id)) {
+          continue;
+        }
+        newRequests.push(requests[i]);
+      }
+      setSignRequests([...newRequests]);
+    }
+  }, [requests]);
+  useEffect(() => {
+    console.log(signRequests);
+  }, [signRequests]);
   return (
     <div>
-      <div>
-        <PendingSignRequestCard signRequests={signRequests} key={1} />
-      </div>
-      <br />
-      <div>
-        <SignedTransactionsCard signRequests={signRequests} key="2" />
-      </div>
-      <br />
-      <div>
-        <PendingTransactionsCard key="3" />
-      </div>
+      {signRequests.length <= 0 ? (
+        <div> {'No signature requests'}</div>
+      ) : (
+        signRequests.map((request) => {
+          const state = GetStatus(request, account);
+          switch (state) {
+            case TransactionStatus.PENDING:
+              return (
+                <div key={request.id}>
+                  <PendingRequestCard signRequest={request} account={account} />
+                  <br />
+                </div>
+              );
+            case TransactionStatus.BROADCASTED:
+              return <div key={request.id}></div>;
+            case TransactionStatus.EXPIRED:
+              return <div key={request.id}></div>;
+          }
+        })
+      )}
     </div>
   );
 };
 
 interface ISignRequestCardProps {
-  signRequests: ITransaction[];
+  signRequest: SignatureRequest;
+  account: LoginResponseType;
 }
 
-const PendingSignRequestCard = ({ signRequests }: ISignRequestCardProps) => {
-  return (
-    <Card key={signRequests.length}>
-      <Card.Body>
-        <Card.Title>Pending Sign Requests</Card.Title>
-        {signRequests.length === 0 ? (
-          <Card.Text className="text-center text-secondary">
-            No signature requests
-          </Card.Text>
-        ) : (
-          signRequests.map((req) => {
-            if (!req.signer.signature) {
-              return (
-                <div key={req.signer.id}>
-                  <RequestCard
-                    signer={req.signer}
-                    signatureRequestId={req.signatureRequestId}
-                    transaction={req.transaction}
-                    method={req.method}
-                    username={req.username}
-                    key={req.signatureRequestId}
-                  />
-                  <br />
-                </div>
-              );
-            }
-          })
-        )}
-      </Card.Body>
-    </Card>
-  );
-};
+const PendingRequestCard = ({
+  signRequest,
+  account,
+}: ISignRequestCardProps) => {
+  const [request, setRequest] = useState(signRequest);
+  const [user, setAccount] = useState(account);
+  const [status, setStatus] = useState(TransactionStatus.PENDING);
+  const [broadcasted, setBroadcasted] = useState(false);
+  const [creationDate, setCreationDate] = useState(undefined);
+  const [expirationDate, setExpirationDate] = useState(undefined);
+  const [decodedTransaction, setDecodedTransaction] =
+    useState<ITransaction>(undefined);
+  const [showDecodedTx, setShowDecodedTx] = useState(false);
+  const multisig = HiveMultisigSDK.getInstance(window);
 
-const SignedTransactionsCard = ({ signRequests }: ISignRequestCardProps) => {
-  return (
-    <Card key={signRequests.length}>
-      <Card.Body>
-        <Card.Title>Signed Transactions</Card.Title>
-        {signRequests.length === 0 ? (
-          <Card.Text className="text-center text-secondary">
-            No signature requests
-          </Card.Text>
-        ) : (
-          signRequests.map((req) => {
-            if (req.signer.signature) {
-              return (
-                <div key={req.signer.id}>
-                  <RequestCard
-                    signer={req.signer}
-                    signatureRequestId={req.signatureRequestId}
-                    transaction={req.transaction}
-                    method={req.method}
-                    username={req.username}
-                    key={req.signatureRequestId}
-                  />
-                  <br />
-                </div>
-              );
-            }
-          })
-        )}
-      </Card.Body>
-    </Card>
-  );
-};
-
-const PendingTransactionsCard = () => {
-  const [showContent, setShowContent] = useState<boolean>(false);
-  const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
-  const [transactionIds, setTtransactionIds] = useState<number[]>([]);
-  const activeTransactions = useAppSelector((state) =>
-    state.multisig.multisig.signerConnectActive
-      ? state.multisig.multisig.signerConnectActive.result
-      : null,
-  );
-  const postingTransactions = useAppSelector((state) =>
-    state.multisig.multisig.signerConnectPosting
-      ? state.multisig.multisig.signerConnectPosting.result
-      : null,
-  );
-  const accountobj = useAppSelector((state) => state.login.accountObject);
-
-  useEffect(() => {
-    const activeTxs: SignatureRequest[] = [];
-    const postingTxs: SignatureRequest[] = [];
-    const txIds: number[] = [];
-    if (activeTransactions) {
-      if (
-        activeTransactions.pendingSignatureRequests[accountobj.data.username]
-      ) {
-        const txs =
-          activeTransactions.pendingSignatureRequests[accountobj.data.username];
-        for (var i = 0; i < txs.length; i++) {
-          if (!txIds.includes(txs[i].id)) {
-            txIds.push(txs[i].id);
-            if (txs[i].initiator === accountobj.data.username) {
-              activeTxs.push(txs[i]);
-            }
-          }
-        }
-      }
+  const handleDecode = async () => {
+    const decodedTxs = await multisig.decodeTransaction({
+      signatureRequest: [request],
+      username: user.data.username,
+    });
+    if (decodedTxs?.length > 0) {
+      setDecodedTransaction(decodedTxs[0]);
+      setStatus(TransactionStatus.REQUEST);
+    } else {
+      setStatus(TransactionStatus.INVALID);
     }
-
-    if (postingTransactions) {
-      if (
-        postingTransactions.pendingSignatureRequests[accountobj.data.username]
-      ) {
-        const txs =
-          postingTransactions.pendingSignatureRequests[
-            accountobj.data.username
-          ];
-        for (var i = 0; i < txs.length; i++) {
-          if (txs[i].initiator === accountobj.data.username) {
-            postingTxs.push(txs[i]);
-          }
-        }
-      }
-    }
-    setTransactions([...activeTxs, ...postingTxs]);
-  }, [activeTransactions, postingTransactions]);
-
-  return (
-    <Card>
-      <Card.Body>
-        <Card.Title>Pending Transaction</Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">
-          <a
-            id="myLink"
-            href="#"
-            className="nounderline  text-muted"
-            onClick={() => {
-              setShowContent(!showContent);
-            }}>
-            See Transaction Details
-          </a>
-        </Card.Subtitle>
-        <Collapse in={showContent}>
-          <Card>
-            <Card.Body>
-              {transactions ? JSON.stringify(transactions) : ''}
-            </Card.Body>
-          </Card>
-        </Collapse>
-      </Card.Body>
-    </Card>
-  );
-};
-
-const RequestCard = (prop: ITransaction) => {
-  const multisig = new HiveMultisigSDK(window);
-  const dispatch = useAppDispatch();
-  const [showContent, setShowContent] = useState<boolean>(false);
-  const opName = prop.transaction
-    ? prop.transaction.operations[0][0].charAt(0).toUpperCase() +
-      prop.transaction.operations[0][0].slice(1)
-    : '';
+  };
 
   const handleSign = async () => {
     const data: ISignTransaction = {
-      decodedTransaction: prop.transaction,
-      signerId: prop.signer.id,
-      signatureRequestId: prop.signatureRequestId,
-      username: prop.username,
-      method: prop.method,
+      decodedTransaction: decodedTransaction.transaction,
+      signerId: decodedTransaction.signer.id,
+      signatureRequestId: decodedTransaction.signatureRequestId,
+      username: user.data.username,
+      method: decodedTransaction.method,
     };
+
     multisig
       .signTransaction(data)
       .then(async (signatures) => {
-        let txToBroadcast = { ...prop };
-        txToBroadcast.transaction.signatures = [...signatures];
-        const broadcastRes = await broadcast(txToBroadcast);
-        console.log(`broadcastRes ${broadcastRes}`);
-        if (broadcastRes) {
-          console.log(`signrequestId ${prop.signatureRequestId}`);
-          dispatch(removeSignRequest(prop.signatureRequestId));
+        if (signatures?.length > 0) {
+          let txToBroadcast = structuredClone(decodedTransaction);
+          txToBroadcast.transaction.signatures = [...signatures];
+          console.log(txToBroadcast);
+          let broadcastResult = await multisig.broadcastTransaction(
+            txToBroadcast,
+          );
+          setBroadcasted(broadcastResult);
         }
       })
       .catch((reason: any) => {
@@ -217,61 +125,123 @@ const RequestCard = (prop: ITransaction) => {
       });
   };
 
-  const broadcast = async (txToBroadcast: ITransaction): Promise<boolean> => {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const broadcastResult = await multisig.broadcastTransaction(
-          txToBroadcast,
-        );
-        resolve(broadcastResult);
-      } catch (error) {
-        reject(`Broadcast Error: ${error}`);
+  useEffect(() => {
+    if (request) {
+      if (request.createdAt) {
+        setCreationDate(request.createdAt);
       }
-    });
-  };
+      if (request.expirationDate) {
+        setExpirationDate(request.expirationDate);
+      }
+    }
+  }, [request]);
+
+  useEffect(() => {
+    if (broadcasted) {
+      setStatus(TransactionStatus.BROADCASTED);
+    }
+  }, [broadcasted]);
   return (
-    <Card>
-      <Card.Body>
-        <Card.Title>
-          <div className="me-auto">{opName}</div>
-        </Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">
-          <a
-            id="myLink"
-            href="#"
-            className="nounderline  text-muted"
-            onClick={() => {
-              setShowContent(!showContent);
-            }}>
-            See Transaction Details
-          </a>
-        </Card.Subtitle>
-        <Collapse in={showContent}>
-          <Card>
-            <Card.Body>
-              <div id="example-collapse-text">
-                {JSON.stringify(prop.transaction)}
-              </div>
-            </Card.Body>
-          </Card>
-        </Collapse>
-        <div>
-          {!prop.signer.signature ? (
-            <div className="mt-2 d-flex justify-content-end">
-              <Button className="me-2" variant="danger">
-                Refuse
-              </Button>
+    <div>
+      <Card key={signRequest.id}>
+        <Card.Body>
+          <Card.Title>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Card.Title>
+          {creationDate ? (
+            <Card.Subtitle className="mb-2 text-muted">{`Creation: ${creationDate.toLocaleString()}`}</Card.Subtitle>
+          ) : null}
+          {expirationDate ? (
+            <Card.Subtitle className="mb-2 text-muted">{`Expiration: ${expirationDate.toLocaleString()}`}</Card.Subtitle>
+          ) : null}
+          {status === TransactionStatus.REQUEST ? (
+            <div>
+              <Card.Subtitle className="mb-2 text-muted">
+                <a
+                  id="myLink"
+                  className="nounderline  text-muted"
+                  onClick={() => {
+                    setShowDecodedTx(!showDecodedTx);
+                  }}>
+                  Show Transaction Details
+                </a>
+              </Card.Subtitle>
+              <Collapse in={showDecodedTx}>
+                <Card>
+                  <Card.Body>
+                    <div id="example-collapse-text">
+                      {JSON.stringify(decodedTransaction.transaction)}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Collapse>
+            </div>
+          ) : null}
+
+          <div className="mt-2 d-flex justify-content-end">
+            {status === TransactionStatus.PENDING ? (
               <Button
                 variant="success"
+                type="button"
+                onClick={() => {
+                  handleDecode();
+                }}>
+                Decode
+              </Button>
+            ) : status === TransactionStatus.REQUEST ? (
+              <Button
+                variant="success"
+                type="button"
                 onClick={() => {
                   handleSign();
                 }}>
                 Sign
               </Button>
-            </div>
-          ) : null}
-        </div>
-      </Card.Body>
-    </Card>
+            ) : null}
+          </div>
+        </Card.Body>
+      </Card>
+    </div>
+  );
+};
+
+const GetStatus = (
+  signRequest: SignatureRequest,
+  account: LoginResponseType,
+) => {
+  if (isPending(signRequest, account)) {
+    return TransactionStatus.PENDING;
+  } else if (isBroadcasted(signRequest)) {
+    return TransactionStatus.BROADCASTED;
+  } else if (isExpired(signRequest)) {
+    return TransactionStatus.EXPIRED;
+  } else {
+    return undefined;
+  }
+};
+
+const isExpired = (signRequest: SignatureRequest) => {
+  return signRequest.expirationDate < new Date();
+};
+
+const isBroadcasted = (signRequest: SignatureRequest) => {
+  return signRequest.broadcasted;
+};
+
+const isPending = (
+  signRequest: SignatureRequest,
+  account: LoginResponseType,
+) => {
+  const signedByMe = (signRequest: SignatureRequest) => {
+    const signatures = signRequest.signers
+      .filter((signer) => signer.publicKey === account.publicKey)
+      .map((tx) => tx.signature);
+    return signatures.includes('') || signatures.includes(undefined);
+  };
+
+  return (
+    !isBroadcasted(signRequest) &&
+    !isExpired(signRequest) &&
+    !signedByMe(signRequest)
   );
 };

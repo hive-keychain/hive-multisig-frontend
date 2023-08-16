@@ -2,8 +2,10 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
   ITransaction,
   SignerConnectResponse,
+  UserNotification,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { State } from '../../../interfaces/multisig.interface';
 
 export const signerConnectActive = createAsyncThunk<
@@ -48,8 +50,15 @@ export const subscribeToSignRequests = createAsyncThunk<
 
 export const addSignRequest = createAsyncThunk(
   'multisig/addSignRequest',
-  async (signRequest: ITransaction[]) => {
+  async (signRequest: SignatureRequest[]) => {
     return signRequest;
+  },
+);
+
+export const addUserNotifications = createAsyncThunk(
+  'multisig/addUserNotifications',
+  async (notification: UserNotification[]) => {
+    return notification;
   },
 );
 export const removeSignRequest = createAsyncThunk(

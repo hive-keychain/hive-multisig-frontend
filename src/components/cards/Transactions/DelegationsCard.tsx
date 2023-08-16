@@ -121,8 +121,9 @@ function DelegationsCard() {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           delegatee: '',

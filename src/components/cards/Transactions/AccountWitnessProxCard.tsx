@@ -88,8 +88,9 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           account: accountDetails ? accountDetails.data.username : '',
