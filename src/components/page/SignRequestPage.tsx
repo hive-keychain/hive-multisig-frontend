@@ -77,11 +77,14 @@ const PendingRequestCard = ({
   const [request, setRequest] = useState(signRequest);
   const [user, setAccount] = useState(account);
   const [status, setStatus] = useState(TransactionStatus.PENDING);
+  const [initiated, setInitiated] = useState(false);
   const [broadcasted, setBroadcasted] = useState(false);
   const [creationDate, setCreationDate] = useState(undefined);
   const [expirationDate, setExpirationDate] = useState(undefined);
   const [decodedTransaction, setDecodedTransaction] =
     useState<ITransaction>(undefined);
+  const [decoded, setDecoded] = useState(false);
+  const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
   const multisig = HiveMultisigSDK.getInstance(window);
 
@@ -90,12 +93,19 @@ const PendingRequestCard = ({
       signatureRequest: [request],
       username: user.data.username,
     });
-    if (decodedTxs?.length > 0) {
+    if (decodedTxs) {
+      if (initiated) {
+        setStatus(TransactionStatus.PENDING);
+      } else {
+        setStatus(TransactionStatus.REQUEST);
+      }
       setDecodedTransaction(decodedTxs[0]);
-      setStatus(TransactionStatus.REQUEST);
+      setValid(true);
     } else {
       setStatus(TransactionStatus.INVALID);
+      setValid(false);
     }
+    setDecoded(true);
   };
 
   const handleSign = async () => {
@@ -133,6 +143,7 @@ const PendingRequestCard = ({
       if (request.expirationDate) {
         setExpirationDate(request.expirationDate);
       }
+      setInitiated(initiatedByMe(request, user));
     }
   }, [request]);
 
@@ -141,12 +152,14 @@ const PendingRequestCard = ({
       setStatus(TransactionStatus.BROADCASTED);
     }
   }, [broadcasted]);
+
   return (
     <div>
       <Card key={signRequest.id}>
         <Card.Body>
           <Card.Title>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {status.charAt(0).toUpperCase() + status.slice(1)}{' '}
+            {initiated ? '  Initiated' : null}
           </Card.Title>
           {creationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Creation: ${creationDate.toLocaleString()}`}</Card.Subtitle>
@@ -154,7 +167,8 @@ const PendingRequestCard = ({
           {expirationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Expiration: ${expirationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
-          {status === TransactionStatus.REQUEST ? (
+          {(status === TransactionStatus.REQUEST && decoded) ||
+          (initiated && decoded && valid) ? (
             <div>
               <Card.Subtitle className="mb-2 text-muted">
                 <a
@@ -163,14 +177,16 @@ const PendingRequestCard = ({
                   onClick={() => {
                     setShowDecodedTx(!showDecodedTx);
                   }}>
-                  Show Transaction Details
+                  {showDecodedTx ? `Hide` : `Show`} Transaction Details
                 </a>
               </Card.Subtitle>
               <Collapse in={showDecodedTx}>
                 <Card>
                   <Card.Body>
                     <div id="example-collapse-text">
-                      {JSON.stringify(decodedTransaction.transaction)}
+                      {decodedTransaction
+                        ? JSON.stringify(decodedTransaction.transaction)
+                        : null}
                     </div>
                   </Card.Body>
                 </Card>
@@ -179,7 +195,7 @@ const PendingRequestCard = ({
           ) : null}
 
           <div className="mt-2 d-flex justify-content-end">
-            {status === TransactionStatus.PENDING ? (
+            {status === TransactionStatus.PENDING && !decoded ? (
               <Button
                 variant="success"
                 type="button"
@@ -232,16 +248,28 @@ const isPending = (
   signRequest: SignatureRequest,
   account: LoginResponseType,
 ) => {
-  const signedByMe = (signRequest: SignatureRequest) => {
-    const signatures = signRequest.signers
-      .filter((signer) => signer.publicKey === account.publicKey)
-      .map((tx) => tx.signature);
-    return signatures.includes('') || signatures.includes(undefined);
-  };
-
   return (
-    !isBroadcasted(signRequest) &&
-    !isExpired(signRequest) &&
-    !signedByMe(signRequest)
+    (!isBroadcasted(signRequest) &&
+      !isExpired(signRequest) &&
+      !signedByMe(signRequest, account)) ||
+    (!isBroadcasted(signRequest) &&
+      !isExpired(signRequest) &&
+      initiatedByMe(signRequest, account))
   );
+};
+
+const initiatedByMe = (
+  signRequest: SignatureRequest,
+  account: LoginResponseType,
+) => {
+  return signRequest.initiator === account.data.username;
+};
+const signedByMe = (
+  signRequest: SignatureRequest,
+  account: LoginResponseType,
+) => {
+  const signatures = signRequest.signers
+    .filter((signer) => signer.publicKey === account.publicKey)
+    .map((tx) => tx.signature);
+  return signatures.includes('') || signatures.includes(undefined);
 };
