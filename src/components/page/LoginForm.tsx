@@ -9,6 +9,7 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
 import {
+  addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
   signerConnectActive,
@@ -166,15 +167,9 @@ const LoginForm = () => {
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
     console.log('broadcastedTransactionCallback');
     console.log(message);
-    // if (message) {
-    //   const decodedTxs = await multisig.decodeTransaction({
-    //     signatureRequest: [message],
-    //     username,
-    //   });
-    //   if (decodedTxs.length > 0) {
-    //     await dispatch(addBroadcastedTransaction(decodedTxs));
-    //   }
-    // }
+    if (message) {
+      await dispatch(addBroadcastedTransaction([message]));
+    }
   };
   useEffect(() => {
     if (isFocused) {

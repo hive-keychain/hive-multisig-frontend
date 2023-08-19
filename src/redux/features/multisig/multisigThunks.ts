@@ -1,6 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  ITransaction,
   SignerConnectResponse,
   UserNotification,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
@@ -81,7 +80,7 @@ export const subscribeToBroadcastedTransactions = createAsyncThunk<
 
 export const addBroadcastedTransaction = createAsyncThunk(
   'multisig/addBroadcastedTransaction',
-  async (transaction: ITransaction[]) => {
+  async (transaction: SignatureRequest[]) => {
     return transaction;
   },
 );

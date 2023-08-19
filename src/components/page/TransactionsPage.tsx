@@ -36,7 +36,6 @@ import UpdateProposalVoteCard from '../cards/Transactions/UpdateProposalVoteCard
 import VoteForWitnessCard from '../cards/Transactions/VoteForWitnessCard';
 import { VoteOperationCard } from '../cards/Transactions/VoteOperationCard';
 import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCard';
-import { SignRequestNotification } from '../modals/SignRequestNotification';
 
 export const TransactionPage = () => {
   const transactionState = useAppSelector(
@@ -194,9 +193,6 @@ export const TransactionPage = () => {
 
   return (
     <div>
-      <div>
-        <SignRequestNotification />
-      </div>
       <InputGroup>
         <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
         <Form.Select
