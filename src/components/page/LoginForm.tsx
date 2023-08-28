@@ -106,6 +106,7 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.active,
     });
+    getTransactions(KeychainKeyTypes.active);
     if (signerConnectResponse.result) {
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -129,6 +130,8 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.posting,
     });
+    getTransactions(KeychainKeyTypes.posting);
+
     if (signerConnectResponse.result) {
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -146,6 +149,13 @@ const LoginForm = () => {
       }
     }
     await dispatch(signerConnectPosting(signerConnectResponse));
+  };
+
+  const getTransactions = async (keyType:KeychainKeyTypes) => {
+    const res = await multisig.getTransactions({
+      username,
+      keyType,
+    });
   };
   const loginInitAsync = async () => {
     if (!multisig) {
