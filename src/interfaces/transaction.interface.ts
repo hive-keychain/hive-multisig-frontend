@@ -21,7 +21,7 @@ export enum OperationType {
 export interface Initiator {
   username: string;
   publicKey: string;
-  weight: string;
+  weight: number;
 }
 export interface ITransaction {
   txName?: String | OperationType;

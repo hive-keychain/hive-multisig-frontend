@@ -178,10 +178,15 @@ export const SignRequestsPage = () => {
                     signRequest={tx}
                     account={account}
                   />
+                  <br />
                 </div>
               );
             case TransactionStatus.EXPIRED:
-              return <div key={tx.id}></div>;
+              return (
+                <div key={tx.id}>
+                  <br />
+                </div>
+              );
           }
         })
       )}
@@ -210,23 +215,29 @@ const PendingRequestCard = ({ signRequest, account }: ITransactionProps) => {
   const multisig = HiveMultisigSDK.getInstance(window);
 
   const handleDecode = async () => {
-    const decodedTxs = await multisig.decodeTransaction({
-      signatureRequest: [request],
-      username: user.data.username,
-    });
-    if (decodedTxs) {
-      if (initiated) {
-        setStatus(TransactionStatus.PENDING);
+    try {
+      const decodedTxs = await multisig.decodeTransaction({
+        signatureRequest: [request],
+        username: user.data.username,
+      });
+      if (decodedTxs) {
+        if (initiated) {
+          setStatus(TransactionStatus.PENDING);
+        } else {
+          setStatus(TransactionStatus.REQUEST);
+        }
+        setDecodedTransaction(decodedTxs[0]);
+        setValid(true);
       } else {
-        setStatus(TransactionStatus.REQUEST);
+        setStatus(TransactionStatus.INVALID);
+        setValid(false);
       }
-      setDecodedTransaction(decodedTxs[0]);
-      setValid(true);
-    } else {
+      setDecoded(true);
+    } catch (e) {
+      console.log(e);
       setStatus(TransactionStatus.INVALID);
       setValid(false);
     }
-    setDecoded(true);
   };
 
   const handleSign = async () => {

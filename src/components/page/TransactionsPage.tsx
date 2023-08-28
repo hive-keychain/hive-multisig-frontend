@@ -114,7 +114,7 @@ export const TransactionPage = () => {
     const initiator: Initiator = {
       username: loggedInAccount.data.username,
       publicKey: auth[0].toString(),
-      weight: auth[1].toString(),
+      weight: auth[1],
     };
     await dispatch(setInitiator(initiator));
   };
@@ -122,6 +122,7 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (operation) {
       (async () => {
+        console.log(transactionState.initiator);
         const transaction = await HiveTxUtils.createTx(
           [operation],
           transactionState.expiration,
@@ -132,9 +133,10 @@ export const TransactionPage = () => {
           expirationDate: new Date(
             getISOStringDate(transactionState.expiration),
           ),
-          initiator: transactionState.initiator,
-          authority: transactionState.authority,
+          initiator: { ...transactionState.initiator },
         };
+        console.log(txEncode);
+
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
         multisig.sendSignatureRequest(encodedTxObj).then(() => {
           dispatch(resetOperation());
