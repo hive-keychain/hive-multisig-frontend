@@ -1,9 +1,12 @@
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import {
+  SignerConnectMessage,
   SignerConnectResponse,
   UserNotification,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 export interface IMultisig {
+  signerConnectMessageActive: SignerConnectMessage;
+  signerConnectMessagePosting: SignerConnectMessage;
   signerConnectActive: SignerConnectResponse;
   signerConnectPosting: SignerConnectResponse;
   subscribeToSignRequest: boolean;

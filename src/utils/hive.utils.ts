@@ -12,6 +12,7 @@ const client = new Client([
   'https://api.openhive.network',
 ]);
 
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import * as hiveTx from 'hive-tx';
 import * as math from 'mathjs';
 import {
@@ -76,7 +77,7 @@ const createSignatureObject = (
     responseCallback: setValidLogIn,
   };
 };
-const requestSignature = (username: string) => {
+const login = (username: string) => {
   return new Promise<LoginResponseType>((resolve, reject) => {
     const callback = (response: LoginResponseType) => {
       if (response.success) {
@@ -94,6 +95,30 @@ const requestSignature = (username: string) => {
     );
   });
 };
+
+const signBuffer = (username: string, keytype: KeychainKeyTypes) => {
+  return new Promise<LoginResponseType>((resolve, reject) => {
+    var message = {
+      username: username,
+      timestamp: getTimestampInSeconds(),
+      message: `request signBuffer with ${keytype} key`,
+    };
+    const callback = (response: LoginResponseType) => {
+      if (response.success) {
+        resolve(response);
+      } else {
+        reject(response);
+      }
+    };
+    window.hive_keychain.requestSignBuffer(
+      username,
+      JSON.stringify(message),
+      keytype.toString(),
+      callback,
+    );
+  });
+};
+
 const getAccountAuthorities = async (username: string) => {
   const account = await getAccount(username);
 
@@ -199,7 +224,8 @@ const HiveUtils = {
   getDynamicGlobalProperties,
   getNextRequestID,
   accountUpdateBroadcast,
-  requestSignature,
+  login,
+  signBuffer,
   getAccountPublicKeyAuthority,
   getPublicKey,
 };

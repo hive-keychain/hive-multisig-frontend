@@ -1,24 +1,27 @@
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 
+import { KeychainKeyTypes } from 'hive-keychain-commons';
+import { SignerConnectMessage } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { hiveKeyChainRequestSign } from '../../redux/features/login/loginSlice';
+import { login } from '../../redux/features/login/loginSlice';
 import {
   addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
   signerConnectActive,
+  signerConnectMessageActive,
+  signerConnectMessagePosting,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
-
-import { KeychainKeyTypes } from 'hive-keychain-commons';
+import HiveUtils from '../../utils/hive.utils';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -31,6 +34,12 @@ const LoginForm = () => {
     (state) => state.login.isSignatureSuccess,
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const signerConnectStateActive = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessageActive,
+  );
+  const signerConnectStatePosting = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessagePosting,
+  );
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage(
@@ -100,13 +109,15 @@ const LoginForm = () => {
   const signerConnect = async () => {
     await connectActive();
     await connectPosting();
+    await getActiveConnectMessage();
+    await getPostingConnectMessage();
   };
+
   const connectActive = async () => {
     const signerConnectResponse = await multisig.signerConnect({
       username,
       keyType: KeychainKeyTypes.active,
     });
-    getTransactions(KeychainKeyTypes.active);
     if (signerConnectResponse.result) {
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -122,16 +133,16 @@ const LoginForm = () => {
           await dispatch(addUserNotifications(notifications));
         }
       }
+      await dispatch(signerConnectActive(signerConnectResponse));
+    } else {
+      console.log('connectActive Failed');
     }
-    await dispatch(signerConnectActive(signerConnectResponse));
   };
   const connectPosting = async () => {
     const signerConnectResponse = await multisig.signerConnect({
       username,
       keyType: KeychainKeyTypes.posting,
     });
-    getTransactions(KeychainKeyTypes.posting);
-
     if (signerConnectResponse.result) {
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -147,16 +158,12 @@ const LoginForm = () => {
           await dispatch(addUserNotifications(notifications));
         }
       }
+      await dispatch(signerConnectPosting(signerConnectResponse));
+    } else {
+      console.log('connectPosting Failed');
     }
-    await dispatch(signerConnectPosting(signerConnectResponse));
   };
 
-  const getTransactions = async (keyType:KeychainKeyTypes) => {
-    const res = await multisig.getTransactions({
-      username,
-      keyType,
-    });
-  };
   const loginInitAsync = async () => {
     if (!multisig) {
       setMultisig(HiveMultisigSDK.getInstance(window));
@@ -181,6 +188,38 @@ const LoginForm = () => {
       await dispatch(addBroadcastedTransaction([message]));
     }
   };
+
+  const getActiveConnectMessage = async () => {
+    const activeSignBuffer = await HiveUtils.signBuffer(
+      username,
+      KeychainKeyTypes.active,
+    );
+    if (activeSignBuffer?.success) {
+      console.log(activeSignBuffer);
+      const connectMessage: SignerConnectMessage = {
+        username: activeSignBuffer.data.username,
+        publicKey: activeSignBuffer.publicKey,
+        message: JSON.stringify(activeSignBuffer.result).replace(/"/g, ''),
+      };
+      dispatch(signerConnectMessageActive(connectMessage));
+    }
+  };
+
+  const getPostingConnectMessage = async () => {
+    const postingSignBuffer = await HiveUtils.signBuffer(
+      username,
+      KeychainKeyTypes.posting,
+    );
+    if (postingSignBuffer?.success) {
+      console.log(postingSignBuffer);
+      const postingMessage: SignerConnectMessage = {
+        username: postingSignBuffer.data.username,
+        publicKey: postingSignBuffer.publicKey,
+        message: JSON.stringify(postingSignBuffer.result).replace(/"/g, ''),
+      };
+      dispatch(signerConnectMessagePosting(postingMessage));
+    }
+  };
   useEffect(() => {
     if (isFocused) {
       const keyDownHandler = (e: KeyboardEvent) => {
@@ -196,7 +235,7 @@ const LoginForm = () => {
   });
 
   const handleOnLoginSubmit = () => {
-    dispatch(hiveKeyChainRequestSign(username));
+    dispatch(login(username));
   };
 
   return (

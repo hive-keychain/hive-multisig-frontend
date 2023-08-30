@@ -19,6 +19,12 @@ export enum TransactionStatus {
 
 export const SignRequestsPage = () => {
   const account = useAppSelector((state) => state.login.accountObject);
+  const postingConnectMessage = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessagePosting,
+  );
+  const activeConnectMessage = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessageActive,
+  );
   const requests = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
   );
@@ -33,7 +39,16 @@ export const SignRequestsPage = () => {
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
+  const multisig = HiveMultisigSDK.getInstance(window);
 
+  useEffect(() => {
+    if (activeConnectMessage) {
+      multisig.getSignatureRequests(activeConnectMessage);
+    }
+    // if (postingConnectMessage) {
+    //   multisig.getSignatureRequests(postingConnectMessage);
+    // }
+  }, []);
   useEffect(() => {
     console.log('Transactions');
     console.log(transactions);

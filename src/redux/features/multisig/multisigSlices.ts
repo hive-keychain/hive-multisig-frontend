@@ -8,12 +8,16 @@ import {
   setSignRequestCount,
   showSignRequests,
   signerConnectActive,
+  signerConnectMessageActive,
+  signerConnectMessagePosting,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from './multisigThunks';
 
 const initialState: State = {
+  signerConnectMessageActive: undefined,
+  signerConnectMessagePosting: undefined,
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
   signRequests: [],
@@ -61,6 +65,17 @@ const multisigSlice = createSlice({
       state.signerConnectPosting = undefined;
       state.success = false;
       state.error = 'Error during signer connect active.';
+    });
+
+    builder.addCase(signerConnectMessageActive.fulfilled, (state, action) => {
+      state.signerConnectMessageActive = {
+        ...action.payload.signerConnectMessageActive,
+      };
+    });
+    builder.addCase(signerConnectMessagePosting.fulfilled, (state, action) => {
+      state.signerConnectMessagePosting = {
+        ...action.payload.signerConnectMessagePosting,
+      };
     });
 
     builder.addCase(subscribeToSignRequests.pending, (state) => {

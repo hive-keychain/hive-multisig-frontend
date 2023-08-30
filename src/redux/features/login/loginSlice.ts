@@ -23,10 +23,10 @@ const initialState: LoginStateType = {
   error: '',
 };
 
-export const hiveKeyChainRequestSign = createAsyncThunk(
+export const login = createAsyncThunk(
   'login/request',
   async (username: string) => {
-    const response = await HiveUtils.requestSignature(username);
+    const response = await HiveUtils.login(username);
     return response;
   },
 );
@@ -44,7 +44,7 @@ const loginSclice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(
-      hiveKeyChainRequestSign.fulfilled,
+      login.fulfilled,
       (state, action: PayloadAction<LoginResponseType>) => {
         if (action.payload.success) {
           state.loginState = LoginState.SIGNATURE_SUCCEEDED;
@@ -54,7 +54,7 @@ const loginSclice = createSlice({
         }
       },
     );
-    builder.addCase(hiveKeyChainRequestSign.rejected, (state, action) => {
+    builder.addCase(login.rejected, (state, action) => {
       state.loginState = LoginState.SIGNATURE_FAILED;
       state.isSignatureSuccess = false;
       state.accountObject = null;

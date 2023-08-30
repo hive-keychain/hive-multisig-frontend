@@ -1,5 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
+  SignerConnectMessage,
   SignerConnectResponse,
   UserNotification,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
@@ -7,6 +8,37 @@ import {
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { State } from '../../../interfaces/multisig.interface';
 
+export const signerConnectMessageActive = createAsyncThunk<
+  State,
+  SignerConnectMessage,
+  { rejectValue: string }
+>(
+  'multisig/signerConnectMessageActive',
+  async (message: SignerConnectMessage, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      signerConnectMessageActive: message,
+    };
+    return newState;
+  },
+);
+
+export const signerConnectMessagePosting = createAsyncThunk<
+  State,
+  SignerConnectMessage,
+  { rejectValue: string }
+>(
+  'multisig/signerConnectMessagePosting',
+  async (message: SignerConnectMessage, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      signerConnectMessagePosting: message,
+    };
+    return newState;
+  },
+);
 export const signerConnectActive = createAsyncThunk<
   State,
   SignerConnectResponse,
