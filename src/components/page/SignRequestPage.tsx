@@ -7,7 +7,8 @@ import {
 import { useEffect, useState } from 'react';
 import { Button, Card, Collapse } from 'react-bootstrap';
 import { LoginResponseType } from '../../interfaces';
-import { useAppSelector } from '../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
 
 export enum TransactionStatus {
   PENDING = 'pending',
@@ -18,6 +19,7 @@ export enum TransactionStatus {
 }
 
 export const SignRequestsPage = () => {
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) => state.login.accountObject);
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
@@ -40,14 +42,29 @@ export const SignRequestsPage = () => {
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
   const multisig = HiveMultisigSDK.getInstance(window);
-
-  useEffect(() => {
+  const getSignRequests = async () => {
     if (activeConnectMessage) {
-      multisig.getSignatureRequests(activeConnectMessage);
+      try {
+        var activeReqs = await multisig.getSignatureRequests(
+          activeConnectMessage,
+        );
+        if (activeReqs) {
+          dispatch(addSignRequest(activeReqs));
+        }
+      } catch {}
     }
-    // if (postingConnectMessage) {
-    //   multisig.getSignatureRequests(postingConnectMessage);
-    // }
+    if (postingConnectMessage) {
+      try {
+        var postingReqs: SignatureRequest[] =
+          await multisig.getSignatureRequests(postingConnectMessage);
+        if (postingReqs) {
+          dispatch(addSignRequest(postingReqs));
+        }
+      } catch {}
+    }
+  };
+  useEffect(() => {
+    getSignRequests();
   }, []);
   useEffect(() => {
     console.log('Transactions');
