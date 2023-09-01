@@ -34,12 +34,7 @@ const LoginForm = () => {
     (state) => state.login.isSignatureSuccess,
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
-  const signerConnectStateActive = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessageActive,
-  );
-  const signerConnectStatePosting = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessagePosting,
-  );
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage(
@@ -135,7 +130,7 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectActive(signerConnectResponse));
     } else {
-      console.log('connectActive Failed');
+      // console.log('connectActive Failed');
     }
   };
   const connectPosting = async () => {
@@ -160,7 +155,7 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectPosting(signerConnectResponse));
     } else {
-      console.log('connectPosting Failed');
+      // console.log('connectPosting Failed');
     }
   };
 
@@ -174,16 +169,12 @@ const LoginForm = () => {
   };
 
   const signRequestCallback = async (message: SignatureRequest) => {
-    console.log('signrequestcCallback');
-    console.log(message);
     if (message) {
       await dispatch(addSignRequest([message]));
     }
   };
 
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    console.log('broadcastedTransactionCallback');
-    console.log(message);
     if (message) {
       await dispatch(addBroadcastedTransaction([message]));
     }
@@ -195,7 +186,6 @@ const LoginForm = () => {
       KeychainKeyTypes.active,
     );
     if (activeSignBuffer?.success) {
-      console.log(activeSignBuffer);
       const connectMessage: SignerConnectMessage = {
         username: activeSignBuffer.data.username,
         publicKey: activeSignBuffer.publicKey,
@@ -211,7 +201,6 @@ const LoginForm = () => {
       KeychainKeyTypes.posting,
     );
     if (postingSignBuffer?.success) {
-      console.log(postingSignBuffer);
       const postingMessage: SignerConnectMessage = {
         username: postingSignBuffer.data.username,
         publicKey: postingSignBuffer.publicKey,

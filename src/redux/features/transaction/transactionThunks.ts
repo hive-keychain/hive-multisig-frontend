@@ -1,12 +1,12 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import {
   IExpiration,
   ITransaction,
   Initiator,
   State,
 } from '../../../interfaces/transaction.interface';
+import HiveUtils from '../../../utils/hive.utils';
 
 export const setAuthority = createAsyncThunk<
   State,
@@ -15,8 +15,7 @@ export const setAuthority = createAsyncThunk<
 >('transaction/setAuthority', async (txInfo: ITransaction, { getState }) => {
   try {
     const currentState = getState() as State;
-    const multisig = new HiveMultisigSDK(window);
-    const authority = await multisig.getSigners(
+    const authority = await HiveUtils.getAuthority(
       txInfo.username.toString(),
       txInfo.method,
     );

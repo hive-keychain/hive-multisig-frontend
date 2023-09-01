@@ -90,7 +90,6 @@ export function AccountKeysCard({
     const componentToDelete = componentKeys.filter(
       (e) => !accountNames.includes(e),
     )[0];
-    console.log('componentToDelete', componentToDelete);
     const componentIndex = getComponentIndex(componentToDelete);
     let newComponentList: [string, ReactNode][] = [];
     if (componentIndex !== -1) {

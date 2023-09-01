@@ -108,6 +108,7 @@ const multisigSlice = createSlice({
       state.signRequests = action.payload
         ? [...state.signRequests, ...action.payload]
         : action.payload;
+      state.showSignRequests = true;
     });
 
     builder.addCase(addUserNotifications.fulfilled, (state, action) => {

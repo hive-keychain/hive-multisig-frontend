@@ -46,8 +46,8 @@ export const TransactionPage = () => {
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
-  const signRequests = useAppSelector(
-    (state) => state.multisig.multisig.signRequests,
+  const showNotif = useAppSelector(
+    (state) => state.multisig.multisig.showSignRequests,
   );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -62,12 +62,12 @@ export const TransactionPage = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (signRequests) {
-      if (signRequests.length > 0) {
-        dispatch(showSignRequests(true));
-      }
+    if (showNotif) {
+      alert('Received new sign request');
+      dispatch(showSignRequests(false));
     }
-  }, [signRequests]);
+  }, [showNotif]);
+
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
@@ -122,7 +122,6 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (operation) {
       (async () => {
-        console.log(transactionState.initiator);
         const transaction = await HiveTxUtils.createTx(
           [operation],
           transactionState.expiration,
@@ -135,7 +134,6 @@ export const TransactionPage = () => {
           ),
           initiator: { ...transactionState.initiator },
         };
-        console.log(txEncode);
 
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
         multisig.sendSignatureRequest(encodedTxObj).then(() => {
@@ -146,7 +144,6 @@ export const TransactionPage = () => {
   }, [operation]);
 
   const handleSelectOnChange = (transaction: string) => {
-    console.log(transaction);
     switch (transaction) {
       case 'TransferOperation':
         setTransactionCard(<Transfer />);

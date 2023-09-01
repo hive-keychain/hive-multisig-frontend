@@ -37,7 +37,6 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   const redirect = () => {
     if (input && input !== '') {
-      console.log(`SearchBar: ${input}`);
       navigate(`/@${input}`);
     } else {
       navigate('/');
@@ -103,7 +102,6 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
   const getAuth = async () => {
     const auth = await AccountUtils.getAccountAuthorities(searchKey);
-    console.log(auth);
     if (auth) {
       setAuthorities(auth);
     }

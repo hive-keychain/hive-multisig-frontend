@@ -24,7 +24,18 @@ import { getTimestampInSeconds } from './utils';
 const getAccount = async (username: string) => {
   return client.database.getAccounts([username]);
 };
-
+const getAuthority = async (username: string, keyType: KeychainKeyTypes) => {
+  const account = await HiveUtils.getAccount(username);
+  if (account.length === 0) {
+    return undefined;
+  }
+  switch (keyType) {
+    case KeychainKeyTypes.active:
+      return account[0].active;
+    case KeychainKeyTypes.posting:
+      return account[0].posting;
+  }
+};
 const getPublicKey = async (username: string, keyType: string) => {
   var account = await getAccount(username);
   try {
@@ -217,6 +228,7 @@ const fromHP = (
 
 const HiveUtils = {
   getAccount,
+  getAuthority,
   getAccountAuthorities,
   broadcastUpdateAccount,
   getPrivateKeyFromSeed,
