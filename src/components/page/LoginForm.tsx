@@ -22,6 +22,7 @@ import {
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import HiveUtils from '../../utils/hive.utils';
+import { MultisigUtils } from '../../utils/multisig.utils';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -56,7 +57,9 @@ const LoginForm = () => {
     inputRef.current.focus();
     if (isLoggedIn) {
       if (!multisig) {
-        setMultisig(HiveMultisigSDK.getInstance(window));
+        setMultisig(
+          HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+        );
       }
       const loggedinDuration = getElapsedTimestampSeconds(
         loginTimestamp,
@@ -73,7 +76,7 @@ const LoginForm = () => {
   useEffect(() => {
     if (isLoggedIn) {
       navigate(`/transaction`);
-      subToSignReqequests();
+      subToSignRequests();
       subToBroadcastedTransactions();
       signerConnect();
     } else {
@@ -87,7 +90,7 @@ const LoginForm = () => {
     }
   }, [isLoginSucceed]);
 
-  const subToSignReqequests = async () => {
+  const subToSignRequests = async () => {
     const subscribeRes = await multisig.subscribeToSignRequests(
       signRequestCallback,
     );
@@ -161,7 +164,9 @@ const LoginForm = () => {
 
   const loginInitAsync = async () => {
     if (!multisig) {
-      setMultisig(HiveMultisigSDK.getInstance(window));
+      setMultisig(
+        HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+      );
     }
     setStorageIsLoggedIn(isLoginSucceed);
     setStorageAccountDetails(signedAccountObj);

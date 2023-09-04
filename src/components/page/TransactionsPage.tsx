@@ -21,6 +21,7 @@ import {
 } from '../../redux/features/transaction/transactionThunks';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
+import { MultisigUtils } from '../../utils/multisig.utils';
 import { getISOStringDate } from '../../utils/utils';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
 import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
@@ -41,7 +42,10 @@ export const TransactionPage = () => {
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
-  const multisig = HiveMultisigSDK.getInstance(window);
+  const multisig = HiveMultisigSDK.getInstance(
+    window,
+    MultisigUtils.getOptions(),
+  );
 
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,

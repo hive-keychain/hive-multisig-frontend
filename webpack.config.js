@@ -2,6 +2,8 @@
 const webpack = require('webpack');
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const dotenv = require('dotenv');
+
 module.exports = {
   entry: './src/index.tsx',
   output: {
@@ -22,6 +24,9 @@ module.exports = {
       url: require.resolve('url'),
       stream: require.resolve('stream-browserify'),
       buffer: require.resolve('buffer/'),
+      crypto: false,
+      os: false,
+      path: false,
       // "stream": false,
       // "buffer": false
       // "buffer": require.resolve("buffer")
@@ -36,10 +41,7 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        exclude: [
-          /node_modules\/hive-multisig-sdk\/src\/index\.ts$/,
-          /node_modules\/hive-multisig-sdk\/src\/interfaces\/socket-message-interface\.ts$/,
-        ],
+        exclude: [],
         use: {
           loader: 'ts-loader',
           options: {
@@ -54,6 +56,9 @@ module.exports = {
     ],
   },
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env': JSON.stringify(dotenv.config().parsed),
+    }),
     new webpack.ProvidePlugin({
       Buffer: ['buffer', 'Buffer'],
     }),

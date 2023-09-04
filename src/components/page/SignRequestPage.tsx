@@ -9,6 +9,7 @@ import { Button, Card, Collapse } from 'react-bootstrap';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
+import { MultisigUtils } from '../../utils/multisig.utils';
 
 export enum TransactionStatus {
   PENDING = 'pending',
@@ -41,7 +42,10 @@ export const SignRequestsPage = () => {
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
-  const multisig = HiveMultisigSDK.getInstance(window);
+  const multisig = HiveMultisigSDK.getInstance(
+    window,
+    MultisigUtils.getOptions(),
+  );
   const getSignRequests = async () => {
     if (activeConnectMessage) {
       try {
@@ -245,7 +249,10 @@ const PendingRequestCard = ({ signRequest, account }: ITransactionProps) => {
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(window);
+  const multisig = HiveMultisigSDK.getInstance(
+    window,
+    MultisigUtils.getOptions(),
+  );
 
   const handleDecode = async () => {
     try {
@@ -402,7 +409,10 @@ const BroadCastedTransactionCard = ({
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(window);
+  const multisig = HiveMultisigSDK.getInstance(
+    window,
+    MultisigUtils.getOptions(),
+  );
 
   const handleDecode = async () => {
     try {
@@ -515,7 +525,10 @@ const ExpiredTransactionCard = ({
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(window);
+  const multisig = HiveMultisigSDK.getInstance(
+    window,
+    MultisigUtils.getOptions(),
+  );
 
   const handleDecode = async () => {
     try {
