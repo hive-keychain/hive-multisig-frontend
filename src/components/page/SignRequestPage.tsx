@@ -73,10 +73,10 @@ export const SignRequestsPage = () => {
   useEffect(() => {
     if (transactions) {
       transactions.sort((a, b) => {
-        var keyA = new Date(a.expirationDate);
-        var keyB = new Date(b.expirationDate);
-        if (keyA < keyB) return -1;
-        if (keyA > keyB) return 1;
+        var keyA = new Date(a.createdAt);
+        var keyB = new Date(b.createdAt);
+        if (keyA < keyB) return 1;
+        if (keyA > keyB) return -1;
         return 0;
       });
     }
