@@ -17,7 +17,8 @@ export interface IMultisig {
 }
 
 export interface State extends IMultisig {
-  showSignRequests?: boolean;
+  signRequestNotification?: boolean;
+  broadcastNotification?: boolean;
   signRequestCount?: number;
   newSignRequestCount?: number;
   success: boolean;

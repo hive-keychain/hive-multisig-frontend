@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 // each request must have a Sign and Reject button
 import { Button, Modal } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
+import { notifySignRequest } from '../../redux/features/multisig/multisigThunks';
 // active and posting
 export const SignRequestNotification = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export const SignRequestNotification = () => {
   const [newSignRequests, setNewSignRequests] = useState<number>(0);
   const [totalPendingRequests, setTotalPendingRequests] = useState<number>(0);
   const showSignRequestModal = useAppSelector(
-    (state) => state.multisig.multisig.showSignRequests,
+    (state) => state.multisig.multisig.signRequestNotification,
   );
   const newSignRequestsCount = useAppSelector(
     (state) => state.multisig.multisig.newSignRequestCount,
@@ -43,7 +43,7 @@ export const SignRequestNotification = () => {
   }, [signRequestsCount]);
   useEffect(() => {
     if (!show) {
-      dispatch(showSignRequests(show));
+      dispatch(notifySignRequest(show));
     }
   }, [show]);
 

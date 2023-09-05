@@ -116,8 +116,14 @@ export const addBroadcastedTransaction = createAsyncThunk(
     return transaction;
   },
 );
-export const showSignRequests = createAsyncThunk(
-  'multisig/showSignRequests',
+export const notifySignRequest = createAsyncThunk(
+  'multisig/notifySignRequest',
+  async (show: boolean) => {
+    return show;
+  },
+);
+export const notifyBroadcastedTransaction = createAsyncThunk(
+  'multisig/notifyBroadcastedTransaction',
   async (show: boolean) => {
     return show;
   },

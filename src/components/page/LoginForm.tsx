@@ -13,6 +13,8 @@ import {
   addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
+  notifyBroadcastedTransaction,
+  notifySignRequest,
   signerConnectActive,
   signerConnectMessageActive,
   signerConnectMessagePosting,
@@ -124,11 +126,15 @@ const LoginForm = () => {
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addSignRequest([message]));
+      if (message.initiator !== username) {
+        await dispatch(notifySignRequest(true));
+      }
     }
   };
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addBroadcastedTransaction([message]));
+      await dispatch(notifyBroadcastedTransaction(true));
     }
   };
   const connectActive = async () => {

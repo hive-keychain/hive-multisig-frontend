@@ -4,9 +4,10 @@ import {
   addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
+  notifyBroadcastedTransaction,
+  notifySignRequest,
   removeSignRequest,
   setSignRequestCount,
-  showSignRequests,
   signerConnectActive,
   signerConnectMessageActive,
   signerConnectMessagePosting,
@@ -25,7 +26,8 @@ const initialState: State = {
   broadcastedTransactions: [],
   subscribeToSignRequest: false,
   subscribeToBroadcast: false,
-  showSignRequests: false,
+  signRequestNotification: false,
+  broadcastNotification: false,
   signRequestCount: 0,
   newSignRequestCount: 0,
   success: false,
@@ -108,7 +110,6 @@ const multisigSlice = createSlice({
       state.signRequests = action.payload
         ? [...state.signRequests, ...action.payload]
         : action.payload;
-      state.showSignRequests = true;
     });
 
     builder.addCase(addUserNotifications.fulfilled, (state, action) => {
@@ -124,14 +125,13 @@ const multisigSlice = createSlice({
       state.success = true;
     });
 
-    builder.addCase(showSignRequests.fulfilled, (state, action) => {
-      state.showSignRequests = action.payload;
+    builder.addCase(notifySignRequest.fulfilled, (state, action) => {
+      state.signRequestNotification = action.payload;
       state.success = action.payload;
     });
-
-    builder.addCase(showSignRequests.rejected, (state) => {
-      state.showSignRequests = false;
-      state.success = false;
+    builder.addCase(notifyBroadcastedTransaction.fulfilled, (state, action) => {
+      state.broadcastNotification = action.payload;
+      state.success = action.payload;
     });
 
     builder.addCase(setSignRequestCount.fulfilled, (state, action) => {

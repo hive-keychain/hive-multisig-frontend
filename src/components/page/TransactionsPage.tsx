@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   addSignRequest,
   addUserNotifications,
-  showSignRequests,
+  notifySignRequest,
   signerConnectActive,
   signerConnectPosting,
 } from '../../redux/features/multisig/multisigThunks';
@@ -61,8 +61,8 @@ export const TransactionPage = () => {
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
-  const showNotif = useAppSelector(
-    (state) => state.multisig.multisig.showSignRequests,
+  const signRequestNotif = useAppSelector(
+    (state) => state.multisig.multisig.signRequestNotification,
   );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -77,11 +77,11 @@ export const TransactionPage = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (showNotif) {
+    if (signRequestNotif) {
       alert('Received new sign request');
-      dispatch(showSignRequests(false));
+      dispatch(notifySignRequest(false));
     }
-  }, [showNotif]);
+  }, [signRequestNotif]);
 
   useEffect(() => {
     if (loggedInAccount) {
