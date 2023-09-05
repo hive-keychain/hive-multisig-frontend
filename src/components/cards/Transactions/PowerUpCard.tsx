@@ -64,14 +64,14 @@ const PowerUpCard: React.FC<{}> = () => {
 
   const handleTransaction = async (values: any) => {
     const asset = hiveDecimalFormat(values.amount, 3) + ` HIVE`;
-    const op: Hive.TransferToVestingOperation = {
-      0: 'transfer_to_vesting',
-      1: {
+    const op: Hive.TransferToVestingOperation = [
+      'transfer_to_vesting',
+      {
         from: values.from,
         to: values.to,
         amount: asset,
       },
-    };
+    ];
     setOps(op);
   };
 

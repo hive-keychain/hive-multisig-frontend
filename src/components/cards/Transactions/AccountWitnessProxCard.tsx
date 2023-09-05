@@ -65,13 +65,13 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
   }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const op: Hive.AccountWitnessProxyOperation = {
-      0: 'account_witness_proxy',
-      1: {
+    const op: Hive.AccountWitnessProxyOperation = [
+      'account_witness_proxy',
+      {
         account: values.account,
         proxy: values.proxy,
       },
-    };
+    ];
     setOps(op);
   };
   const schema = yup.object().shape({

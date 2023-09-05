@@ -67,13 +67,13 @@ const PowerDownCard: React.FC<{}> = () => {
   const handleTransaction = (values: any) => {
     const asset: string =
       hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
-    const op: Hive.WithdrawVestingOperation = {
-      0: 'withdraw_vesting',
-      1: {
+    const op: Hive.WithdrawVestingOperation = [
+      'withdraw_vesting',
+      {
         account: values.account,
         vesting_shares: asset,
       },
-    };
+    ];
     setOps(op);
   };
 

@@ -67,15 +67,16 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
     var p_ids: number[] = values.proposal_ids.map((x: string) => {
       return parseInt(x, 10);
     });
-    const op: Hive.UpdateProposalVotesOperation = {
-      0: 'update_proposal_votes',
-      1: {
+    const op: Hive.UpdateProposalVotesOperation = [
+      'update_proposal_votes',
+      ,
+      {
         approve: values.approve,
         extensions: values.extensions,
         proposal_ids: p_ids,
         voter: values.voter,
       },
-    };
+    ];
     setOps(op);
   };
 

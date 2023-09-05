@@ -64,9 +64,9 @@ const RecurrentTransferCard: React.FC<{}> = () => {
 
   const handleTransaction = async (values: any) => {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
-    const op: Hive.RecurrentTransferOperation = {
-      0: 'recurrent_transfer',
-      1: {
+    const op: Hive.RecurrentTransferOperation = [
+      'recurrent_transfer',
+      {
         amount: asset,
         executions: values.executions,
         extensions: values.extensions,
@@ -75,7 +75,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
         recurrence: values.recurrence,
         to: values.to,
       },
-    };
+    ];
     setOps(op);
   };
   const handleAssetChange = (value: string) => {

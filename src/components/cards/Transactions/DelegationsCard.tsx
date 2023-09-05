@@ -102,14 +102,15 @@ function DelegationsCard() {
     } else {
       asset = hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
     }
-    const op: Hive.DelegateVestingSharesOperation = {
-      0: 'delegate_vesting_shares',
-      1: {
+    const op: Hive.DelegateVestingSharesOperation = [
+      'delegate_vesting_shares',
+      ,
+      {
         delegatee: values.delegatee,
         delegator: values.delegator,
         vesting_shares: asset,
       },
-    };
+    ];
     setOps(op);
   };
   return (

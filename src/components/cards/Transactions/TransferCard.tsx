@@ -67,15 +67,16 @@ function Transfer() {
 
   const handleTransaction = async (values: any) => {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
-    const op: Hive.TransferOperation = {
-      0: 'transfer',
-      1: {
+    const op: Hive.TransferOperation = [
+      'transfer',
+      ,
+      {
         from: values.from,
         to: values.to,
         amount: asset,
         memo: values.memo,
       },
-    };
+    ];
     setOps(op);
   };
 

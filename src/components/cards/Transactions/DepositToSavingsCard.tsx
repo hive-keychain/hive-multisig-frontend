@@ -69,16 +69,16 @@ const DepositToSavingsCard: React.FC<{}> = () => {
     const rqid = await HiveUtils.getNextRequestID(
       loggedInAccount.data.username,
     );
-    const op: Hive.TransferToSavingsOperation = {
-      0: 'transfer_to_savings',
-      1: {
+    const op: Hive.TransferToSavingsOperation = [
+      'transfer_to_savings',
+      {
         amount: asset,
         from: values.from,
         memo: values.memo,
         request_id: rqid,
         to: values.to,
       },
-    };
+    ];
     setOps(op);
   };
 

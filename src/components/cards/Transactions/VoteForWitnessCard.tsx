@@ -63,14 +63,14 @@ const VoteForWitnessCard: React.FC<{}> = () => {
   }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const op: Hive.AccountWitnessVoteOperation = {
-      0: 'account_witness_vote',
-      1: {
+    const op: Hive.AccountWitnessVoteOperation = [
+      'account_witness_vote',
+      {
         account: values.account,
         approve: values.approve,
         witness: values.witness,
       },
-    };
+    ];
     setOps(op);
   };
   const schema = yup.object().shape({

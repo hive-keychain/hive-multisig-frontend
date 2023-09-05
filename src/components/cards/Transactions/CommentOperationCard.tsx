@@ -61,9 +61,9 @@ export const CommentOperationCard = () => {
   }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const op: Hive.CommentOperation = {
-      0: 'comment',
-      1: {
+    const op: Hive.CommentOperation = [
+      'comment',
+      {
         parent_author: values.parent_author,
         parent_permlink: values.parent_permlink,
         author: values.author,
@@ -72,7 +72,7 @@ export const CommentOperationCard = () => {
         body: values.body,
         json_metadata: values.json_metadata,
       },
-    };
+    ];
     setOps(op);
   };
   const schema = yup.object().shape({

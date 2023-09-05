@@ -110,6 +110,7 @@ const NavBar = () => {
       <Container fluid>
         <Navbar.Brand
           className="nav-text-color ms-0 me-1"
+          style={{ paddingRight: 50 }}
           onClick={() => {
             isLoggedIn ? setDestination('/transaction') : setDestination('/');
           }}>
@@ -151,7 +152,7 @@ const NavBar = () => {
           <Nav className="me-2">
             {isLoggedIn ? (
               <Nav.Link onClick={() => setDestination('/transaction')}>
-                Transaction
+                Transactions
               </Nav.Link>
             ) : null}
             {isLoggedIn ? (
@@ -177,18 +178,19 @@ const NavBar = () => {
               </Nav>
             )}
           </Nav>
-          {/*Search bar when collapsed and logged in*/}
+          {/* Search bar when collapsed and logged in
           <NavSearchBar
             classNames="w-auto mt-2 me-auto d-md d-lg-none d-xl-none d-xxl-none"
             isLoggedIn={isLoggedIn}
             setDestination={setDestination}
           />
-          {/*Search bar when not collapsed and logged in*/}
+          {Search bar when not collapsed and logged in}
           <NavSearchBar
             classNames="w-auto  d-xs-none d-none d-sm-none d-md-none d-lg-flex"
             isLoggedIn={isLoggedIn}
             setDestination={setDestination}
-          />
+          /> 
+          */}
           {isLoggedIn ? (
             <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
               <Nav.Link
