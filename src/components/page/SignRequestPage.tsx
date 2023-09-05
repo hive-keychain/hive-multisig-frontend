@@ -5,7 +5,14 @@ import {
   ITransaction,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { useEffect, useState } from 'react';
-import { Button, Card, Collapse } from 'react-bootstrap';
+import {
+  Button,
+  Card,
+  Collapse,
+  Toast,
+  ToastBody,
+  ToastContainer,
+} from 'react-bootstrap';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
@@ -18,6 +25,12 @@ export enum TransactionStatus {
   EXPIRED = 'expired',
   INVALID = 'invalid',
 }
+
+type AlertType = {
+  variant?: string;
+  text?: string;
+  show?: boolean;
+};
 
 export const SignRequestsPage = () => {
   const dispatch = useAppDispatch();
@@ -42,6 +55,8 @@ export const SignRequestsPage = () => {
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
+  const [alerts, setAlerts] = useState<AlertType>({
+  });
   const multisig = HiveMultisigSDK.getInstance(
     window,
     MultisigUtils.getOptions(),
@@ -203,7 +218,11 @@ export const SignRequestsPage = () => {
             case TransactionStatus.PENDING:
               return (
                 <div key={tx.id}>
-                  <PendingRequestCard signRequest={tx} account={account} />
+                  <PendingRequestCard
+                    signRequest={tx}
+                    account={account}
+                    setAlerts={setAlerts}
+                  />
                   <br />
                 </div>
               );
@@ -213,6 +232,7 @@ export const SignRequestsPage = () => {
                   <BroadCastedTransactionCard
                     signRequest={tx}
                     account={account}
+                    setAlerts={setAlerts}
                   />
                   <br />
                 </div>
@@ -220,12 +240,29 @@ export const SignRequestsPage = () => {
             case TransactionStatus.EXPIRED:
               return (
                 <div key={tx.id}>
-                  <ExpiredTransactionCard signRequest={tx} account={account} />
+                  <ExpiredTransactionCard
+                    signRequest={tx}
+                    account={account}
+                    setAlerts={setAlerts}
+                  />
                   <br />
                 </div>
               );
           }
         })
+      )}
+      {alerts.show && (
+        <ToastContainer position="bottom-end">
+          <Toast
+            delay={5000}
+            autohide
+            bg={alerts.variant}
+            onClose={() => {
+              setAlerts({});
+            }}>
+            <ToastBody>{alerts.text}</ToastBody>
+          </Toast>
+        </ToastContainer>
       )}
     </div>
   );
@@ -234,9 +271,14 @@ export const SignRequestsPage = () => {
 interface ITransactionProps {
   signRequest: SignatureRequest;
   account: LoginResponseType;
+  setAlerts: any;
 }
 
-const PendingRequestCard = ({ signRequest, account }: ITransactionProps) => {
+const PendingRequestCard = ({
+  signRequest,
+  account,
+  setAlerts,
+}: ITransactionProps) => {
   const [request, setRequest] = useState(signRequest);
   const [user, setAccount] = useState(account);
   const [status, setStatus] = useState(TransactionStatus.PENDING);
@@ -299,11 +341,19 @@ const PendingRequestCard = ({ signRequest, account }: ITransactionProps) => {
             txToBroadcast,
           );
           setIsBroadcasted(broadcastResult !== undefined);
-          alert('The transaction was broadcasted successfully!');
+          setAlerts({
+            variant: 'success',
+            text: 'The transaction was broadcasted successfully!',
+            show: true,
+          });
         }
       })
       .catch((reason: any) => {
-        alert('Failed to broadcast');
+        setAlerts({
+          variant: 'danger',
+          text: 'Failed to broadcast',
+          show: 'true',
+        });
         console.log(`Sign Transaction Rejected ${reason}`);
       });
   };
