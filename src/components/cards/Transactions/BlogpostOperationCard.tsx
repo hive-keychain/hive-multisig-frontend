@@ -63,7 +63,6 @@ export const BlogpostOperationCard = () => {
   const handleTransaction = async (values: any) => {
     const op: Hive.CommentOperation = [
       'comment',
-      ,
       {
         parent_author: values.parent_author,
         parent_permlink: values.parent_permlink,

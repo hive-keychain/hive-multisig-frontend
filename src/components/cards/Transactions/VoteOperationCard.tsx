@@ -65,7 +65,6 @@ export const VoteOperationCard = () => {
   const handleTransaction = async (values: any) => {
     const op: Hive.VoteOperation = [
       'vote',
-      ,
       {
         author: values.author,
         permlink: values.permlink,

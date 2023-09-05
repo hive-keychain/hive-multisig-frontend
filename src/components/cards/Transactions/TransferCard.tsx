@@ -69,7 +69,6 @@ function Transfer() {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
     const op: Hive.TransferOperation = [
       'transfer',
-      ,
       {
         from: values.from,
         to: values.to,

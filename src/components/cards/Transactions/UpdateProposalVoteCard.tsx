@@ -69,7 +69,6 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
     });
     const op: Hive.UpdateProposalVotesOperation = [
       'update_proposal_votes',
-      ,
       {
         approve: values.approve,
         extensions: values.extensions,

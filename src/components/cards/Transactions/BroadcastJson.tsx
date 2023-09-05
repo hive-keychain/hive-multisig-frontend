@@ -67,7 +67,6 @@ function BroadcastJson() {
   const handleTransaction = async (values: any) => {
     const op: Hive.CustomJsonOperation = [
       'custom_json',
-      ,
       {
         id: values.id,
         json: values.json,

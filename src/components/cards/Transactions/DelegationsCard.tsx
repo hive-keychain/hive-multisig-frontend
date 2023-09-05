@@ -104,7 +104,6 @@ function DelegationsCard() {
     }
     const op: Hive.DelegateVestingSharesOperation = [
       'delegate_vesting_shares',
-      ,
       {
         delegatee: values.delegatee,
         delegator: values.delegator,
