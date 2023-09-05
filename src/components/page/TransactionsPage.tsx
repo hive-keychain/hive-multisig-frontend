@@ -11,7 +11,13 @@ import {
   Initiator,
 } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { showSignRequests } from '../../redux/features/multisig/multisigThunks';
+import {
+  addSignRequest,
+  addUserNotifications,
+  showSignRequests,
+  signerConnectActive,
+  signerConnectPosting,
+} from '../../redux/features/multisig/multisigThunks';
 import {
   resetOperation,
   setAuthority,
@@ -46,7 +52,12 @@ export const TransactionPage = () => {
     window,
     MultisigUtils.getOptions(),
   );
-
+  const postingConnectMessage = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessagePosting,
+  );
+  const activeConnectMessage = useAppSelector(
+    (state) => state.multisig.multisig.signerConnectMessageActive,
+  );
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
@@ -75,6 +86,7 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
+      connectToBackend();
     } else {
       navigate('/login');
     }
@@ -95,6 +107,71 @@ export const TransactionPage = () => {
     dispatchTxAsync();
   }, [method]);
 
+  const connectActive = async () => {
+    if (activeConnectMessage) {
+      const signerConnectResponse = await multisig.signerConnect(
+        activeConnectMessage,
+      );
+      if (signerConnectResponse.result) {
+        if (signerConnectResponse.result.pendingSignatureRequests) {
+          const pendingReqs =
+            signerConnectResponse.result.pendingSignatureRequests[
+              activeConnectMessage.username
+            ];
+          if (pendingReqs?.length > 0) {
+            await dispatch(addSignRequest(pendingReqs));
+          }
+        }
+
+        if (signerConnectResponse.result.notifications) {
+          const notifications =
+            signerConnectResponse.result.notifications[
+              activeConnectMessage.username
+            ];
+          if (notifications?.length > 0) {
+            await dispatch(addUserNotifications(notifications));
+          }
+        }
+        await dispatch(signerConnectActive(signerConnectResponse));
+      } else {
+        // console.log('connectActive Failed');
+      }
+    }
+  };
+  const connectPosting = async () => {
+    if (postingConnectMessage) {
+      const signerConnectResponse = await multisig.signerConnect(
+        postingConnectMessage,
+      );
+      if (signerConnectResponse.result) {
+        if (signerConnectResponse.result.pendingSignatureRequests) {
+          const pendingReqs =
+            signerConnectResponse.result.pendingSignatureRequests[
+              postingConnectMessage.username
+            ];
+          if (pendingReqs.length > 0) {
+            await dispatch(addSignRequest(pendingReqs));
+          }
+        }
+        if (signerConnectResponse.result.notifications) {
+          const notifications =
+            signerConnectResponse.result.notifications[
+              postingConnectMessage.username
+            ];
+          if (notifications?.length > 0) {
+            await dispatch(addUserNotifications(notifications));
+          }
+        }
+        await dispatch(signerConnectPosting(signerConnectResponse));
+      } else {
+        // console.log('connectPosting Failed');
+      }
+    }
+  };
+  const connectToBackend = async () => {
+    await connectActive();
+    await connectPosting();
+  };
   const dispatchTxAsync = async () => {
     try {
       const txInfo: ITransaction = {

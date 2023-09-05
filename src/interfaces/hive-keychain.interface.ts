@@ -10,16 +10,13 @@ export type SignResponseDataType = {
   key: string;
   message: string;
   method: string;
-  rpc: string;
-  title: string;
-  type: string;
   username: string;
 };
 export type LoginResponseType = {
-  error: string;
-  message: string;
+  error?: string;
+  message?: string;
   publicKey: string;
-  request_id: number;
+  request_id?: number;
   result: string;
   success: boolean;
   data: SignResponseDataType;

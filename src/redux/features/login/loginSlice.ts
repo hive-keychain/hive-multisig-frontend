@@ -1,7 +1,6 @@
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 import { LoginResponseType } from '../../../interfaces';
-import HiveUtils from '../../../utils/hive.utils';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 export enum LoginState {
   SIGNATURE_REQUESTED = 'SIGNATURE_REQUESTED',
@@ -26,9 +25,8 @@ const initialState: LoginStateType = {
 
 export const login = createAsyncThunk(
   'login/request',
-  async (username: string) => {
-    const response = await HiveUtils.login(username);
-    return response;
+  async (data: LoginResponseType) => {
+    return data;
   },
 );
 

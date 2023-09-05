@@ -3,13 +3,13 @@ import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
 
 const getOptions = () => {
   return {
-    apiAddress: process.env.API_ADDRESS || 'http://localhost:5000',
-    socketAddress: process.env.SOCKET_ADDRESS || 'http://localhost:5001',
+    apiAddress: 'http://localhost:5000',
+    socketAddress: 'http://localhost:5001',
     clientAddress: 'https://api.deathwing.me',
   };
 };
 
-const multisig = new HiveMultisigSDK(window, getOptions());
+const multisig = HiveMultisigSDK.getInstance(window, getOptions());
 
 const getSigners = async (username: string, keyType: KeychainKeyTypes) => {
   const signers = await multisig.getSigners(username, keyType);

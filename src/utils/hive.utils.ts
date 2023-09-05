@@ -112,7 +112,7 @@ const signBuffer = (username: string, keytype: KeychainKeyTypes) => {
     var message = {
       username: username,
       timestamp: getTimestampInSeconds(),
-      message: `request signBuffer with ${keytype} key`,
+      message: `${username}`,
     };
     const callback = (response: LoginResponseType) => {
       if (response.success) {
