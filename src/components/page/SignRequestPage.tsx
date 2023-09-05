@@ -299,6 +299,7 @@ const PendingRequestCard = ({ signRequest, account }: ITransactionProps) => {
             txToBroadcast,
           );
           setIsBroadcasted(broadcastResult !== undefined);
+          alert('The transaction was broadcasted successfully!');
         }
       })
       .catch((reason: any) => {
