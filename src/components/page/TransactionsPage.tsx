@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   addSignRequest,
   addUserNotifications,
+  notifyBroadcastedTransaction,
   notifySignRequest,
   signerConnectActive,
   signerConnectPosting,
@@ -64,6 +65,9 @@ export const TransactionPage = () => {
   const signRequestNotif = useAppSelector(
     (state) => state.multisig.multisig.signRequestNotification,
   );
+  const broadcastNotif = useAppSelector(
+    (state) => state.multisig.multisig.broadcastNotification,
+  );
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [transactionType, setTransactionType] =
@@ -79,10 +83,17 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (signRequestNotif) {
       alert('Received new sign request');
+      navigate('/signRequest');
       dispatch(notifySignRequest(false));
     }
   }, [signRequestNotif]);
 
+  useEffect(() => {
+    if (broadcastNotif) {
+      alert('A transaction as been broadcasted');
+      dispatch(notifyBroadcastedTransaction(false));
+    }
+  }, [broadcastNotif]);
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
