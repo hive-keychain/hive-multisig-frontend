@@ -68,6 +68,7 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (showNotif) {
       alert('Received new sign request');
+      navigate('/signRequest');
       dispatch(showSignRequests(false));
     }
   }, [showNotif]);
