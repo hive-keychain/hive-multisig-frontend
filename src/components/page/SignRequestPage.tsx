@@ -13,9 +13,20 @@ import {
   ToastBody,
   ToastContainer,
 } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
+import {
+  addBroadcastedTransaction,
+  addSignRequest,
+  addUserNotifications,
+  notifyBroadcastedTransaction,
+  notifySignRequest,
+  signerConnectActive,
+  signerConnectPosting,
+  subscribeToBroadcastedTransactions,
+  subscribeToSignRequests,
+} from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
 
 export enum TransactionStatus {
@@ -55,12 +66,13 @@ export const SignRequestsPage = () => {
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
-  const [alerts, setAlerts] = useState<AlertType>({
-  });
+  const [alerts, setAlerts] = useState<AlertType>({});
   const multisig = HiveMultisigSDK.getInstance(
     window,
     MultisigUtils.getOptions(),
   );
+  const navigate = useNavigate();
+
   const getSignRequests = async () => {
     if (activeConnectMessage) {
       try {
@@ -83,7 +95,12 @@ export const SignRequestsPage = () => {
     }
   };
   useEffect(() => {
-    getSignRequests();
+    if (account) {
+      getSignRequests();
+      connectToBackend();
+    } else {
+      navigate('/login');
+    }
   }, []);
   useEffect(() => {
     if (transactions) {
@@ -178,7 +195,6 @@ export const SignRequestsPage = () => {
 
     setTransactions([...newTransactions]);
   };
-
   const handleAddNotifications = async () => {
     let newTransactions = [...transactions];
     for (var i = 0; i < notifications.length; i++) {
@@ -207,6 +223,102 @@ export const SignRequestsPage = () => {
     }
     setTransactions([...newTransactions]);
   };
+
+  const subToSignRequests = async () => {
+    const subscribeRes = await multisig.subscribeToSignRequests(
+      signRequestCallback,
+    );
+    dispatch(subscribeToSignRequests(subscribeRes));
+  };
+  const subToBroadcastedTransactions = async () => {
+    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+      broadcastedTransactionCallback,
+    );
+    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
+  };
+  const signRequestCallback = async (message: SignatureRequest) => {
+    if (message) {
+      await dispatch(addSignRequest([message]));
+      if (message.initiator !== account.data.username) {
+        await dispatch(notifySignRequest(true));
+      }
+    }
+  };
+  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
+    if (message) {
+      await dispatch(addBroadcastedTransaction([message]));
+      await dispatch(notifyBroadcastedTransaction(true));
+    }
+  };
+
+  const connectActive = async () => {
+    if (activeConnectMessage) {
+      const signerConnectResponse = await multisig.signerConnect(
+        activeConnectMessage,
+      );
+      if (signerConnectResponse.result) {
+        if (signerConnectResponse.result.pendingSignatureRequests) {
+          const pendingReqs =
+            signerConnectResponse.result.pendingSignatureRequests[
+              activeConnectMessage.username
+            ];
+          if (pendingReqs?.length > 0) {
+            await dispatch(addSignRequest(pendingReqs));
+          }
+        }
+
+        if (signerConnectResponse.result.notifications) {
+          const notifications =
+            signerConnectResponse.result.notifications[
+              activeConnectMessage.username
+            ];
+          if (notifications?.length > 0) {
+            await dispatch(addUserNotifications(notifications));
+          }
+        }
+        await dispatch(signerConnectActive(signerConnectResponse));
+      } else {
+        console.log('connectActive Failed');
+      }
+    }
+  };
+  const connectPosting = async () => {
+    if (postingConnectMessage) {
+      const signerConnectResponse = await multisig.signerConnect(
+        postingConnectMessage,
+      );
+      if (signerConnectResponse.result) {
+        if (signerConnectResponse.result.pendingSignatureRequests) {
+          const pendingReqs =
+            signerConnectResponse.result.pendingSignatureRequests[
+              postingConnectMessage.username
+            ];
+          if (pendingReqs.length > 0) {
+            await dispatch(addSignRequest(pendingReqs));
+          }
+        }
+        if (signerConnectResponse.result.notifications) {
+          const notifications =
+            signerConnectResponse.result.notifications[
+              postingConnectMessage.username
+            ];
+          if (notifications?.length > 0) {
+            await dispatch(addUserNotifications(notifications));
+          }
+        }
+        await dispatch(signerConnectPosting(signerConnectResponse));
+      } else {
+        console.log('connectPosting Failed');
+      }
+    }
+  };
+  const connectToBackend = async () => {
+    await connectPosting();
+    await connectActive();
+    await subToSignRequests();
+    await subToBroadcastedTransactions();
+  };
+
   return (
     <div>
       {transactions?.length <= 0 ? (

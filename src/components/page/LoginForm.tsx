@@ -218,8 +218,12 @@ const LoginForm = () => {
     }
   };
   const handleOnLoginSubmit = async () => {
-    await connectPosting();
-    await connectActive();
+    try {
+      await connectPosting();
+      await connectActive();
+    } catch (error) {
+      alert(`Login Failed \n ${error.message}`);
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
@@ -12,12 +13,15 @@ import {
 } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
+  addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
   notifyBroadcastedTransaction,
   notifySignRequest,
   signerConnectActive,
   signerConnectPosting,
+  subscribeToBroadcastedTransactions,
+  subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import {
   resetOperation,
@@ -94,6 +98,7 @@ export const TransactionPage = () => {
       dispatch(notifyBroadcastedTransaction(false));
     }
   }, [broadcastNotif]);
+
   useEffect(() => {
     if (loggedInAccount) {
       document.title = 'Hive Multisig - Transaction';
@@ -117,6 +122,33 @@ export const TransactionPage = () => {
   useEffect(() => {
     dispatchTxAsync();
   }, [method]);
+
+  const subToSignRequests = async () => {
+    const subscribeRes = await multisig.subscribeToSignRequests(
+      signRequestCallback,
+    );
+    dispatch(subscribeToSignRequests(subscribeRes));
+  };
+  const subToBroadcastedTransactions = async () => {
+    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+      broadcastedTransactionCallback,
+    );
+    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
+  };
+  const signRequestCallback = async (message: SignatureRequest) => {
+    if (message) {
+      await dispatch(addSignRequest([message]));
+      if (message.initiator !== loggedInAccount.data.username) {
+        await dispatch(notifySignRequest(true));
+      }
+    }
+  };
+  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
+    if (message) {
+      await dispatch(addBroadcastedTransaction([message]));
+      await dispatch(notifyBroadcastedTransaction(true));
+    }
+  };
 
   const connectActive = async () => {
     if (activeConnectMessage) {
@@ -145,7 +177,7 @@ export const TransactionPage = () => {
         }
         await dispatch(signerConnectActive(signerConnectResponse));
       } else {
-        // console.log('connectActive Failed');
+        console.log('connectActive Failed');
       }
     }
   };
@@ -175,13 +207,15 @@ export const TransactionPage = () => {
         }
         await dispatch(signerConnectPosting(signerConnectResponse));
       } else {
-        // console.log('connectPosting Failed');
+        console.log('connectPosting Failed');
       }
     }
   };
   const connectToBackend = async () => {
-    await connectActive();
     await connectPosting();
+    await connectActive();
+    await subToSignRequests();
+    await subToBroadcastedTransactions();
   };
   const dispatchTxAsync = async () => {
     try {
