@@ -21,21 +21,12 @@ import {
   addSignRequest,
   addUserNotifications,
   notifyBroadcastedTransaction,
-  notifySignRequest,
   signerConnectActive,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
-
-export enum TransactionStatus {
-  PENDING = 'pending',
-  REQUEST = 'request',
-  BROADCASTED = 'broadcasted',
-  EXPIRED = 'expired',
-  INVALID = 'invalid',
-}
 
 type AlertType = {
   variant?: string;
@@ -76,9 +67,8 @@ export const SignRequestsPage = () => {
   const getSignRequests = async () => {
     if (activeConnectMessage) {
       try {
-        var activeReqs = await multisig.getSignatureRequests(
-          activeConnectMessage,
-        );
+        var activeReqs: SignatureRequest[] =
+          await multisig.getSignatureRequests(activeConnectMessage);
         if (activeReqs) {
           dispatch(addSignRequest(activeReqs));
         }
@@ -120,7 +110,7 @@ export const SignRequestsPage = () => {
         if (newSignRequests.find((req) => req.id === requests[i].id)) {
           continue;
         }
-        newSignRequests.push(requests[i]);
+        newSignRequests.unshift(requests[i]);
       }
       if (newSignRequests?.length > 0) {
         setSignRequests([...newSignRequests]);
@@ -139,7 +129,7 @@ export const SignRequestsPage = () => {
         ) {
           continue;
         }
-        newNotifications.push({ ...userNotifications[i].signatureRequest });
+        newNotifications.unshift({ ...userNotifications[i].signatureRequest });
       }
       if (newNotifications?.length > 0) {
         setNotifications([...newNotifications]);
@@ -158,7 +148,7 @@ export const SignRequestsPage = () => {
         ) {
           continue;
         }
-        newBroadcasted.push(broadcastedTransactions[i]);
+        newBroadcasted.unshift(broadcastedTransactions[i]);
       }
       if (newBroadcasted?.length > 0) {
         setNewBroadcasted([...newBroadcasted]);
@@ -239,9 +229,6 @@ export const SignRequestsPage = () => {
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addSignRequest([message]));
-      if (message.initiator !== account.data.username) {
-        await dispatch(notifySignRequest(true));
-      }
     }
   };
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
@@ -327,7 +314,7 @@ export const SignRequestsPage = () => {
         transactions.map((tx) => {
           const state = GetStatus(tx, account);
           switch (state) {
-            case TransactionStatus.PENDING:
+            case TransactionStatus.PENDING_INITIATED_TRANSACTION:
               return (
                 <div key={tx.id}>
                   <PendingRequestCard
@@ -338,7 +325,18 @@ export const SignRequestsPage = () => {
                   <br />
                 </div>
               );
-            case TransactionStatus.BROADCASTED:
+            case TransactionStatus.PENDING_TRANSACTION:
+              return (
+                <div key={tx.id}>
+                  <PendingRequestCard
+                    signRequest={tx}
+                    account={account}
+                    setAlerts={setAlerts}
+                  />
+                  <br />
+                </div>
+              );
+            case TransactionStatus.BROADCASTED_INITIATED_TRANSACTION:
               return (
                 <div key={tx.id}>
                   <BroadCastedTransactionCard
@@ -349,7 +347,29 @@ export const SignRequestsPage = () => {
                   <br />
                 </div>
               );
-            case TransactionStatus.EXPIRED:
+            case TransactionStatus.BROADCASTED_TRANSACTION:
+              return (
+                <div key={tx.id}>
+                  <BroadCastedTransactionCard
+                    signRequest={tx}
+                    account={account}
+                    setAlerts={setAlerts}
+                  />
+                  <br />
+                </div>
+              );
+            case TransactionStatus.EXPIRED_INITIATED_TRANSACTION:
+              return (
+                <div key={tx.id}>
+                  <ExpiredTransactionCard
+                    signRequest={tx}
+                    account={account}
+                    setAlerts={setAlerts}
+                  />
+                  <br />
+                </div>
+              );
+            case TransactionStatus.EXPIRED_TRANSACTION:
               return (
                 <div key={tx.id}>
                   <ExpiredTransactionCard
@@ -393,7 +413,7 @@ const PendingRequestCard = ({
 }: ITransactionProps) => {
   const [request, setRequest] = useState(signRequest);
   const [user, setAccount] = useState(account);
-  const [status, setStatus] = useState(TransactionStatus.PENDING);
+  const [status, setStatus] = useState(TransactionStatus.PENDING_TRANSACTION);
   const [initiated, setInitiated] = useState(false);
   const [isBroadcasted, setIsBroadcasted] = useState(false);
   const [creationDate, setCreationDate] = useState(undefined);
@@ -415,11 +435,6 @@ const PendingRequestCard = ({
         username: user.data.username,
       });
       if (decodedTxs) {
-        if (initiated) {
-          setStatus(TransactionStatus.PENDING);
-        } else {
-          setStatus(TransactionStatus.REQUEST);
-        }
         setDecodedTransaction(decodedTxs[0]);
         setValid(true);
       } else {
@@ -427,7 +442,8 @@ const PendingRequestCard = ({
         setValid(false);
       }
       setDecoded(true);
-    } catch {
+    } catch (error) {
+      alert(error);
       setStatus(TransactionStatus.INVALID);
       setValid(false);
     }
@@ -484,26 +500,31 @@ const PendingRequestCard = ({
 
   useEffect(() => {
     if (isBroadcasted) {
-      setStatus(TransactionStatus.BROADCASTED);
+      if (initiated) {
+        setStatus(TransactionStatus.BROADCASTED_INITIATED_TRANSACTION);
+      } else {
+        setStatus(TransactionStatus.BROADCASTED_TRANSACTION);
+      }
     }
   }, [isBroadcasted]);
 
+  useEffect(() => {
+    if (initiated && status === TransactionStatus.PENDING_TRANSACTION) {
+      setStatus(TransactionStatus.PENDING_INITIATED_TRANSACTION);
+    }
+  }, [initiated]);
   return (
     <div>
       <Card key={signRequest.id}>
         <Card.Body>
-          <Card.Title>
-            {status.charAt(0).toUpperCase() + status.slice(1)}{' '}
-            {initiated ? '  Initiated' : null}
-          </Card.Title>
+          <Card.Title>{status}</Card.Title>
           {creationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Creation: ${creationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
           {expirationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Expiration: ${expirationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
-          {(status === TransactionStatus.REQUEST && decoded) ||
-          (initiated && decoded && valid) ? (
+          {status !== TransactionStatus.INVALID && decoded ? (
             <div>
               <Card.Subtitle className="mb-2 text-muted">
                 <a
@@ -530,7 +551,9 @@ const PendingRequestCard = ({
           ) : null}
 
           <div className="mt-2 d-flex justify-content-end">
-            {status === TransactionStatus.PENDING && !decoded ? (
+            {(status === TransactionStatus.PENDING_INITIATED_TRANSACTION &&
+              !decoded) ||
+            (status === TransactionStatus.PENDING_TRANSACTION && !decoded) ? (
               <Button
                 variant="success"
                 type="button"
@@ -539,7 +562,12 @@ const PendingRequestCard = ({
                 }}>
                 Decode
               </Button>
-            ) : status === TransactionStatus.REQUEST ? (
+            ) : (status === TransactionStatus.PENDING_INITIATED_TRANSACTION &&
+                decoded &&
+                !initiated) ||
+              (status === TransactionStatus.PENDING_TRANSACTION &&
+                decoded &&
+                !initiated) ? (
               <Button
                 variant="success"
                 type="button"
@@ -562,7 +590,9 @@ const BroadCastedTransactionCard = ({
 }: ITransactionProps) => {
   const [request, setRequest] = useState(signRequest);
   const [user, setAccount] = useState(account);
-  const [status, setStatus] = useState(TransactionStatus.BROADCASTED);
+  const [status, setStatus] = useState(
+    TransactionStatus.BROADCASTED_TRANSACTION,
+  );
   const [initiated, setInitiated] = useState(false);
   const [isBroadcasted, setIsBroadcasted] = useState(false);
   const [creationDate, setCreationDate] = useState(undefined);
@@ -610,26 +640,29 @@ const BroadCastedTransactionCard = ({
   }, [request]);
 
   useEffect(() => {
-    if (isBroadcasted) {
-      setStatus(TransactionStatus.BROADCASTED);
+    if (isBroadcasted && initiated) {
+      setStatus(TransactionStatus.BROADCASTED_INITIATED_TRANSACTION);
+    } else {
+      setStatus(TransactionStatus.BROADCASTED_TRANSACTION);
     }
   }, [isBroadcasted]);
   return (
     <div>
       <Card key={signRequest.id}>
         <Card.Body>
-          <Card.Title>
-            {status.charAt(0).toUpperCase() + status.slice(1)}{' '}
-            {initiated ? '  Initiated' : null}
-          </Card.Title>
+          <Card.Title>{status}</Card.Title>
           {creationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Creation: ${creationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
           {expirationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Expiration: ${expirationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
-          {(status === TransactionStatus.BROADCASTED && decoded) ||
-          (decoded && valid) ? (
+          {(status === TransactionStatus.BROADCASTED_INITIATED_TRANSACTION &&
+            decoded &&
+            valid) ||
+          (status === TransactionStatus.BROADCASTED_TRANSACTION &&
+            decoded &&
+            valid) ? (
             <div>
               <Card.Subtitle className="mb-2 text-muted">
                 <a
@@ -656,7 +689,10 @@ const BroadCastedTransactionCard = ({
           ) : null}
 
           <div className="mt-2 d-flex justify-content-end">
-            {status === TransactionStatus.BROADCASTED && !decoded ? (
+            {(status === TransactionStatus.BROADCASTED_INITIATED_TRANSACTION &&
+              !decoded) ||
+            (status === TransactionStatus.BROADCASTED_TRANSACTION &&
+              !decoded) ? (
               <Button
                 variant="success"
                 type="button"
@@ -679,7 +715,7 @@ const ExpiredTransactionCard = ({
 }: ITransactionProps) => {
   const [request, setRequest] = useState(signRequest);
   const [user, setAccount] = useState(account);
-  const [status, setStatus] = useState(TransactionStatus.EXPIRED);
+  const [status, setStatus] = useState(TransactionStatus.EXPIRED_TRANSACTION);
   const [initiated, setInitiated] = useState(false);
   const [creationDate, setCreationDate] = useState(undefined);
   const [expirationDate, setExpirationDate] = useState(undefined);
@@ -723,15 +759,16 @@ const ExpiredTransactionCard = ({
       setInitiated(initiatedByMe(request, user));
     }
   }, [request]);
-
+  useEffect(() => {
+    if (initiated) {
+      setStatus(TransactionStatus.EXPIRED_INITIATED_TRANSACTION);
+    }
+  }, [initiated]);
   return (
     <div>
       <Card key={signRequest.id}>
         <Card.Body>
-          <Card.Title>
-            {status.charAt(0).toUpperCase() + status.slice(1)}{' '}
-            {initiated ? '  Initiated' : null}
-          </Card.Title>
+          <Card.Title>{status}</Card.Title>
           {creationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Creation: ${creationDate.toLocaleString()}`}</Card.Subtitle>
           ) : null}
@@ -781,27 +818,56 @@ const ExpiredTransactionCard = ({
     </div>
   );
 };
+
+export enum TransactionStatus {
+  PENDING_INITIATED_TRANSACTION = 'Pending Initiated Transaction',
+  PENDING_TRANSACTION = 'Pending Transaction',
+  BROADCASTED_INITIATED_TRANSACTION = 'Broadcasted Initiated Transaction',
+  BROADCASTED_TRANSACTION = 'Broadcasted Transaction',
+  EXPIRED_INITIATED_TRANSACTION = 'Expired Initiated Transaction',
+  EXPIRED_TRANSACTION = 'Expired Transaction',
+  INVALID = 'Invalid',
+}
 const GetStatus = (
   signRequest: SignatureRequest,
   account: LoginResponseType,
 ) => {
-  if (isPending(signRequest, account)) {
-    return TransactionStatus.PENDING;
-  } else if (isBroadcasted(signRequest)) {
-    return TransactionStatus.BROADCASTED;
-  } else if (isExpired(signRequest)) {
-    return TransactionStatus.EXPIRED;
+  if (isPending(signRequest, account) && initiatedByMe(signRequest, account)) {
+    return TransactionStatus.PENDING_INITIATED_TRANSACTION;
+  } else if (
+    isPending(signRequest, account) &&
+    !initiatedByMe(signRequest, account)
+  ) {
+    return TransactionStatus.PENDING_TRANSACTION;
+  } else if (
+    isBroadcasted(signRequest) &&
+    initiatedByMe(signRequest, account)
+  ) {
+    return TransactionStatus.BROADCASTED_INITIATED_TRANSACTION;
+  } else if (
+    isBroadcasted(signRequest) &&
+    !initiatedByMe(signRequest, account)
+  ) {
+    return TransactionStatus.BROADCASTED_TRANSACTION;
+  } else if (isExpired(signRequest) && initiatedByMe(signRequest, account)) {
+    return TransactionStatus.EXPIRED_INITIATED_TRANSACTION;
+  } else if (isExpired(signRequest) && !initiatedByMe(signRequest, account)) {
+    return TransactionStatus.EXPIRED_TRANSACTION;
   } else {
     return undefined;
   }
 };
 
 const isExpired = (signRequest: SignatureRequest) => {
-  return signRequest.status === 'expired' && !signRequest.broadcasted;
+  return signRequest.status === 'expired';
+};
+
+const isSignedd = (signRequest: SignatureRequest) => {
+  return signRequest.status === 'signed';
 };
 
 const isBroadcasted = (signRequest: SignatureRequest) => {
-  return signRequest.broadcasted;
+  return signRequest.broadcasted && signRequest.status === 'broadcasted';
 };
 
 const isPending = (
@@ -809,12 +875,9 @@ const isPending = (
   account: LoginResponseType,
 ) => {
   return (
-    (!isBroadcasted(signRequest) &&
-      !isExpired(signRequest) &&
-      !signedByMe(signRequest, account)) ||
-    (!isBroadcasted(signRequest) &&
-      !isExpired(signRequest) &&
-      initiatedByMe(signRequest, account))
+    !isBroadcasted(signRequest) &&
+    !isExpired(signRequest) &&
+    signRequest.status !== 'expired'
   );
 };
 
@@ -822,7 +885,10 @@ const initiatedByMe = (
   signRequest: SignatureRequest,
   account: LoginResponseType,
 ) => {
-  return signRequest.initiator === account.data.username;
+  if (account) {
+    return signRequest.initiator === account.data.username;
+  }
+  return false;
 };
 const signedByMe = (
   signRequest: SignatureRequest,

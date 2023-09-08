@@ -255,12 +255,11 @@ export const TransactionPage = () => {
         const txEncode: IEncodeTransaction = {
           transaction: transaction,
           method: transactionState.method,
-          expirationDate: new Date(
-            getISOStringDate(transactionState.expiration),
-          ),
+          expirationDate: getISOStringDate(transactionState.expiration),
           initiator: { ...transactionState.initiator },
         };
 
+        console.log(txEncode);
         const encodedTxObj = await multisig.encodeTransaction(txEncode);
         multisig.sendSignatureRequest(encodedTxObj).then(() => {
           dispatch(resetOperation());

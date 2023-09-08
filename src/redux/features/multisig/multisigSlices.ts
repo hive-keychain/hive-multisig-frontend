@@ -107,9 +107,24 @@ const multisigSlice = createSlice({
         : action.payload;
     });
     builder.addCase(addSignRequest.fulfilled, (state, action) => {
-      state.signRequests = action.payload
-        ? [...state.signRequests, ...action.payload]
-        : action.payload;
+      if (action.payload) {
+        action.payload.forEach((newSignRequest) => {
+          const index = state.signRequests.findIndex(
+            (sr) => sr.id === newSignRequest.id,
+          );
+
+          if (index !== -1) {
+            if (state.signRequests[index].status !== newSignRequest.status) {
+              state.signRequests[index] = {
+                ...state.signRequests[index],
+                status: newSignRequest.status,
+              };
+            }
+          } else {
+            state.signRequests.push(newSignRequest);
+          }
+        });
+      }
     });
 
     builder.addCase(addUserNotifications.fulfilled, (state, action) => {
