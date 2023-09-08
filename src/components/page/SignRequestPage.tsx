@@ -180,7 +180,7 @@ export const SignRequestsPage = () => {
         newTransactions[index] = { ...signRequests[i] };
         continue;
       }
-      newTransactions.push({ ...signRequests[i] });
+      newTransactions.unshift({ ...signRequests[i] });
     }
 
     setTransactions([...newTransactions]);
@@ -195,7 +195,7 @@ export const SignRequestsPage = () => {
         newTransactions[index] = { ...notifications[i] };
         continue;
       }
-      newTransactions.push({ ...notifications[i] });
+      newTransactions.unshift({ ...notifications[i] });
     }
     setTransactions([...newTransactions]);
   };
@@ -209,7 +209,7 @@ export const SignRequestsPage = () => {
         newTransactions[index] = { ...broadcasted[i] };
         continue;
       }
-      newTransactions.push({ ...broadcasted[i] });
+      newTransactions.unshift({ ...broadcasted[i] });
     }
     setTransactions([...newTransactions]);
   };
