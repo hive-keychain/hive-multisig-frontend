@@ -23,10 +23,7 @@ import {
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
-import {
-  getElapsedTimestampSeconds,
-  getTimestampInSeconds,
-} from '../../utils/utils';
+import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
   const [multisig, setMultisig] = useState<HiveMultisigSDK>(undefined);
@@ -61,28 +58,16 @@ const LoginForm = () => {
         HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
       );
     }
-    if (isLoggedIn) {
-      const loggedinDuration = getElapsedTimestampSeconds(
-        loginTimestamp,
-        getTimestampInSeconds(),
-      );
-      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
-        setLoginTimestamp(0);
-        setStorageAccountDetails(null);
-        setStorageIsLoggedIn(false);
-      }
-    }
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isLoggedIn && accountDetails) {
       navigate(`/transaction`);
       subToSignRequests();
       subToBroadcastedTransactions();
     } else {
-      navigate('/login');
     }
-  }, [isLoggedIn]);
+  }, [accountDetails]);
 
   useEffect(() => {
     if (isLoginSucceed) {
@@ -103,6 +88,7 @@ const LoginForm = () => {
       };
     }
   });
+
   const loginInitAsync = async () => {
     setStorageIsLoggedIn(isLoginSucceed);
     setStorageAccountDetails(signedAccountObj);

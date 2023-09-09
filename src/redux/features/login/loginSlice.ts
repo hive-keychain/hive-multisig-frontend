@@ -33,14 +33,7 @@ export const login = createAsyncThunk(
 const loginSclice = createSlice({
   name: 'login',
   initialState,
-  reducers: {
-    logout(state) {
-      (state.loginState = LoginState.LOGGED_OUT),
-        (state.isSignatureSuccess = false),
-        (state.accountObject = null),
-        (state.error = '');
-    },
-  },
+  reducers: { logout: () => initialState },
   extraReducers: (builder) => {
     builder.addCase(
       login.fulfilled,
@@ -63,4 +56,4 @@ const loginSclice = createSlice({
 });
 
 export default loginSclice.reducer;
-export const { logout } = loginSclice.actions;
+export const loginActions = loginSclice.actions;

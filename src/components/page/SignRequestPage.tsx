@@ -14,8 +14,12 @@ import {
   ToastContainer,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useLocalStorage } from 'usehooks-ts';
+import { Config } from '../../config';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { loginActions } from '../../redux/features/login/loginSlice';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import {
   addBroadcastedTransaction,
   addSignRequest,
@@ -26,7 +30,13 @@ import {
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
+import { transactionActions } from '../../redux/features/transaction/transactionSlices';
+import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import {
+  getElapsedTimestampSeconds,
+  getTimestampInSeconds,
+} from '../../utils/utils';
 
 type AlertType = {
   variant?: string;
@@ -36,6 +46,20 @@ type AlertType = {
 
 export const SignRequestsPage = () => {
   const dispatch = useAppDispatch();
+  const loginExpirationInSec = Config.login.expirationInSec;
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+
+  const [accountDetails, setStorageAccountDetails] = useLocalStorage(
+    'accountDetails',
+    signedAccountObj,
+  );
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
+    'loginTimestap',
+    null,
+  );
+  const [transactionType, setTransactionType] =
+    useState<string>('TransferOperation');
+
   const account = useAppSelector((state) => state.login.accountObject);
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
@@ -86,12 +110,30 @@ export const SignRequestsPage = () => {
   };
   useEffect(() => {
     if (account) {
-      getSignRequests();
-      connectToBackend();
+      const loggedinDuration = getElapsedTimestampSeconds(
+        loginTimestamp,
+        getTimestampInSeconds(),
+      );
+      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
+        handleLogout();
+        navigate('/');
+      } else {
+        getSignRequests();
+        connectToBackend();
+      }
     } else {
-      navigate('/login');
+      navigate('/');
     }
   }, []);
+
+  const handleLogout = async () => {
+    setLoginTimestamp(0);
+    setStorageAccountDetails(null);
+    await dispatch(loginActions.logout());
+    await dispatch(multisigActions.resetState());
+    await dispatch(transactionActions.resetState());
+    await dispatch(updateAuthorityActions.resetState());
+  };
   useEffect(() => {
     if (transactions) {
       transactions.sort((a, b) => {

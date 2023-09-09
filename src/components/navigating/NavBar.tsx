@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { logout } from '../../redux/features/login/loginSlice';
+import { loginActions } from '../../redux/features/login/loginSlice';
 import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { transactionActions } from '../../redux/features/transaction/transactionSlices';
 import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
@@ -87,9 +87,10 @@ const NavBar = () => {
       setDestination('/login');
     }
   }, [isLoggedIn, loginTimestamp, accountDetails]);
+
   const handleLogout = async () => {
     if (isLoggedIn) {
-      dispatch(logout(null));
+      dispatch(loginActions.logout());
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
@@ -110,9 +111,11 @@ const NavBar = () => {
       <Container fluid>
         <Navbar.Brand
           className="nav-text-color ms-0 me-1"
-          style={{ paddingRight: 50 }}
+          style={{ paddingRight: 15 }}
           onClick={() => {
-            isLoggedIn ? setDestination('/transaction') : setDestination('/');
+            isLoggedIn && accountDetails
+              ? setDestination('/transaction')
+              : setDestination('/');
           }}>
           <img
             alt=""
@@ -129,20 +132,20 @@ const NavBar = () => {
           aria-controls="responsive-navbar-nav"
         />
         <Navbar.Collapse
-          className="mt-2 mt-sm-2 mt-md-3 mt-lg-0"
+          className="mt-2 mt-sm-2 mt-md-3 mt-lg-0 pe-auto"
           id="responsive-navbar-nav ">
           {/*Search bar when not collapsed and logged out*/}
-          {!isLoggedIn ? (
+          {!accountDetails ? (
             <div className="text-secondary ms-2">{'Search'}</div>
           ) : (
             ''
           )}
           <NavSearchBar
             classNames="w-auto ms-1 me-auto"
-            isLoggedIn={!isLoggedIn}
+            isLoggedIn={!accountDetails}
             setDestination={setDestination}
           />
-          {isLoggedIn ? (
+          {isLoggedIn && accountDetails ? (
             <NavUserAvatar
               classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
               username={accountDetails.data.username}
@@ -150,12 +153,12 @@ const NavBar = () => {
           ) : null}
           {/*Navs*/}
           <Nav className="me-2">
-            {isLoggedIn ? (
+            {isLoggedIn && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/transaction')}>
                 Transactions
               </Nav.Link>
             ) : null}
-            {isLoggedIn ? (
+            {isLoggedIn && accountDetails ? (
               <Nav.Link
                 onClick={() =>
                   setDestination(`@${accountDetails.data.username}`)
@@ -163,7 +166,7 @@ const NavBar = () => {
                 Update Account
               </Nav.Link>
             ) : null}
-            {isLoggedIn ? (
+            {isLoggedIn && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/signRequest')}>
                 Sign Requests{' '}
                 {signRequest ? (
@@ -173,7 +176,7 @@ const NavBar = () => {
                 ) : null}
               </Nav.Link>
             ) : (
-              <Nav className="ms-auto">
+              <Nav className="ml-auto">
                 <Nav.Link href="/login">Login</Nav.Link>
               </Nav>
             )}
@@ -191,7 +194,7 @@ const NavBar = () => {
             setDestination={setDestination}
           /> 
           */}
-          {isLoggedIn ? (
+          {isLoggedIn && accountDetails ? (
             <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
               <Nav.Link
                 className="nav-text-color"
@@ -203,7 +206,7 @@ const NavBar = () => {
             </div>
           ) : null}
           {/* Login button when logged out */}
-          {isLoggedIn ? (
+          {isLoggedIn && accountDetails ? (
             <NavUserAvatarDropdown
               classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
               username={accountDetails.data.username}

@@ -5,13 +5,15 @@ import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-mess
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useReadLocalStorage } from 'usehooks-ts';
-import { LoginResponseType } from '../../interfaces';
+import { useLocalStorage } from 'usehooks-ts';
+import { Config } from '../../config';
 import {
   ITransaction,
   Initiator,
 } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { loginActions } from '../../redux/features/login/loginSlice';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import {
   addBroadcastedTransaction,
   addSignRequest,
@@ -23,6 +25,7 @@ import {
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
+import { transactionActions } from '../../redux/features/transaction/transactionSlices';
 import {
   resetOperation,
   setAuthority,
@@ -30,10 +33,15 @@ import {
   setTransactionMethod,
   setTransactionName,
 } from '../../redux/features/transaction/transactionThunks';
+import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
-import { getISOStringDate } from '../../utils/utils';
+import {
+  getElapsedTimestampSeconds,
+  getISOStringDate,
+  getTimestampInSeconds,
+} from '../../utils/utils';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
 import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
 import BroadcastJson from '../cards/Transactions/BroadcastJson';
@@ -50,6 +58,7 @@ import { VoteOperationCard } from '../cards/Transactions/VoteOperationCard';
 import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCard';
 
 export const TransactionPage = () => {
+  const loginExpirationInSec = Config.login.expirationInSec;
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
@@ -72,8 +81,16 @@ export const TransactionPage = () => {
   const broadcastNotif = useAppSelector(
     (state) => state.multisig.multisig.broadcastNotification,
   );
-  const loggedInAccount =
-    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+
+  const [accountDetails, setStorageAccountDetails] = useLocalStorage(
+    'accountDetails',
+    signedAccountObj,
+  );
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
+    'loginTimestap',
+    null,
+  );
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
@@ -100,20 +117,31 @@ export const TransactionPage = () => {
   }, [broadcastNotif]);
 
   useEffect(() => {
-    if (loggedInAccount) {
+    if (signedAccountObj) {
       document.title = 'Hive Multisig - Transaction';
-      connectToBackend();
+      const loggedinDuration = getElapsedTimestampSeconds(
+        loginTimestamp,
+        getTimestampInSeconds(),
+      );
+      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
+        handleLogout();
+        navigate('/');
+      } else {
+        connectToBackend();
+      }
     } else {
-      navigate('/login');
+      navigate('/');
     }
   }, []);
 
-  useEffect(() => {
-    if (!loggedInAccount) {
-      navigate('/login');
-    }
-  }, [loggedInAccount]);
-
+  const handleLogout = async () => {
+    setLoginTimestamp(0);
+    setStorageAccountDetails(null);
+    await dispatch(loginActions.logout());
+    await dispatch(multisigActions.resetState());
+    await dispatch(transactionActions.resetState());
+    await dispatch(updateAuthorityActions.resetState());
+  };
   useEffect(() => {
     handleSelectOnChange(transactionType);
     dispatch(setTransactionName(transactionType));
@@ -138,7 +166,7 @@ export const TransactionPage = () => {
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addSignRequest([message]));
-      if (message.initiator !== loggedInAccount.data.username) {
+      if (message.initiator !== signedAccountObj.data.username) {
         await dispatch(notifySignRequest(true));
       }
     }
@@ -220,7 +248,7 @@ export const TransactionPage = () => {
   const dispatchTxAsync = async () => {
     try {
       const txInfo: ITransaction = {
-        username: loggedInAccount.data.username,
+        username: signedAccountObj.data.username,
         expiration: undefined,
         method,
       };
@@ -234,11 +262,11 @@ export const TransactionPage = () => {
 
   const handleSetInitiator = async (keyType: string) => {
     const auth = await HiveUtils.getAccountPublicKeyAuthority(
-      loggedInAccount.data.username,
+      signedAccountObj.data.username,
       keyType,
     );
     const initiator: Initiator = {
-      username: loggedInAccount.data.username,
+      username: signedAccountObj.data.username,
       publicKey: auth[0].toString(),
       weight: auth[1],
     };
