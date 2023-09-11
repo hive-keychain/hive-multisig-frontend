@@ -136,13 +136,10 @@ export const SignRequestsPage = () => {
   };
   useEffect(() => {
     if (transactions) {
-      transactions.sort((a, b) => {
-        var keyA = new Date(a.createdAt);
-        var keyB = new Date(b.createdAt);
-        if (keyA < keyB) return 1;
-        if (keyA > keyB) return -1;
-        return 0;
-      });
+      transactions.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
     }
   }, [transactions]);
   useEffect(() => {
@@ -155,7 +152,12 @@ export const SignRequestsPage = () => {
         newSignRequests.unshift(requests[i]);
       }
       if (newSignRequests?.length > 0) {
-        setSignRequests([...newSignRequests]);
+        setSignRequests(
+          [...newSignRequests].sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          ),
+        );
       }
     }
   }, [requests]);
