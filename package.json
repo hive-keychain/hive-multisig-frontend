@@ -33,7 +33,7 @@
     "formik": "^2.2.9",
     "fs-extra": "^10.0.0",
     "hive-keychain-commons": "^1.2.2",
-    "hive-multisig-sdk": "^0.0.2",
+    "hive-multisig-sdk": "^0.0.4",
     "hive-qrcode": "github:hive-keychain/hive-qrcode",
     "hive-tx": "^4.2.2",
     "hive-uri": "^0.2.4",
