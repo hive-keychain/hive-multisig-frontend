@@ -183,11 +183,11 @@ export const SignRequestsPage = () => {
     if (broadcastedTransactions) {
       let newBroadcasted: SignatureRequest[] = [...broadcasted];
       for (var i = 0; i < broadcastedTransactions.length; i++) {
-        if (
-          newBroadcasted.find(
-            (broadcasted) => broadcasted.id === broadcastedTransactions[i].id,
-          )
-        ) {
+        const index = newBroadcasted.findIndex(
+          (broadcasted) => broadcasted.id === broadcastedTransactions[i].id,
+        );
+        if (index > -1) {
+          newBroadcasted[index] = { ...broadcastedTransactions[i] };
           continue;
         }
         newBroadcasted.unshift(broadcastedTransactions[i]);
