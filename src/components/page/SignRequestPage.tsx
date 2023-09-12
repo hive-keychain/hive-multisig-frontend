@@ -61,6 +61,9 @@ export const SignRequestsPage = () => {
     useState<string>('TransferOperation');
 
   const account = useAppSelector((state) => state.login.accountObject);
+  const operation = useAppSelector(
+    (state) => state.transaction.transaction.operation,
+  );
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
   );
@@ -77,15 +80,13 @@ export const SignRequestsPage = () => {
   const broadcastedTransactions = useAppSelector(
     (state) => state.multisig.multisig.broadcastedTransactions,
   );
+  const [multisig, setMultisig] = useState<HiveMultisigSDK>();
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
   const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
   const [alerts, setAlerts] = useState<AlertType>({});
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+
   const navigate = useNavigate();
 
   const getSignRequests = async () => {
@@ -118,14 +119,26 @@ export const SignRequestsPage = () => {
         handleLogout();
         navigate('/');
       } else {
-        getSignRequests();
-        connectToBackend();
+        setMultisig(
+          HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+        );
       }
     } else {
       navigate('/');
     }
   }, []);
 
+  useEffect(() => {
+    if (!operation && multisig) {
+      getSignRequests();
+    }
+  }, [operation]);
+  useEffect(() => {
+    if (multisig) {
+      getSignRequests();
+      connectToBackend();
+    }
+  }, [multisig]);
   const handleLogout = async () => {
     setLoginTimestamp(0);
     setStorageAccountDetails(null);
@@ -138,7 +151,7 @@ export const SignRequestsPage = () => {
     if (transactions) {
       transactions.sort(
         (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
     }
   }, [transactions]);
@@ -346,6 +359,11 @@ export const SignRequestsPage = () => {
   const connectToBackend = async () => {
     await connectPosting();
     await connectActive();
+
+    //ISSUE: every time the user navigates to another page, it loses the connection to the backend via socket.io
+    //therefore every time the user navigate the multisigsdk must be reconnected
+    //and since all the backend transactions are being routed via socket.io connection UID of the connected users
+    //
     await subToSignRequests();
     await subToBroadcastedTransactions();
   };
