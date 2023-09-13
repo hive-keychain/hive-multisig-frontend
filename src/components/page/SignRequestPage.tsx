@@ -93,7 +93,7 @@ export const SignRequestsPage = () => {
     if (activeConnectMessage) {
       try {
         var activeReqs: SignatureRequest[] =
-          await multisig.getSignatureRequests(activeConnectMessage);
+          await multisig.api.getSignatureRequests(activeConnectMessage);
         if (activeReqs) {
           dispatch(addSignRequest(activeReqs));
         }
@@ -106,7 +106,7 @@ export const SignRequestsPage = () => {
     if (postingConnectMessage) {
       try {
         var postingReqs: SignatureRequest[] =
-          await multisig.getSignatureRequests(postingConnectMessage);
+          await multisig.api.getSignatureRequests(postingConnectMessage);
         if (postingReqs) {
           dispatch(addSignRequest(postingReqs));
         }
@@ -284,7 +284,7 @@ export const SignRequestsPage = () => {
 
   const subToSignRequests = async () => {
     try {
-      const subscribeRes = await multisig.subscribeToSignRequests(
+      const subscribeRes = await multisig.wss.onReceiveSignRequest(
         signRequestCallback,
       );
       console.log(`subscribeRes: ${subscribeRes}`);
@@ -295,7 +295,7 @@ export const SignRequestsPage = () => {
   };
   const subToBroadcastedTransactions = async () => {
     try {
-      const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+      const subscribeRes = await multisig.wss.onBroadcasted(
         broadcastedTransactionCallback,
       );
       dispatch(subscribeToBroadcastedTransactions(subscribeRes));
@@ -318,7 +318,7 @@ export const SignRequestsPage = () => {
 
   const connectActive = async () => {
     if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         activeConnectMessage,
       );
       if (signerConnectResponse.result) {
@@ -349,7 +349,7 @@ export const SignRequestsPage = () => {
   };
   const connectPosting = async () => {
     if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         postingConnectMessage,
       );
       if (signerConnectResponse.result) {
@@ -508,7 +508,7 @@ const PendingRequestCard = ({
 
   const handleDecode = async () => {
     try {
-      const decodedTxs = await multisig.decodeTransaction({
+      const decodedTxs = await multisig.utils.decodeTransaction({
         signatureRequest: [request],
         username: user.data.username,
       });
@@ -537,13 +537,13 @@ const PendingRequestCard = ({
       method: decodedTransaction.method,
     };
 
-    multisig
+    multisig.wss
       .signTransaction(data)
       .then(async (signatures) => {
         if (signatures?.length > 0) {
           let txToBroadcast = structuredClone(decodedTransaction);
           txToBroadcast.transaction.signatures = [...signatures];
-          let broadcastResult = await multisig.broadcastTransaction(
+          let broadcastResult = await multisig.wss.broadcastTransaction(
             txToBroadcast,
           );
           setIsBroadcasted(broadcastResult !== undefined);
@@ -687,7 +687,7 @@ const BroadCastedTransactionCard = ({
 
   const handleDecode = async () => {
     try {
-      const decodedTxs = await multisig.decodeTransaction({
+      const decodedTxs = await multisig.utils.decodeTransaction({
         signatureRequest: [request],
         username: user.data.username,
       });
@@ -809,7 +809,7 @@ const ExpiredTransactionCard = ({
 
   const handleDecode = async () => {
     try {
-      const decodedTxs = await multisig.decodeTransaction({
+      const decodedTxs = await multisig.utils.decodeTransaction({
         signatureRequest: [request],
         username: user.data.username,
       });

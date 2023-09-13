@@ -195,13 +195,13 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   }, []);
 
   const subToSignRequests = async () => {
-    const subscribeRes = await multisig.subscribeToSignRequests(
+    const subscribeRes = await multisig.wss.onReceiveSignRequest(
       signRequestCallback,
     );
     dispatch(subscribeToSignRequests(subscribeRes));
   };
   const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+    const subscribeRes = await multisig.wss.onBroadcasted(
       broadcastedTransactionCallback,
     );
     dispatch(subscribeToBroadcastedTransactions(subscribeRes));
@@ -220,7 +220,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
 
   const connectActive = async () => {
     if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         activeConnectMessage,
       );
       if (signerConnectResponse.result) {
@@ -251,7 +251,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   };
   const connectPosting = async () => {
     if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         postingConnectMessage,
       );
       if (signerConnectResponse.result) {

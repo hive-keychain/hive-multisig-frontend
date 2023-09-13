@@ -152,13 +152,13 @@ export const TransactionPage = () => {
   }, [method]);
 
   const subToSignRequests = async () => {
-    const subscribeRes = await multisig.subscribeToSignRequests(
+    const subscribeRes = await multisig.wss.onReceiveSignRequest(
       signRequestCallback,
     );
     dispatch(subscribeToSignRequests(subscribeRes));
   };
   const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+    const subscribeRes = await multisig.wss.onBroadcasted(
       broadcastedTransactionCallback,
     );
     dispatch(subscribeToBroadcastedTransactions(subscribeRes));
@@ -180,7 +180,7 @@ export const TransactionPage = () => {
 
   const connectActive = async () => {
     if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         activeConnectMessage,
       );
       if (signerConnectResponse.result) {
@@ -211,7 +211,7 @@ export const TransactionPage = () => {
   };
   const connectPosting = async () => {
     if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.signerConnect(
+      const signerConnectResponse = await multisig.wss.subscribe(
         postingConnectMessage,
       );
       if (signerConnectResponse.result) {
@@ -288,8 +288,8 @@ export const TransactionPage = () => {
         };
 
         console.log(txEncode);
-        const encodedTxObj = await multisig.encodeTransaction(txEncode);
-        multisig.sendSignatureRequest(encodedTxObj).then(() => {
+        const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
+        multisig.wss.requestSignatures(encodedTxObj).then(() => {
           dispatch(resetOperation());
         });
       })();

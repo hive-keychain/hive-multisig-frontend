@@ -53,11 +53,16 @@ const LoginForm = () => {
   const inputRef = useRef(null);
   useEffect(() => {
     inputRef.current.focus();
+    console.log(
+      'start here',
+      HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+    );
     if (!multisig) {
       setMultisig(
         HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
       );
     }
+    console.log('ms', multisig);
   }, []);
 
   useEffect(() => {
@@ -96,14 +101,14 @@ const LoginForm = () => {
   };
 
   const subToSignRequests = async () => {
-    const subscribeRes = await multisig.subscribeToSignRequests(
+    const subscribeRes = await multisig.wss.onReceiveSignRequest(
       signRequestCallback,
     );
     dispatch(subscribeToSignRequests(subscribeRes));
   };
 
   const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+    const subscribeRes = await multisig.wss.onBroadcasted(
       broadcastedTransactionCallback,
     );
     dispatch(subscribeToBroadcastedTransactions(subscribeRes));
@@ -124,7 +129,8 @@ const LoginForm = () => {
     }
   };
   const connectActive = async () => {
-    const signerConnectResponse = await multisig.signerConnect({
+    console.log('mults', multisig);
+    const signerConnectResponse = await multisig.wss.subscribe({
       username,
       keyType: KeychainKeyTypes.active,
     });
@@ -158,7 +164,7 @@ const LoginForm = () => {
     }
   };
   const connectPosting = async () => {
-    const signerConnectResponse = await multisig.signerConnect({
+    const signerConnectResponse = await multisig.wss.subscribe({
       username,
       keyType: KeychainKeyTypes.posting,
     });
