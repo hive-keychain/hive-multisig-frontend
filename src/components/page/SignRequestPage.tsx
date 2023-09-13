@@ -97,7 +97,11 @@ export const SignRequestsPage = () => {
         if (activeReqs) {
           dispatch(addSignRequest(activeReqs));
         }
-      } catch {}
+      } catch (error) {
+        console.log(`activeConnect: ${error}`);
+      }
+    } else {
+      console.log(`activeConnectMessage: ${activeConnectMessage}`);
     }
     if (postingConnectMessage) {
       try {
@@ -106,9 +110,16 @@ export const SignRequestsPage = () => {
         if (postingReqs) {
           dispatch(addSignRequest(postingReqs));
         }
-      } catch {}
+      } catch (error) {
+        console.log(`postingConnect: ${error}`);
+      }
+    } else {
+      console.log(`postingConnectMessage: ${postingConnectMessage}`);
     }
   };
+
+  useEffect(() => {}, [postingConnectMessage, activeConnectMessage]);
+
   useEffect(() => {
     if (account) {
       const loggedinDuration = getElapsedTimestampSeconds(
@@ -118,11 +129,10 @@ export const SignRequestsPage = () => {
       if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
         handleLogout();
         navigate('/');
-      } else {
-        setMultisig(
-          HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
-        );
       }
+      setMultisig(
+        HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+      );
     } else {
       navigate('/');
     }
@@ -135,6 +145,7 @@ export const SignRequestsPage = () => {
   }, [operation]);
   useEffect(() => {
     if (multisig) {
+      console.log('trying to get sign requests');
       getSignRequests();
       connectToBackend();
     }
@@ -272,19 +283,29 @@ export const SignRequestsPage = () => {
   };
 
   const subToSignRequests = async () => {
-    const subscribeRes = await multisig.subscribeToSignRequests(
-      signRequestCallback,
-    );
-    dispatch(subscribeToSignRequests(subscribeRes));
+    try {
+      const subscribeRes = await multisig.subscribeToSignRequests(
+        signRequestCallback,
+      );
+      console.log(`subscribeRes: ${subscribeRes}`);
+      dispatch(subscribeToSignRequests(subscribeRes));
+    } catch (error) {
+      console.log(`subToSignRequests: ${error}`);
+    }
   };
   const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
-      broadcastedTransactionCallback,
-    );
-    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
+    try {
+      const subscribeRes = await multisig.subscribeToBroadcastedTransactions(
+        broadcastedTransactionCallback,
+      );
+      dispatch(subscribeToBroadcastedTransactions(subscribeRes));
+    } catch (error) {
+      console.log(`subToBroadcastedTransactions: ${error}`);
+    }
   };
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
+      console.log('signRequestCallback fired');
       await dispatch(addSignRequest([message]));
     }
   };
@@ -359,11 +380,6 @@ export const SignRequestsPage = () => {
   const connectToBackend = async () => {
     await connectPosting();
     await connectActive();
-
-    //ISSUE: every time the user navigates to another page, it loses the connection to the backend via socket.io
-    //therefore every time the user navigate the multisigsdk must be reconnected
-    //and since all the backend transactions are being routed via socket.io connection UID of the connected users
-    //
     await subToSignRequests();
     await subToBroadcastedTransactions();
   };
