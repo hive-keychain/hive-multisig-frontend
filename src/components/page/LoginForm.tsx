@@ -1,4 +1,4 @@
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 
 import { KeychainKeyTypes } from 'hive-keychain-commons';
@@ -26,7 +26,7 @@ import { MultisigUtils } from '../../utils/multisig.utils';
 import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
-  const [multisig, setMultisig] = useState<HiveMultisigSDK>(undefined);
+  const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
   const loginExpirationInSec = Config.login.expirationInSec;
   const [username, setUsername] = useState<string>('');
   const isLoginSucceed = useAppSelector(
@@ -55,12 +55,10 @@ const LoginForm = () => {
     inputRef.current.focus();
     console.log(
       'start here',
-      HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
+      HiveMultisig.getInstance(window, MultisigUtils.getOptions()),
     );
     if (!multisig) {
-      setMultisig(
-        HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
-      );
+      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     }
     console.log('ms', multisig);
   }, []);

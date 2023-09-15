@@ -1,5 +1,5 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 
 const getOptions = () => {
   return {
@@ -9,7 +9,7 @@ const getOptions = () => {
   };
 };
 
-const multisig = HiveMultisigSDK.getInstance(window, getOptions());
+const multisig = HiveMultisig.getInstance(window, getOptions());
 
 const getSigners = async (username: string, keyType: KeychainKeyTypes) => {
   const signers = await multisig.utils.getSigners(username, keyType);

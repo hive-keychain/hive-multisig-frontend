@@ -1,5 +1,5 @@
 import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { LoginResponseType } from '../../../interfaces';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 export enum LoginState {
@@ -8,7 +8,7 @@ export enum LoginState {
   SIGNATURE_FAILED = 'SIGNATURE_FAILED',
   LOGGED_OUT = 'LOGGED_OUT',
 }
-const multisig = new HiveMultisigSDK(window, MultisigUtils.getOptions());
+const multisig = new HiveMultisig(window, MultisigUtils.getOptions());
 
 export type LoginStateType = {
   loginState: LoginState;

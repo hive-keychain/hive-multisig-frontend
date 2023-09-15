@@ -1,4 +1,4 @@
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
@@ -124,10 +124,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
     'accountDetails',
     signedAccountObj,
   );
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
   const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   const loginExpirationInSec = Config.login.expirationInSec;
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(

@@ -1,4 +1,4 @@
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import {
   ISignTransaction,
@@ -80,7 +80,7 @@ export const SignRequestsPage = () => {
   const broadcastedTransactions = useAppSelector(
     (state) => state.multisig.multisig.broadcastedTransactions,
   );
-  const [multisig, setMultisig] = useState<HiveMultisigSDK>();
+  const [multisig, setMultisig] = useState<HiveMultisig>();
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
   const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
   const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
@@ -130,9 +130,7 @@ export const SignRequestsPage = () => {
         handleLogout();
         navigate('/');
       }
-      setMultisig(
-        HiveMultisigSDK.getInstance(window, MultisigUtils.getOptions()),
-      );
+      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     } else {
       navigate('/');
     }
@@ -501,10 +499,7 @@ const PendingRequestCard = ({
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
 
   const handleDecode = async () => {
     try {
@@ -680,10 +675,7 @@ const BroadCastedTransactionCard = ({
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
 
   const handleDecode = async () => {
     try {
@@ -802,10 +794,7 @@ const ExpiredTransactionCard = ({
   const [decoded, setDecoded] = useState(false);
   const [valid, setValid] = useState(false);
   const [showDecodedTx, setShowDecodedTx] = useState(false);
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
 
   const handleDecode = async () => {
     try {
@@ -945,7 +934,7 @@ const isSignedd = (signRequest: SignatureRequest) => {
 };
 
 const isBroadcasted = (signRequest: SignatureRequest) => {
-  return signRequest.broadcasted && signRequest.status === 'broadcasted';
+  return signRequest.broadcasted || signRequest.status === 'broadcasted';
 };
 
 const isPending = (

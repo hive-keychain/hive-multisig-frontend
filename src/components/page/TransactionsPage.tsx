@@ -1,5 +1,5 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
-import { HiveMultisigSDK } from 'hive-multisig-sdk/src';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
@@ -62,10 +62,7 @@ export const TransactionPage = () => {
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
-  const multisig = HiveMultisigSDK.getInstance(
-    window,
-    MultisigUtils.getOptions(),
-  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
   );
