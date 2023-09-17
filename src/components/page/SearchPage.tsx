@@ -12,17 +12,9 @@ import {
   ISearchPageInterface,
   LoginResponseType,
 } from '../../interfaces';
-import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { loginActions } from '../../redux/features/login/loginSlice';
-import { multisigActions } from '../../redux/features/multisig/multisigSlices';
-import { transactionActions } from '../../redux/features/transaction/transactionSlices';
-import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { useAppSelector } from '../../redux/app/hooks';
 import AccountUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
-import {
-  getElapsedTimestampSeconds,
-  getTimestampInSeconds,
-} from '../../utils/utils';
 import AccountPage from './AccountPage';
 import SearchAccountPage from './SearchAccountPage';
 
@@ -120,12 +112,7 @@ export const HomePage: React.FC<ISearchPageInterface> = (
     'loginTimestap',
     null,
   );
-  const postingConnectMessage = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessagePosting,
-  );
-  const activeConnectMessage = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessageActive,
-  );
+
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
@@ -136,7 +123,6 @@ export const HomePage: React.FC<ISearchPageInterface> = (
     }
   };
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
 
   useEffect(() => {
     setSearchKey(params.id.replace('@', ''));
@@ -164,28 +150,11 @@ export const HomePage: React.FC<ISearchPageInterface> = (
   }, [authorities]);
 
   useEffect(() => {
-    if (signedAccountObj) {
-      const loggedinDuration = getElapsedTimestampSeconds(
-        loginTimestamp,
-        getTimestampInSeconds(),
-      );
-      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
-        handleLogout();
-        navigate('/');
-      }
-    } else {
+    if (!signedAccountObj) {
       navigate('/');
     }
   }, []);
 
-  const handleLogout = async () => {
-    setLoginTimestamp(0);
-    setStorageAccountDetails(null);
-    await dispatch(loginActions.logout());
-    await dispatch(multisigActions.resetState());
-    await dispatch(transactionActions.resetState());
-    await dispatch(updateAuthorityActions.resetState());
-  };
   return (
     <div>
       <SearchBar username={searchKey} isValid={isValid} />
