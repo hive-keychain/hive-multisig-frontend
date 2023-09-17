@@ -33,30 +33,40 @@ type AlertType = {
 
 export const SignRequestsPage = () => {
   const dispatch = useAppDispatch();
+
   const loginExpirationInSec = Config.login.expirationInSec;
 
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
     'loginTimestap',
     null,
   );
+
   const account = useAppSelector((state) => state.login.accountObject);
+
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
+
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
   );
+
   const activeConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessageActive,
   );
+
   const signRequest = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
   );
 
   const [multisig, setMultisig] = useState<HiveMultisig>();
+
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
+
   const [alerts, setAlerts] = useState<AlertType>({});
+
   const [listAltText, setListAltText] = useState<string>();
+
   const navigate = useNavigate();
 
   const isLoggedIn = () => {
@@ -66,6 +76,7 @@ export const SignRequestsPage = () => {
     );
     return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
   };
+
   const getSignRequests = async () => {
     setListAltText('Retrieving Transactions');
     if (activeConnectMessage) {

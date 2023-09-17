@@ -21,19 +21,26 @@ import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+
   const loginExpirationInSec = Config.login.expirationInSec;
+
   const [username, setUsername] = useState<string>('');
+
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
   );
+
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   const dispatch = useAppDispatch();
+
   const navigate = useNavigate();
+
   const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage(
     'loginStatus',
     isLoginSucceed,
   );
+
   const [accountDetails, setStorageAccountDetails] = useLocalStorage(
     'accountDetails',
     signedAccountObj,
@@ -43,8 +50,11 @@ const LoginForm = () => {
     'loginTimestap',
     null,
   );
+
   const [isFocused, setIsFocused] = useState<boolean>(false);
+
   const inputRef = useRef(null);
+
   useEffect(() => {
     inputRef.current.focus();
     if (!multisig) {
@@ -121,6 +131,7 @@ const LoginForm = () => {
       console.log('connectActive Failed');
     }
   };
+
   const connectPosting = async () => {
     const signerConnectResponse = await multisig.wss.subscribe({
       username,
@@ -167,6 +178,7 @@ const LoginForm = () => {
       console.log('connectPosting Failed');
     }
   };
+
   const handleOnLoginSubmit = async () => {
     try {
       await connectPosting();

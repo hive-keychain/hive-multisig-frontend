@@ -48,23 +48,30 @@ export const TransactionPage = () => {
     'loginTimestap',
     null,
   );
+
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
+
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
 
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
   );
+
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
+
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
+
   const [method, setMethod] = useState<KeychainKeyTypes>(
     KeychainKeyTypes.active,
   );
 
   const navigate = useNavigate();
+
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -141,6 +148,7 @@ export const TransactionPage = () => {
     };
     await dispatch(setInitiator(initiator));
   };
+
   const isLoggedIn = () => {
     const loggedinDuration = getElapsedTimestampSeconds(
       loginTimestamp,

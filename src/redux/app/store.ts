@@ -7,9 +7,8 @@ import multisigReducers from '../features/multisig/multisigReducers';
 import transactionReducers from '../features/transaction/transactionReducers';
 import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice';
 const persistConfig = {
-  key: 'root', // Change this to a unique string for your application
-  storage, // Use the storage engine you imported (local storage, AsyncStorage, etc.)
-  // Add other options if needed, such as blacklist/whitelist for specific reducers
+  key: 'root',
+  storage,
 };
 const rootReducer = combineReducers({
   keychain: keychainReducers,

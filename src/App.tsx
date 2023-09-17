@@ -2,7 +2,7 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import './App.css';
 import NavBar from './components/navigating/NavBar';
@@ -40,18 +40,21 @@ function App() {
   const loginExpirationInSec = Config.login.expirationInSec;
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const loginState = useAppSelector((state) => state.login.loginState);
-  const location = useLocation();
+
   const [accountDetails, setStorageAccountDetails] = useLocalStorage(
     'accountDetails',
     signedAccountObj,
   );
+
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
     'loginTimestap',
     null,
   );
+
   const signRequestNotif = useAppSelector(
     (state) => state.multisig.multisig.signRequestNotification,
   );
+
   const broadcastNotif = useAppSelector(
     (state) => state.multisig.multisig.broadcastNotification,
   );
@@ -63,15 +66,19 @@ function App() {
   const onLoginPendingReqsNotif = useAppSelector(
     (state) => state.multisig.multisig.userPendingSignatureRequest,
   );
+
   const connectActiveKey = useAppSelector(
     (state) => state.multisig.multisig.signerConnectActive,
   );
+
   const connectPostingKey = useAppSelector(
     (state) => state.multisig.multisig.signerConnectActive,
   );
+
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
   );
+
   const activeConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessageActive,
   );
@@ -83,6 +90,7 @@ function App() {
       dispatch(notifySignRequest(false));
     }
   }, [signRequestNotif]);
+
   useEffect(() => {
     if (broadcastNotif && loginState !== LoginState.LOGGED_OUT) {
       alert('A transaction has been broadcasted');
@@ -126,12 +134,14 @@ function App() {
       }
     }
   }, [onLoginPendingReqsNotif]);
+
   useEffect(() => {
     if (connectActiveKey && connectPostingKey && isLoggedIn()) {
       setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     } else {
     }
   }, [connectActiveKey, connectPostingKey]);
+
   useEffect(() => {
     if (multisig && loginState !== LoginState.LOGGED_OUT) {
       connectToBackend();
@@ -146,6 +156,7 @@ function App() {
       navigate('/');
     }
   });
+
   const isLoggedIn = () => {
     const loggedinDuration = getElapsedTimestampSeconds(
       loginTimestamp,
@@ -153,6 +164,7 @@ function App() {
     );
     return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
   };
+
   const subToSignRequests = async () => {
     try {
       const subscribeRes = await multisig.wss.onReceiveSignRequest(
@@ -163,6 +175,7 @@ function App() {
       console.error('subToSignRequests failed');
     }
   };
+
   const subToBroadcastedTransactions = async () => {
     try {
       const subscribeRes = await multisig.wss.onBroadcasted(
@@ -173,6 +186,7 @@ function App() {
       console.error('subToBroadcastedTransactions failed');
     }
   };
+
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addSignRequest([message]));
@@ -181,12 +195,14 @@ function App() {
       }
     }
   };
+
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addBroadcastedTransaction([message]));
       await dispatch(notifyBroadcastedTransaction(true));
     }
   };
+
   const connectActive = async () => {
     if (activeConnectMessage) {
       const signerConnectResponse = await multisig.wss.subscribe(
@@ -225,6 +241,7 @@ function App() {
       }
     }
   };
+
   const connectPosting = async () => {
     if (postingConnectMessage) {
       const signerConnectResponse = await multisig.wss.subscribe(
@@ -262,6 +279,7 @@ function App() {
       }
     }
   };
+
   const connectToBackend = async () => {
     await connectPosting();
     await connectActive();
