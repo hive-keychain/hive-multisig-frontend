@@ -102,7 +102,6 @@ export const TransactionPage = () => {
           initiator: { ...transactionState.initiator },
         };
 
-        console.log(txEncode);
         try {
           const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
           multisig.wss.requestSignatures(encodedTxObj).then(() => {

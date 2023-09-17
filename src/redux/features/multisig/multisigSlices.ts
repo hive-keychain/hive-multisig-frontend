@@ -3,11 +3,13 @@ import { State } from '../../../interfaces/multisig.interface';
 import {
   addBroadcastNotifications,
   addBroadcastedTransaction,
+  addPendingSignRequest,
   addSignRequest,
   notifyBroadcastedTransaction,
   notifySignRequest,
   removeSignRequest,
   resetBroadcastNotifications,
+  resetPendingSignRequest,
   setSignRequestCount,
   signerConnectActive,
   signerConnectMessageActive,
@@ -22,6 +24,7 @@ const initialState: State = {
   signerConnectMessagePosting: undefined,
   signerConnectActive: undefined,
   signerConnectPosting: undefined,
+  userPendingSignatureRequest: [],
   signRequests: [],
   userNotifications: [],
   broadcastedTransactions: [],
@@ -124,7 +127,6 @@ const multisigSlice = createSlice({
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
 
-        // Update the state with the sorted array
         state.signRequests = sortedSignRequests;
       }
     });
@@ -155,12 +157,32 @@ const multisigSlice = createSlice({
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           );
 
-          // Update the state with the sorted array
           state.signRequests = sortedSignRequests;
         });
       }
     });
 
+    builder.addCase(addPendingSignRequest.fulfilled, (state, action) => {
+      if (action.payload) {
+        action.payload.forEach((newReq) => {
+          const existing = state.userPendingSignatureRequest.find(
+            (existingReq) => {
+              existingReq.id === newReq.id;
+            },
+          );
+
+          if (!existing) {
+            state.userPendingSignatureRequest = [
+              ...state.userPendingSignatureRequest,
+              newReq,
+            ];
+          }
+        });
+      }
+    });
+    builder.addCase(resetPendingSignRequest.fulfilled, (state, action) => {
+      state.userPendingSignatureRequest = [...action.payload];
+    });
     builder.addCase(addBroadcastNotifications.fulfilled, (state, action) => {
       if (action.payload) {
         action.payload.forEach((notif) => {

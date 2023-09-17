@@ -14,10 +14,12 @@ import { multisigActions } from './redux/features/multisig/multisigSlices';
 import {
   addBroadcastNotifications,
   addBroadcastedTransaction,
+  addPendingSignRequest,
   addSignRequest,
   notifyBroadcastedTransaction,
   notifySignRequest,
   resetBroadcastNotifications,
+  resetPendingSignRequest,
   signerConnectActive,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
@@ -54,10 +56,13 @@ function App() {
     (state) => state.multisig.multisig.broadcastNotification,
   );
 
-  const onLoginNotif = useAppSelector(
+  const onLoginBroadcastNotif = useAppSelector(
     (state) => state.multisig.multisig.userNotifications,
   );
 
+  const onLoginPendingReqsNotif = useAppSelector(
+    (state) => state.multisig.multisig.userPendingSignatureRequest,
+  );
   const connectActiveKey = useAppSelector(
     (state) => state.multisig.multisig.signerConnectActive,
   );
@@ -87,19 +92,40 @@ function App() {
   }, [broadcastNotif]);
 
   useEffect(() => {
-    if (onLoginNotif && loginState !== LoginState.LOGGED_OUT) {
-      if (onLoginNotif.length > 0) {
+    if (onLoginBroadcastNotif && loginState !== LoginState.LOGGED_OUT) {
+      if (onLoginBroadcastNotif.length > 0) {
         alert(
-          `${onLoginNotif.length > 1 ? onLoginNotif.length : 'A'} transaction${
-            onLoginNotif.length > 1 ? 's' : ''
+          `${
+            onLoginBroadcastNotif.length > 1
+              ? onLoginBroadcastNotif.length
+              : 'A'
+          } transaction${
+            onLoginBroadcastNotif.length > 1 ? 's' : ''
           } has been broadcasted`,
         );
         navigate('/signRequest');
         dispatch(resetBroadcastNotifications());
       }
     }
-  }, [onLoginNotif]);
+  }, [onLoginBroadcastNotif]);
 
+  useEffect(() => {
+    if (onLoginPendingReqsNotif && loginState !== LoginState.LOGGED_OUT) {
+      if (onLoginPendingReqsNotif.length > 0) {
+        alert(
+          `You have ${
+            onLoginPendingReqsNotif.length > 1
+              ? onLoginPendingReqsNotif.length
+              : 'a'
+          } pending sign request${
+            onLoginPendingReqsNotif.length > 1 ? 's' : ''
+          }`,
+        );
+        navigate('/signRequest');
+        dispatch(resetPendingSignRequest());
+      }
+    }
+  }, [onLoginPendingReqsNotif]);
   useEffect(() => {
     if (connectActiveKey && connectPostingKey && isLoggedIn()) {
       setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
@@ -110,7 +136,7 @@ function App() {
     if (multisig && loginState !== LoginState.LOGGED_OUT) {
       connectToBackend();
     } else {
-      console.log(`multisig: ${multisig}`);
+      // console.log(`multisig: ${multisig}`);
     }
   }, [multisig, loginState]);
 
@@ -174,6 +200,13 @@ function App() {
             ];
           if (pendingReqs?.length > 0) {
             await dispatch(addSignRequest(pendingReqs));
+            let myReqs: SignatureRequest[] = [];
+            pendingReqs.forEach((req) => {
+              if (req.initiator !== activeConnectMessage.username) {
+                myReqs.push(req);
+              }
+            });
+            dispatch(addPendingSignRequest(myReqs));
           }
         }
 
@@ -205,6 +238,13 @@ function App() {
             ];
           if (pendingReqs.length > 0) {
             await dispatch(addSignRequest(pendingReqs));
+            let myReqs: SignatureRequest[] = [];
+            pendingReqs.forEach((req) => {
+              if (req.initiator !== postingConnectMessage.username) {
+                myReqs.push(req);
+              }
+            });
+            dispatch(addPendingSignRequest(myReqs));
           }
         }
         if (signerConnectResponse.result.notifications) {

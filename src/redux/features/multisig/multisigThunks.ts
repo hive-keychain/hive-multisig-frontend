@@ -99,6 +99,20 @@ export const resetBroadcastNotifications = createAsyncThunk(
     return [] as UserNotification[];
   },
 );
+
+export const addPendingSignRequest = createAsyncThunk(
+  'multisig/addPendingSignRequest',
+  async (signRequests: SignatureRequest[]) => {
+    return signRequests;
+  },
+);
+
+export const resetPendingSignRequest = createAsyncThunk(
+  'multisig/resetPendingSignRequest',
+  async () => {
+    return [] as SignatureRequest[];
+  },
+);
 export const removeSignRequest = createAsyncThunk(
   'multisig/removeSignRequest',
   async (signatureRequestId: number) => {

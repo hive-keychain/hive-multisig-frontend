@@ -12,6 +12,7 @@ export interface IMultisig {
   subscribeToSignRequest: boolean;
   subscribeToBroadcast: boolean;
   signRequests: SignatureRequest[];
+  userPendingSignatureRequest: SignatureRequest[];
   userNotifications: UserNotification[];
   broadcastedTransactions: SignatureRequest[];
 }

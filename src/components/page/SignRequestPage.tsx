@@ -121,7 +121,6 @@ export const SignRequestsPage = () => {
   }, [multisig]);
 
   useEffect(() => {
-    console.log(transactions);
     if (!transactions) {
       setListAltText('No Transaction Found');
     }
