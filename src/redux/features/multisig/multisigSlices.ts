@@ -7,6 +7,7 @@ import {
   notifyBroadcastedTransaction,
   notifySignRequest,
   removeSignRequest,
+  resetNotifications,
   setSignRequestCount,
   signerConnectActive,
   signerConnectMessageActive,
@@ -102,9 +103,30 @@ const multisigSlice = createSlice({
       },
     );
     builder.addCase(addBroadcastedTransaction.fulfilled, (state, action) => {
-      state.broadcastedTransactions = action.payload
-        ? [...state.broadcastedTransactions, ...action.payload]
-        : action.payload;
+      if (action.payload) {
+        action.payload.forEach((broadcasted) => {
+          const index = state.signRequests.findIndex(
+            (sr) => sr.id === broadcasted.id,
+          );
+          if (index !== -1) {
+            state.signRequests = [
+              ...state.signRequests.slice(0, index),
+              {
+                ...broadcasted,
+              },
+              ...state.signRequests.slice(index + 1),
+            ];
+          }
+        });
+
+        const sortedSignRequests = [...state.signRequests].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+
+        // Update the state with the sorted array
+        state.signRequests = sortedSignRequests;
+      }
     });
     builder.addCase(addSignRequest.fulfilled, (state, action) => {
       if (action.payload) {
@@ -115,23 +137,48 @@ const multisigSlice = createSlice({
 
           if (index !== -1) {
             if (state.signRequests[index].status !== newSignRequest.status) {
-              state.signRequests[index] = {
-                ...state.signRequests[index],
-                status: newSignRequest.status,
-              };
+              state.signRequests = state.signRequests.map((sr, i) => {
+                if (i === index) {
+                  return {
+                    ...sr,
+                    status: newSignRequest.status,
+                  };
+                }
+                return sr;
+              });
             }
           } else {
             state.signRequests.push(newSignRequest);
           }
+          const sortedSignRequests = [...state.signRequests].sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+          );
+
+          // Update the state with the sorted array
+          state.signRequests = sortedSignRequests;
         });
       }
     });
 
     builder.addCase(addUserNotifications.fulfilled, (state, action) => {
-      state.userNotifications = action.payload
-        ? [...state.userNotifications, ...action.payload]
-        : action.payload;
+      if (action.payload) {
+        action.payload.forEach((notif) => {
+          const exsisting = state.userNotifications.find(
+            (exsistingNotif) =>
+              exsistingNotif.signatureRequest.id === notif.signatureRequest.id,
+          );
+          if (!exsisting) {
+            state.userNotifications = [...state.userNotifications, notif];
+          }
+        });
+      }
     });
+
+    builder.addCase(resetNotifications.fulfilled, (state, action) => {
+      state.userNotifications = [...action.payload];
+    });
+
     builder.addCase(removeSignRequest.fulfilled, (state, action) => {
       state.signRequests = state.signRequests.filter(
         (item) => item.id !== action.payload,

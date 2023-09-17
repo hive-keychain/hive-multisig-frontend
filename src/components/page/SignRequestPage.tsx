@@ -14,24 +14,11 @@ import {
   ToastContainer,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from 'usehooks-ts';
+import useLocalStorage from 'usehooks-ts/dist/esm/useLocalStorage/useLocalStorage';
 import { Config } from '../../config';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { loginActions } from '../../redux/features/login/loginSlice';
-import { multisigActions } from '../../redux/features/multisig/multisigSlices';
-import {
-  addBroadcastedTransaction,
-  addSignRequest,
-  addUserNotifications,
-  notifyBroadcastedTransaction,
-  signerConnectActive,
-  signerConnectPosting,
-  subscribeToBroadcastedTransactions,
-  subscribeToSignRequests,
-} from '../../redux/features/multisig/multisigThunks';
-import { transactionActions } from '../../redux/features/transaction/transactionSlices';
-import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import {
   getElapsedTimestampSeconds,
@@ -47,19 +34,11 @@ type AlertType = {
 export const SignRequestsPage = () => {
   const dispatch = useAppDispatch();
   const loginExpirationInSec = Config.login.expirationInSec;
-  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
-  const [accountDetails, setStorageAccountDetails] = useLocalStorage(
-    'accountDetails',
-    signedAccountObj,
-  );
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
     'loginTimestap',
     null,
   );
-  const [transactionType, setTransactionType] =
-    useState<string>('TransferOperation');
-
   const account = useAppSelector((state) => state.login.accountObject);
   const operation = useAppSelector(
     (state) => state.transaction.transaction.operation,
@@ -70,33 +49,34 @@ export const SignRequestsPage = () => {
   const activeConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessageActive,
   );
-  const requests = useAppSelector(
+  const signRequest = useAppSelector(
     (state) => state.multisig.multisig.signRequests,
   );
-  const userNotifications = useAppSelector(
-    (state) => state.multisig.multisig.userNotifications,
-  );
 
-  const broadcastedTransactions = useAppSelector(
-    (state) => state.multisig.multisig.broadcastedTransactions,
-  );
   const [multisig, setMultisig] = useState<HiveMultisig>();
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
-  const [signRequests, setSignRequests] = useState<SignatureRequest[]>([]);
-  const [notifications, setNotifications] = useState<SignatureRequest[]>([]);
-  const [broadcasted, setNewBroadcasted] = useState<SignatureRequest[]>([]);
   const [alerts, setAlerts] = useState<AlertType>({});
-
+  const [listAltText, setListAltText] = useState<string>();
   const navigate = useNavigate();
 
+  const isLoggedIn = () => {
+    const loggedinDuration = getElapsedTimestampSeconds(
+      loginTimestamp,
+      getTimestampInSeconds(),
+    );
+    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
+  };
   const getSignRequests = async () => {
+    setListAltText('Retrieving Transactions');
     if (activeConnectMessage) {
       try {
-        var activeReqs: SignatureRequest[] =
-          await multisig.api.getSignatureRequests(activeConnectMessage);
-        if (activeReqs) {
-          dispatch(addSignRequest(activeReqs));
-        }
+        multisig.api
+          .getSignatureRequests(activeConnectMessage)
+          .then((activeReqs) => {
+            if (activeReqs) {
+              dispatch(addSignRequest(activeReqs));
+            }
+          });
       } catch (error) {
         console.log(`activeConnect: ${error}`);
       }
@@ -105,11 +85,13 @@ export const SignRequestsPage = () => {
     }
     if (postingConnectMessage) {
       try {
-        var postingReqs: SignatureRequest[] =
-          await multisig.api.getSignatureRequests(postingConnectMessage);
-        if (postingReqs) {
-          dispatch(addSignRequest(postingReqs));
-        }
+        multisig.api
+          .getSignatureRequests(postingConnectMessage)
+          .then((postingReqs) => {
+            if (postingReqs) {
+              dispatch(addSignRequest(postingReqs));
+            }
+          });
       } catch (error) {
         console.log(`postingConnect: ${error}`);
       }
@@ -118,18 +100,8 @@ export const SignRequestsPage = () => {
     }
   };
 
-  useEffect(() => {}, [postingConnectMessage, activeConnectMessage]);
-
   useEffect(() => {
     if (account) {
-      const loggedinDuration = getElapsedTimestampSeconds(
-        loginTimestamp,
-        getTimestampInSeconds(),
-      );
-      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
-        handleLogout();
-        navigate('/');
-      }
       setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     } else {
       navigate('/');
@@ -137,255 +109,34 @@ export const SignRequestsPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!operation && multisig) {
+    if (!operation && multisig && isLoggedIn()) {
       getSignRequests();
     }
   }, [operation]);
+
   useEffect(() => {
     if (multisig) {
-      console.log('trying to get sign requests');
       getSignRequests();
-      connectToBackend();
     }
   }, [multisig]);
-  const handleLogout = async () => {
-    setLoginTimestamp(0);
-    setStorageAccountDetails(null);
-    await dispatch(loginActions.logout());
-    await dispatch(multisigActions.resetState());
-    await dispatch(transactionActions.resetState());
-    await dispatch(updateAuthorityActions.resetState());
-  };
+
   useEffect(() => {
-    if (transactions) {
-      transactions.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+    console.log(transactions);
+    if (!transactions) {
+      setListAltText('No Transaction Found');
     }
   }, [transactions]);
-  useEffect(() => {
-    if (requests) {
-      let newSignRequests: SignatureRequest[] = [...signRequests];
-      for (var i = 0; i < requests.length; i++) {
-        if (newSignRequests.find((req) => req.id === requests[i].id)) {
-          continue;
-        }
-        newSignRequests.unshift(requests[i]);
-      }
-      if (newSignRequests?.length > 0) {
-        setSignRequests(
-          [...newSignRequests].sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-          ),
-        );
-      }
-    }
-  }, [requests]);
 
   useEffect(() => {
-    if (userNotifications) {
-      let newNotifications: SignatureRequest[] = [...notifications];
-      for (var i = 0; i < userNotifications.length; i++) {
-        if (
-          newNotifications.find(
-            (notif) => notif.id === userNotifications[i].signatureRequest.id,
-          )
-        ) {
-          continue;
-        }
-        newNotifications.unshift({ ...userNotifications[i].signatureRequest });
-      }
-      if (newNotifications?.length > 0) {
-        setNotifications([...newNotifications]);
-      }
+    if (signRequest) {
+      setTransactions(signRequest);
     }
-  }, [userNotifications]);
-
-  useEffect(() => {
-    if (broadcastedTransactions) {
-      let newBroadcasted: SignatureRequest[] = [...broadcasted];
-      for (var i = 0; i < broadcastedTransactions.length; i++) {
-        const index = newBroadcasted.findIndex(
-          (broadcasted) => broadcasted.id === broadcastedTransactions[i].id,
-        );
-        if (index > -1) {
-          newBroadcasted[index] = { ...broadcastedTransactions[i] };
-          continue;
-        }
-        newBroadcasted.unshift(broadcastedTransactions[i]);
-      }
-      if (newBroadcasted?.length > 0) {
-        setNewBroadcasted([...newBroadcasted]);
-      }
-    }
-  }, [broadcastedTransactions]);
-
-  useEffect(() => {
-    if (signRequests?.length > 0) {
-      handleAddSignRequests();
-    }
-
-    if (notifications?.length > 0) {
-      handleAddNotifications();
-    }
-
-    if (broadcasted?.length > 0) {
-      handleAddBroadcasted();
-    }
-  }, [signRequests, notifications, broadcasted]);
-
-  const handleAddSignRequests = async () => {
-    let newTransactions = [...transactions];
-    for (var i = 0; i < signRequests.length; i++) {
-      const index = newTransactions.findIndex(
-        (tx) => tx.id === signRequests[i].id,
-      );
-      if (index !== -1) {
-        newTransactions[index] = { ...signRequests[i] };
-        continue;
-      }
-      newTransactions.unshift({ ...signRequests[i] });
-    }
-
-    setTransactions([...newTransactions]);
-  };
-  const handleAddNotifications = async () => {
-    let newTransactions = [...transactions];
-    for (var i = 0; i < notifications.length; i++) {
-      const index = newTransactions.findIndex(
-        (tx) => tx.id === notifications[i].id,
-      );
-      if (index !== -1) {
-        newTransactions[index] = { ...notifications[i] };
-        continue;
-      }
-      newTransactions.unshift({ ...notifications[i] });
-    }
-    setTransactions([...newTransactions]);
-  };
-  const handleAddBroadcasted = async () => {
-    let newTransactions = [...transactions];
-    for (var i = 0; i < broadcasted.length; i++) {
-      const index = newTransactions.findIndex(
-        (tx) => tx.id === broadcasted[i].id,
-      );
-      if (index !== -1) {
-        newTransactions[index] = { ...broadcasted[i] };
-        continue;
-      }
-      newTransactions.unshift({ ...broadcasted[i] });
-    }
-    setTransactions([...newTransactions]);
-  };
-
-  const subToSignRequests = async () => {
-    try {
-      const subscribeRes = await multisig.wss.onReceiveSignRequest(
-        signRequestCallback,
-      );
-      console.log(`subscribeRes: ${subscribeRes}`);
-      dispatch(subscribeToSignRequests(subscribeRes));
-    } catch (error) {
-      console.log(`subToSignRequests: ${error}`);
-    }
-  };
-  const subToBroadcastedTransactions = async () => {
-    try {
-      const subscribeRes = await multisig.wss.onBroadcasted(
-        broadcastedTransactionCallback,
-      );
-      dispatch(subscribeToBroadcastedTransactions(subscribeRes));
-    } catch (error) {
-      console.log(`subToBroadcastedTransactions: ${error}`);
-    }
-  };
-  const signRequestCallback = async (message: SignatureRequest) => {
-    if (message) {
-      console.log('signRequestCallback fired');
-      await dispatch(addSignRequest([message]));
-    }
-  };
-  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addBroadcastedTransaction([message]));
-      await dispatch(notifyBroadcastedTransaction(true));
-    }
-  };
-
-  const connectActive = async () => {
-    if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        activeConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              activeConnectMessage.username
-            ];
-          if (pendingReqs?.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
-        }
-
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              activeConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectActive(signerConnectResponse));
-      } else {
-        console.log('connectActive Failed');
-      }
-    }
-  };
-  const connectPosting = async () => {
-    if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        postingConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              postingConnectMessage.username
-            ];
-          if (pendingReqs.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
-        }
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              postingConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectPosting(signerConnectResponse));
-      } else {
-        console.log('connectPosting Failed');
-      }
-    }
-  };
-  const connectToBackend = async () => {
-    await connectPosting();
-    await connectActive();
-    await subToSignRequests();
-    await subToBroadcastedTransactions();
-  };
+  }, [signRequest]);
 
   return (
     <div>
       {transactions?.length <= 0 ? (
-        <div> {'No signature requests'}</div>
+        <div> {listAltText}</div>
       ) : (
         transactions.map((tx) => {
           const state = GetStatus(tx, account);

@@ -1,31 +1,16 @@
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useLocalStorage } from 'usehooks-ts';
+import useLocalStorage from 'usehooks-ts/dist/esm/useLocalStorage/useLocalStorage';
 import { Config } from '../../config';
 import {
   ITransaction,
   Initiator,
 } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { loginActions } from '../../redux/features/login/loginSlice';
-import { multisigActions } from '../../redux/features/multisig/multisigSlices';
-import {
-  addBroadcastedTransaction,
-  addSignRequest,
-  addUserNotifications,
-  notifyBroadcastedTransaction,
-  notifySignRequest,
-  signerConnectActive,
-  signerConnectPosting,
-  subscribeToBroadcastedTransactions,
-  subscribeToSignRequests,
-} from '../../redux/features/multisig/multisigThunks';
-import { transactionActions } from '../../redux/features/transaction/transactionSlices';
 import {
   resetOperation,
   setAuthority,
@@ -33,7 +18,6 @@ import {
   setTransactionMethod,
   setTransactionName,
 } from '../../redux/features/transaction/transactionThunks';
-import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
@@ -59,35 +43,20 @@ import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCa
 
 export const TransactionPage = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
-  const transactionState = useAppSelector(
-    (state) => state.transaction.transaction,
-  );
-  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
-  const postingConnectMessage = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessagePosting,
-  );
-  const activeConnectMessage = useAppSelector(
-    (state) => state.multisig.multisig.signerConnectMessageActive,
-  );
-  const operation = useAppSelector(
-    (state) => state.transaction.transaction.operation,
-  );
-  const signRequestNotif = useAppSelector(
-    (state) => state.multisig.multisig.signRequestNotification,
-  );
-  const broadcastNotif = useAppSelector(
-    (state) => state.multisig.multisig.broadcastNotification,
-  );
-  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
-  const [accountDetails, setStorageAccountDetails] = useLocalStorage(
-    'accountDetails',
-    signedAccountObj,
-  );
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
     'loginTimestap',
     null,
   );
+  const transactionState = useAppSelector(
+    (state) => state.transaction.transaction,
+  );
+  const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+
+  const operation = useAppSelector(
+    (state) => state.transaction.transaction.operation,
+  );
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
@@ -99,149 +68,53 @@ export const TransactionPage = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (signRequestNotif) {
-      alert('Received new sign request');
-      navigate('/signRequest');
-      dispatch(notifySignRequest(false));
-    }
-  }, [signRequestNotif]);
-
-  useEffect(() => {
-    if (broadcastNotif) {
-      alert('A transaction as been broadcasted');
-      dispatch(notifyBroadcastedTransaction(false));
-    }
-  }, [broadcastNotif]);
-
-  useEffect(() => {
     if (signedAccountObj) {
       document.title = 'Hive Multisig - Transaction';
-      const loggedinDuration = getElapsedTimestampSeconds(
-        loginTimestamp,
-        getTimestampInSeconds(),
-      );
-      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
-        handleLogout();
-        navigate('/');
-      } else {
-        connectToBackend();
-      }
+      dispatch(resetOperation());
+      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     } else {
       navigate('/');
     }
   }, []);
 
-  const handleLogout = async () => {
-    setLoginTimestamp(0);
-    setStorageAccountDetails(null);
-    await dispatch(loginActions.logout());
-    await dispatch(multisigActions.resetState());
-    await dispatch(transactionActions.resetState());
-    await dispatch(updateAuthorityActions.resetState());
-  };
   useEffect(() => {
     handleSelectOnChange(transactionType);
     dispatch(setTransactionName(transactionType));
   }, [transactionType]);
 
   useEffect(() => {
-    dispatchTxAsync();
+    if (signedAccountObj && isLoggedIn()) {
+      dispatchTxAsync();
+    }
   }, [method]);
 
-  const subToSignRequests = async () => {
-    const subscribeRes = await multisig.wss.onReceiveSignRequest(
-      signRequestCallback,
-    );
-    dispatch(subscribeToSignRequests(subscribeRes));
-  };
-  const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.wss.onBroadcasted(
-      broadcastedTransactionCallback,
-    );
-    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
-  };
-  const signRequestCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addSignRequest([message]));
-      if (message.initiator !== signedAccountObj.data.username) {
-        await dispatch(notifySignRequest(true));
-      }
-    }
-  };
-  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addBroadcastedTransaction([message]));
-      await dispatch(notifyBroadcastedTransaction(true));
-    }
-  };
+  useEffect(() => {
+    if (operation && isLoggedIn()) {
+      (async () => {
+        const transaction = await HiveTxUtils.createTx(
+          [operation],
+          transactionState.expiration,
+        );
+        const txEncode: IEncodeTransaction = {
+          transaction: transaction,
+          method: transactionState.method,
+          expirationDate: getISOStringDate(transactionState.expiration),
+          initiator: { ...transactionState.initiator },
+        };
 
-  const connectActive = async () => {
-    if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        activeConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              activeConnectMessage.username
-            ];
-          if (pendingReqs?.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
+        console.log(txEncode);
+        try {
+          const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
+          multisig.wss.requestSignatures(encodedTxObj).then(() => {
+            dispatch(resetOperation());
+          });
+        } catch (error) {
+          alert(`${error}`);
         }
+      })();
+    }
+  }, [operation]);
 
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              activeConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectActive(signerConnectResponse));
-      } else {
-        console.log('connectActive Failed');
-      }
-    }
-  };
-  const connectPosting = async () => {
-    if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        postingConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              postingConnectMessage.username
-            ];
-          if (pendingReqs.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
-        }
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              postingConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectPosting(signerConnectResponse));
-      } else {
-        console.log('connectPosting Failed');
-      }
-    }
-  };
-  const connectToBackend = async () => {
-    await connectPosting();
-    await connectActive();
-    await subToSignRequests();
-    await subToBroadcastedTransactions();
-  };
   const dispatchTxAsync = async () => {
     try {
       const txInfo: ITransaction = {
@@ -269,29 +142,13 @@ export const TransactionPage = () => {
     };
     await dispatch(setInitiator(initiator));
   };
-
-  useEffect(() => {
-    if (operation) {
-      (async () => {
-        const transaction = await HiveTxUtils.createTx(
-          [operation],
-          transactionState.expiration,
-        );
-        const txEncode: IEncodeTransaction = {
-          transaction: transaction,
-          method: transactionState.method,
-          expirationDate: getISOStringDate(transactionState.expiration),
-          initiator: { ...transactionState.initiator },
-        };
-
-        console.log(txEncode);
-        const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
-        multisig.wss.requestSignatures(encodedTxObj).then(() => {
-          dispatch(resetOperation());
-        });
-      })();
-    }
-  }, [operation]);
+  const isLoggedIn = () => {
+    const loggedinDuration = getElapsedTimestampSeconds(
+      loginTimestamp,
+      getTimestampInSeconds(),
+    );
+    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
+  };
 
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {

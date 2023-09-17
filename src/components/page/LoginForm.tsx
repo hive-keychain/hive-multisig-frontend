@@ -1,5 +1,4 @@
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { useEffect, useRef, useState } from 'react';
@@ -10,17 +9,12 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { login } from '../../redux/features/login/loginSlice';
 import {
-  addBroadcastedTransaction,
   addSignRequest,
   addUserNotifications,
-  notifyBroadcastedTransaction,
-  notifySignRequest,
   signerConnectActive,
   signerConnectMessageActive,
   signerConnectMessagePosting,
   signerConnectPosting,
-  subscribeToBroadcastedTransactions,
-  subscribeToSignRequests,
 } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { getTimestampInSeconds } from '../../utils/utils';
@@ -53,21 +47,17 @@ const LoginForm = () => {
   const inputRef = useRef(null);
   useEffect(() => {
     inputRef.current.focus();
-    console.log(
-      'start here',
-      HiveMultisig.getInstance(window, MultisigUtils.getOptions()),
-    );
     if (!multisig) {
-      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
+      console.log('start here');
+      setMultisig(
+        HiveMultisig.resetInstance(window, MultisigUtils.getOptions()),
+      );
     }
-    console.log('ms', multisig);
   }, []);
 
   useEffect(() => {
     if (isLoggedIn && accountDetails) {
       navigate(`/transaction`);
-      subToSignRequests();
-      subToBroadcastedTransactions();
     } else {
     }
   }, [accountDetails]);
@@ -98,36 +88,7 @@ const LoginForm = () => {
     setLoginTimestamp(getTimestampInSeconds());
   };
 
-  const subToSignRequests = async () => {
-    const subscribeRes = await multisig.wss.onReceiveSignRequest(
-      signRequestCallback,
-    );
-    dispatch(subscribeToSignRequests(subscribeRes));
-  };
-
-  const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.wss.onBroadcasted(
-      broadcastedTransactionCallback,
-    );
-    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
-  };
-
-  const signRequestCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addSignRequest([message]));
-      if (message.initiator !== username) {
-        await dispatch(notifySignRequest(true));
-      }
-    }
-  };
-  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addBroadcastedTransaction([message]));
-      await dispatch(notifyBroadcastedTransaction(true));
-    }
-  };
   const connectActive = async () => {
-    console.log('mults', multisig);
     const signerConnectResponse = await multisig.wss.subscribe({
       username,
       keyType: KeychainKeyTypes.active,
@@ -158,7 +119,7 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectActive(signerConnectResponse));
     } else {
-      // console.log('connectActive Failed');
+      console.log('connectActive Failed');
     }
   };
   const connectPosting = async () => {
@@ -204,7 +165,7 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectPosting(signerConnectResponse));
     } else {
-      // console.log('connectPosting Failed');
+      console.log('connectPosting Failed');
     }
   };
   const handleOnLoginSubmit = async () => {

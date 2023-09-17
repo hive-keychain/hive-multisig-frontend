@@ -92,6 +92,13 @@ export const addUserNotifications = createAsyncThunk(
     return notification;
   },
 );
+
+export const resetNotifications = createAsyncThunk(
+  'multisig/resetNotifications',
+  async () => {
+    return [] as UserNotification[];
+  },
+);
 export const removeSignRequest = createAsyncThunk(
   'multisig/removeSignRequest',
   async (signatureRequestId: number) => {

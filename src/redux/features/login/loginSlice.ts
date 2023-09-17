@@ -10,6 +10,12 @@ export enum LoginState {
 }
 const multisig = new HiveMultisig(window, MultisigUtils.getOptions());
 
+export enum PAGE {
+  TRANSACTIONS = 'transaction',
+  AUTHORITIES = 'authorities',
+  SIGN_REQUESTS = 'sign_requests',
+  LOGIN = 'login',
+}
 export type LoginStateType = {
   loginState: LoginState;
   isSignatureSuccess: boolean;
