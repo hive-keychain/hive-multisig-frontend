@@ -9,8 +9,8 @@ import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { login } from '../../redux/features/login/loginSlice';
 import {
+  addBroadcastNotifications,
   addSignRequest,
-  addUserNotifications,
   signerConnectActive,
   signerConnectMessageActive,
   signerConnectMessagePosting,
@@ -48,7 +48,6 @@ const LoginForm = () => {
   useEffect(() => {
     inputRef.current.focus();
     if (!multisig) {
-      console.log('start here');
       setMultisig(
         HiveMultisig.resetInstance(window, MultisigUtils.getOptions()),
       );
@@ -114,7 +113,7 @@ const LoginForm = () => {
         const notifications =
           signerConnectResponse.result.notifications[username];
         if (notifications?.length > 0) {
-          await dispatch(addUserNotifications(notifications));
+          await dispatch(addBroadcastNotifications(notifications));
         }
       }
       await dispatch(signerConnectActive(signerConnectResponse));
@@ -160,7 +159,7 @@ const LoginForm = () => {
         const notifications =
           signerConnectResponse.result.notifications[username];
         if (notifications?.length > 0) {
-          await dispatch(addUserNotifications(notifications));
+          await dispatch(addBroadcastNotifications(notifications));
         }
       }
       await dispatch(signerConnectPosting(signerConnectResponse));

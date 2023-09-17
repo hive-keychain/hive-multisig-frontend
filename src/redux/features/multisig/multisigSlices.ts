@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
 import {
+  addBroadcastNotifications,
   addBroadcastedTransaction,
   addSignRequest,
-  addUserNotifications,
   notifyBroadcastedTransaction,
   notifySignRequest,
   removeSignRequest,
-  resetNotifications,
+  resetBroadcastNotifications,
   setSignRequestCount,
   signerConnectActive,
   signerConnectMessageActive,
@@ -161,7 +161,7 @@ const multisigSlice = createSlice({
       }
     });
 
-    builder.addCase(addUserNotifications.fulfilled, (state, action) => {
+    builder.addCase(addBroadcastNotifications.fulfilled, (state, action) => {
       if (action.payload) {
         action.payload.forEach((notif) => {
           const exsisting = state.userNotifications.find(
@@ -175,7 +175,7 @@ const multisigSlice = createSlice({
       }
     });
 
-    builder.addCase(resetNotifications.fulfilled, (state, action) => {
+    builder.addCase(resetBroadcastNotifications.fulfilled, (state, action) => {
       state.userNotifications = [...action.payload];
     });
 

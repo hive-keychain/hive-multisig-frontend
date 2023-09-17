@@ -30,7 +30,6 @@ const NavBar = () => {
   const [destination, setDestination] = useState<string>('');
   const [displayLoginBtn, setDisplayLoginBtn] = useState(false);
   const loginExpirationInSec = Config.login.expirationInSec;
-  const loginState = useAppSelector((state) => state.login.loginState);
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
   );

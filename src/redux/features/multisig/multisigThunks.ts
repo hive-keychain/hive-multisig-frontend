@@ -86,15 +86,15 @@ export const addSignRequest = createAsyncThunk(
   },
 );
 
-export const addUserNotifications = createAsyncThunk(
-  'multisig/addUserNotifications',
+export const addBroadcastNotifications = createAsyncThunk(
+  'multisig/addBroadcastNotifications',
   async (notification: UserNotification[]) => {
     return notification;
   },
 );
 
-export const resetNotifications = createAsyncThunk(
-  'multisig/resetNotifications',
+export const resetBroadcastNotifications = createAsyncThunk(
+  'multisig/resetBroadcastNotifications',
   async () => {
     return [] as UserNotification[];
   },

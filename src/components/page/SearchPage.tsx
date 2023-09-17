@@ -1,5 +1,4 @@
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -16,16 +15,6 @@ import {
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { loginActions } from '../../redux/features/login/loginSlice';
 import { multisigActions } from '../../redux/features/multisig/multisigSlices';
-import {
-  addBroadcastedTransaction,
-  addSignRequest,
-  addUserNotifications,
-  notifyBroadcastedTransaction,
-  signerConnectActive,
-  signerConnectPosting,
-  subscribeToBroadcastedTransactions,
-  subscribeToSignRequests,
-} from '../../redux/features/multisig/multisigThunks';
 import { transactionActions } from '../../redux/features/transaction/transactionSlices';
 import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import AccountUtils from '../../utils/hive.utils';
@@ -183,105 +172,12 @@ export const HomePage: React.FC<ISearchPageInterface> = (
       if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
         handleLogout();
         navigate('/');
-      } else {
-        connectToBackend();
       }
     } else {
       navigate('/');
     }
   }, []);
 
-  const subToSignRequests = async () => {
-    const subscribeRes = await multisig.wss.onReceiveSignRequest(
-      signRequestCallback,
-    );
-    dispatch(subscribeToSignRequests(subscribeRes));
-  };
-  const subToBroadcastedTransactions = async () => {
-    const subscribeRes = await multisig.wss.onBroadcasted(
-      broadcastedTransactionCallback,
-    );
-    dispatch(subscribeToBroadcastedTransactions(subscribeRes));
-  };
-  const signRequestCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addSignRequest([message]));
-    }
-  };
-  const broadcastedTransactionCallback = async (message: SignatureRequest) => {
-    if (message) {
-      await dispatch(addBroadcastedTransaction([message]));
-      await dispatch(notifyBroadcastedTransaction(true));
-    }
-  };
-
-  const connectActive = async () => {
-    if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        activeConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              activeConnectMessage.username
-            ];
-          if (pendingReqs?.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
-        }
-
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              activeConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectActive(signerConnectResponse));
-      } else {
-        console.log('connectActive Failed');
-      }
-    }
-  };
-  const connectPosting = async () => {
-    if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        postingConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              postingConnectMessage.username
-            ];
-          if (pendingReqs.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-          }
-        }
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              postingConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectPosting(signerConnectResponse));
-      } else {
-        console.log('connectPosting Failed');
-      }
-    }
-  };
-  const connectToBackend = async () => {
-    await connectPosting();
-    await connectActive();
-    await subToSignRequests();
-    await subToBroadcastedTransactions();
-  };
   const handleLogout = async () => {
     setLoginTimestamp(0);
     setStorageAccountDetails(null);

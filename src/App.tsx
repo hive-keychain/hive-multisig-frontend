@@ -12,11 +12,12 @@ import { useAppDispatch, useAppSelector } from './redux/app/hooks';
 import { LoginState, loginActions } from './redux/features/login/loginSlice';
 import { multisigActions } from './redux/features/multisig/multisigSlices';
 import {
+  addBroadcastNotifications,
   addBroadcastedTransaction,
   addSignRequest,
-  addUserNotifications,
   notifyBroadcastedTransaction,
   notifySignRequest,
+  resetBroadcastNotifications,
   signerConnectActive,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
@@ -53,6 +54,10 @@ function App() {
     (state) => state.multisig.multisig.broadcastNotification,
   );
 
+  const onLoginNotif = useAppSelector(
+    (state) => state.multisig.multisig.userNotifications,
+  );
+
   const connectActiveKey = useAppSelector(
     (state) => state.multisig.multisig.signerConnectActive,
   );
@@ -75,11 +80,26 @@ function App() {
   }, [signRequestNotif]);
   useEffect(() => {
     if (broadcastNotif && loginState !== LoginState.LOGGED_OUT) {
-      alert('A transaction as been broadcasted');
+      alert('A transaction has been broadcasted');
       navigate('/signRequest');
       dispatch(notifyBroadcastedTransaction(false));
     }
   }, [broadcastNotif]);
+
+  useEffect(() => {
+    if (onLoginNotif && loginState !== LoginState.LOGGED_OUT) {
+      if (onLoginNotif.length > 0) {
+        alert(
+          `${onLoginNotif.length > 1 ? onLoginNotif.length : 'A'} transaction${
+            onLoginNotif.length > 1 ? 's' : ''
+          } has been broadcasted`,
+        );
+        navigate('/signRequest');
+        dispatch(resetBroadcastNotifications());
+      }
+    }
+  }, [onLoginNotif]);
+
   useEffect(() => {
     if (connectActiveKey && connectPostingKey && isLoggedIn()) {
       setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
@@ -109,7 +129,6 @@ function App() {
   };
   const subToSignRequests = async () => {
     try {
-      console.log(`subToSignRequests here`);
       const subscribeRes = await multisig.wss.onReceiveSignRequest(
         signRequestCallback,
       );
@@ -120,7 +139,6 @@ function App() {
   };
   const subToBroadcastedTransactions = async () => {
     try {
-      console.log(`subToBroadcastedTransactions here`);
       const subscribeRes = await multisig.wss.onBroadcasted(
         broadcastedTransactionCallback,
       );
@@ -165,7 +183,7 @@ function App() {
               activeConnectMessage.username
             ];
           if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
+            await dispatch(addBroadcastNotifications(notifications));
           }
         }
         await dispatch(signerConnectActive(signerConnectResponse));
@@ -195,7 +213,7 @@ function App() {
               postingConnectMessage.username
             ];
           if (notifications?.length > 0) {
-            await dispatch(addUserNotifications(notifications));
+            await dispatch(addBroadcastNotifications(notifications));
           }
         }
         await dispatch(signerConnectPosting(signerConnectResponse));
