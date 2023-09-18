@@ -87,7 +87,7 @@
     "dev": "webpack serve --mode development --open --hot",
     "build": "webpack --mode production",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist -a"
+    "deploy": "echo 'multisig.hive-keychain.com' > ./dist/CNAME && gh-pages -d dist -a"
   },
   "devDependencies": {
     "@types/bytebuffer": "^5.0.44",
