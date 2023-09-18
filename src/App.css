@@ -1,0 +1,167 @@
+a.nounderline {
+  text-decoration: none;
+}
+@media (min-width: 576px) {
+  .w-lg-50 {
+    width: 50% !important;
+  }
+}
+@media (min-width: 768px) {
+  .w-md-50 {
+    width: 50% !important;
+  }
+}
+
+@media (min-width: 1200px) {
+  .w-xl-50 {
+    width: 50% !important;
+  }
+}
+.nav-text-color {
+  color: rgba(255, 255, 255, 0.55);
+}
+.search-input-group {
+  width: 20% !important;
+  position: relative;
+}
+.navbar-avatar-menu {
+  border-radius: 0px;
+}
+.navbar-search-btn {
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid rgba(71, 70, 70, 0.55);
+  border-radius: 0px;
+  box-shadow: none;
+}
+.navbar-search-btn:hover {
+  color: rgb(33, 37, 41);
+  background-color: rgb(33, 37, 41);
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid rgba(71, 70, 70, 0.55);
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+.navbar-search-btn:focus {
+  color: rgb(33, 37, 41);
+  background-color: rgb(33, 37, 41);
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid rgba(71, 70, 70, 0.55);
+  border-radius: 0px;
+  box-shadow: none;
+}
+
+.navbar-input-border-color {
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid rgba(71, 70, 70, 0.55);
+  border-radius: 0px;
+  box-shadow: none;
+  /* outline: none; */
+}
+.navbar-input-border-color:focus {
+  color: rgb(33, 37, 41);
+  background-color: rgb(33, 37, 41);
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid rgba(71, 70, 70, 0.55);
+  border-radius: 0px;
+  outline: none;
+  box-shadow: none;
+}
+.navbar-input-border-color::-ms-clear {
+  display: none;
+}
+.gray-input-outline {
+  border-color: gray;
+}
+.red-input-outline {
+  border-color: red;
+}
+.blue-input-outline {
+  border-color: blue;
+}
+.txn-crd-btn {
+  width: 100px !important;
+}
+.acc-crd-btn {
+  width: 73px !important;
+}
+.avatar-sm {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+.avatar-md {
+  height: 70px;
+  width: 70px;
+  border-radius: 50%;
+}
+html {
+  min-height: 100%;
+}
+
+body,
+#root,
+.App {
+  height: 100vh;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+}
+
+.footer-text {
+  text-align: center;
+  padding-bottom: 10px;
+}
