@@ -3,8 +3,8 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 
 const getOptions = () => {
   return {
-    apiAddress: 'http://localhost:5000',
-    socketAddress: 'http://localhost:5001',
+    apiAddress: process.env.API_ADDRESS || 'http://localhost:5000',
+    socketAddress: process.env.SOCKET_ADDRESS || 'http://localhost:5001',
     clientAddress: 'https://api.deathwing.me',
   };
 };
