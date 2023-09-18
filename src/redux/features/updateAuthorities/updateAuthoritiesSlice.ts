@@ -8,9 +8,10 @@ import {
   IHiveAccountUpdateBroadcast,
 } from '../../../interfaces';
 import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
-import { AccountUpdateBroadcast } from '../../../utils/hive-keychain.utils';
-import { BroadcastUpdateAccount } from '../../../utils/hive.utils';
-
+import {
+  default as AccountUtils,
+  default as HiveUtils,
+} from '../../../utils/hive.utils';
 export type AuthorityUpdateStateType = {
   Authorities: Authorities;
   NewAuthorities: Authorities;
@@ -40,7 +41,7 @@ const initialState: AuthorityUpdateStateType = {
 export const hiveKeyChainRequestBroadCast = createAsyncThunk(
   'updateAuthority/hiveBroadcast',
   async (props: IHiveAccountUpdateBroadcast) => {
-    const response = await AccountUpdateBroadcast(props);
+    const response = await HiveUtils.accountUpdateBroadcast(props);
     return response;
   },
 );
@@ -48,7 +49,10 @@ export const hiveKeyChainRequestBroadCast = createAsyncThunk(
 export const dhiveBroadcastUpdateAccount = createAsyncThunk(
   'updateAuthority/dhiveBroadcast',
   async ({ newAuthorities, ownerKey }: IDHiveAccountUpdateBroadcast) => {
-    const response = await BroadcastUpdateAccount({ newAuthorities, ownerKey });
+    const response = await AccountUtils.broadcastUpdateAccount({
+      newAuthorities,
+      ownerKey,
+    });
     return response;
   },
 );
@@ -88,6 +92,13 @@ export const removeAuthorityAccount = (
   }
   return [...array];
 };
+
+export const clearAuthorityState = createAsyncThunk(
+  'updateAuthority/clearAuthorityState',
+  async () => {
+    return {} as AuthorityUpdateStateType;
+  },
+);
 const updateAuthoritySlice = createSlice({
   name: 'updateAuthority',
   initialState,
@@ -297,6 +308,7 @@ const updateAuthoritySlice = createSlice({
     setOwnerKey(state, action: PayloadAction<string>) {
       state.ownerKey = action.payload;
     },
+    resetState: () => initialState,
   },
   extraReducers: (builder) => {
     builder.addCase(
@@ -325,6 +337,10 @@ const updateAuthoritySlice = createSlice({
       state.isUpdateSucces = false;
       state.error = 'DHive Update Error';
     });
+    builder.addCase(
+      updateAuthoritySlice.actions.resetState,
+      () => initialState,
+    );
   },
 });
 
@@ -335,4 +351,6 @@ export const {
   setOwnerKey,
   addAccount,
   deleteAccount,
+  resetState,
 } = updateAuthoritySlice.actions;
+export const updateAuthorityActions = updateAuthoritySlice.actions;

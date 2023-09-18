@@ -177,7 +177,7 @@ function UpdateAuthoritiesConfirmation({ show, handleClose }: Iprops) {
           {isOwnerUpdate || isPostingUpdate || !isOriginalActiveSufficient ? (
             <OnwerKeyInput setOwnerKey={setKey} />
           ) : !updateError ? (
-            <Form.Label>Are you sure you wanna update?</Form.Label>
+            <Form.Label>Are you sure you want to update?</Form.Label>
           ) : (
             ''
           )}

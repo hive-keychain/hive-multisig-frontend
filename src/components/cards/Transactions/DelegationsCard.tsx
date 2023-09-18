@@ -4,24 +4,27 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
 import {
-  RequestSignTx,
-  fromHP,
-  getDynamicGlobalProperties,
-} from '../../../utils/hive-keychain.utils';
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
+import HiveUtils from '../../../utils/hive.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
-const DelegationsCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+function DelegationsCard() {
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+    useState<LoginResponseType>(loggedInAccount);
+  const [operation, setOps] = useState<Hive.DelegateVestingSharesOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [assetType, setAssetType] = useState<Hive.AssetSymbol | string>('HP');
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
@@ -30,10 +33,11 @@ const DelegationsCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -65,26 +69,11 @@ const DelegationsCard: React.FC<{}> = () => {
     }
   }, [errorMessage]);
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleAssetChange = (value: string) => {
     switch (value) {
@@ -99,27 +88,29 @@ const DelegationsCard: React.FC<{}> = () => {
   const handleTransaction = async (values: any) => {
     let asset: string;
     if (assetType === 'HP') {
-      await getDynamicGlobalProperties('PowerUp', []).then((response) => {
-        if (response) {
-          var vests = fromHP(
-            parseInt(hiveDecimalFormat(values.vesting_shares, 3)),
-            response,
-          );
-          asset = vests.toString() + ` VESTS`;
-        }
-      });
+      await HiveUtils.getDynamicGlobalProperties('PowerUp', []).then(
+        (response) => {
+          if (response) {
+            var vests = HiveUtils.fromHP(
+              parseInt(hiveDecimalFormat(values.vesting_shares, 3)),
+              response,
+            );
+            asset = vests.toString() + ` VESTS`;
+          }
+        },
+      );
     } else {
       asset = hiveDecimalFormat(values.vesting_shares, 6) + ` VESTS`;
     }
-    const tx: Hive.DelegateVestingSharesOperation = {
-      0: 'delegate_vesting_shares',
-      1: {
+    const op: Hive.DelegateVestingSharesOperation = [
+      'delegate_vesting_shares',
+      {
         delegatee: values.delegatee,
         delegator: values.delegator,
         vesting_shares: asset,
       },
-    };
-    setTransaction(tx);
+    ];
+    setOps(op);
   };
   return (
     <div>
@@ -130,8 +121,9 @@ const DelegationsCard: React.FC<{}> = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           delegatee: '',
@@ -183,14 +175,13 @@ const DelegationsCard: React.FC<{}> = () => {
                     }
                     error={errors.vesting_shares}
                   />
-                  <Expiration setExpiration={setExpiration} />
+                  <Expiration setExpiration={setTxExpiration} />
 
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>
@@ -201,6 +192,6 @@ const DelegationsCard: React.FC<{}> = () => {
       </Formik>
     </div>
   );
-};
+}
 
 export default DelegationsCard;

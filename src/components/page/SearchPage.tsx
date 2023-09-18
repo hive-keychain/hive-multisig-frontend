@@ -1,17 +1,20 @@
+import { HiveMultisig } from 'hive-multisig-sdk/src';
 import React, { useEffect, useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useReadLocalStorage } from 'usehooks-ts';
+import { useLocalStorage, useReadLocalStorage } from 'usehooks-ts';
+import { Config } from '../../config';
 import {
   Authorities,
   ISearchBarInterface,
   ISearchPageInterface,
-  SignResponseType,
+  LoginResponseType,
 } from '../../interfaces';
 import { useAppSelector } from '../../redux/app/hooks';
 import AccountUtils from '../../utils/hive.utils';
+import { MultisigUtils } from '../../utils/multisig.utils';
 import AccountPage from './AccountPage';
 import SearchAccountPage from './SearchAccountPage';
 
@@ -19,19 +22,10 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
   props: ISearchBarInterface,
 ) => {
   const [input, setInput] = useState<string>('');
-  const [isKeychain, setKeychain] = useState<boolean>(true);
-  const isKeyChainFound = useAppSelector<boolean>(
-    (state) => state.keychain.isKeyChainFound,
-  );
-  const keyChainMsg = useAppSelector((state) => state.keychain.message);
-  const keyChainError = useAppSelector((state) => state.keychain.error);
+
   const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setKeychain(isKeyChainFound);
-  }, [isKeyChainFound]);
 
   useEffect(() => {
     const keyDownHandler = (e: KeyboardEvent) => {
@@ -53,17 +47,6 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
     }
   };
 
-  const DispalyHiveKeyChainError = () => {
-    if (!isKeychain) {
-      return (
-        <div className="ms-2 text-start" style={{ color: 'red' }}>
-          {keyChainError}
-        </div>
-      );
-    } else {
-      return <div></div>;
-    }
-  };
   const DisplayValidity = () => {
     if (props.isValid === false) {
       return (
@@ -86,7 +69,6 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
         <h5>Search Account</h5>
       </div>
       <DisplayValidity />
-      <DispalyHiveKeyChainError />
       <InputGroup className="mb-3">
         <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
 
@@ -100,6 +82,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
           value={input}
         />
         <Button
+          type="button"
           variant="outline-secondary"
           id="button-addon2"
           onClick={(e) => handleOnClick()}>
@@ -115,19 +98,43 @@ export const HomePage: React.FC<ISearchPageInterface> = (
 ) => {
   const [authorities, setAuthorities] = useState<Authorities>();
   const [isValid, setValid] = useState<boolean>();
+  const [searchKey, setSearchKey] = useState<string>();
   const params = useParams();
-  const searchKey = params.id;
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const [accountDetails, setStorageAccountDetails] = useLocalStorage(
+    'accountDetails',
+    signedAccountObj,
+  );
+  const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
   const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
+  const loginExpirationInSec = Config.login.expirationInSec;
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
+    'loginTimestap',
+    null,
+  );
+
   const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
+  const getAuth = async () => {
+    const auth = await AccountUtils.getAccountAuthorities(searchKey);
+    if (auth) {
+      setAuthorities(auth);
+    }
+  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    AccountUtils.GetAuthorities(setAuthorities, setValid, searchKey);
+    setSearchKey(params.id.replace('@', ''));
+  }, [params.id]);
+
+  useEffect(() => {
+    getAuth();
   }, [searchKey]);
 
   useEffect(() => {
     if (authorities) {
+      setValid(true);
       if (loggedInAccount) {
         if (loggedInAccount.data.username === searchKey) {
           setAccountSearch(false);
@@ -141,6 +148,13 @@ export const HomePage: React.FC<ISearchPageInterface> = (
       setAccountSearch(false);
     }
   }, [authorities]);
+
+  useEffect(() => {
+    if (!signedAccountObj) {
+      navigate('/');
+    }
+  }, []);
+
   return (
     <div>
       <SearchBar username={searchKey} isValid={isValid} />

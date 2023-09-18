@@ -4,20 +4,24 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { RequestSignTx } from '../../../utils/hive-keychain.utils';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 export const BlogpostOperationCard = () => {
+  const dispatch = useAppDispatch();
   const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+    useState<LoginResponseType>(loggedInAccount);
+  const [operation, setOps] = useState<Hive.CommentOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -25,10 +29,11 @@ export const BlogpostOperationCard = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -48,34 +53,17 @@ export const BlogpostOperationCard = () => {
       setOnErrorShow(true);
     }
   }, [errorMessage]);
-
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-          'Posting',
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const tx: Hive.CommentOperation = {
-      0: 'comment',
-      1: {
+    const op: Hive.CommentOperation = [
+      'comment',
+      {
         parent_author: values.parent_author,
         parent_permlink: values.parent_permlink,
         author: values.author,
@@ -84,8 +72,8 @@ export const BlogpostOperationCard = () => {
         body: values.body,
         json_metadata: values.json_metadata,
       },
-    };
-    setTransaction(tx);
+    ];
+    setOps(op);
   };
   const schema = yup.object().shape({
     author: yup.string().required('Required'),
@@ -105,8 +93,9 @@ export const BlogpostOperationCard = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values, helpers) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           author: accountDetails ? accountDetails.data.username : '',
@@ -191,14 +180,13 @@ export const BlogpostOperationCard = () => {
                     }
                     error={errors.json_metadata}
                   />
-                  <Expiration setExpiration={setExpiration} />
+                  <Expiration setExpiration={setTxExpiration} />
 
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

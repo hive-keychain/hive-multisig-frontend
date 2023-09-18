@@ -4,23 +4,28 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form, Row } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { RequestSignTx } from '../../../utils/hive-keychain.utils';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { AddArrayFieldType } from './AddArrayField';
 import { Expiration } from './Expiration';
 import { FieldArrayCard } from './FieldArrayCard';
 import { InputRow } from './InputRow';
-
 function BroadcastJson() {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
   const [newAuth, setNewAuth] = useState<string>('');
   const [newPostingAuth, setNewPostingAuth] = useState<string>('');
-  const [transaction, setTransaction] = useState<object>();
+  const [operation, setOps] = useState<Hive.CustomJsonOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -28,10 +33,11 @@ function BroadcastJson() {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -52,38 +58,23 @@ function BroadcastJson() {
     }
   }, [errorMessage]);
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const tx: Hive.CustomJsonOperation = {
-      0: 'custom_json',
-      1: {
+    const op: Hive.CustomJsonOperation = [
+      'custom_json',
+      {
         id: values.id,
         json: values.json,
         required_auths: values.required_auths,
         required_posting_auths: values.required_posting_auths,
       },
-    };
-    setTransaction(tx);
+    ];
+    setOps(op);
   };
 
   const schema = yup.object().shape({
@@ -134,8 +125,9 @@ function BroadcastJson() {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           id: '',
@@ -202,13 +194,12 @@ function BroadcastJson() {
                     invalidFlag={touched.json && !!errors.json}
                     error={errors.json}
                   />
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

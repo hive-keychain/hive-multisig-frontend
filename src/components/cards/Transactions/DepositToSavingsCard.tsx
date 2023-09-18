@@ -4,24 +4,27 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
+import { useAppDispatch } from '../../../redux/app/hooks';
 import {
-  GetNextRequestID,
-  RequestSignTx,
-} from '../../../utils/hive-keychain.utils';
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
+import HiveUtils from '../../../utils/hive.utils';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 const DepositToSavingsCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
+    useState<LoginResponseType>(loggedInAccount);
+  const [operation, setOps] = useState<Hive.TransferToSavingsOperation>();
   const [assetType, setAssetType] = useState<Hive.AssetSymbol>('HIVE');
-  const [transaction, setTransaction] = useState<object>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -29,10 +32,11 @@ const DepositToSavingsCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
   useEffect(() => {
     setAccountDetails(loggedInAccount);
@@ -54,41 +58,28 @@ const DepositToSavingsCard: React.FC<{}> = () => {
   }, [errorMessage]);
 
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
     const asset: string = hiveDecimalFormat(values.amount) + ` ${assetType}`;
-    const rqid = await GetNextRequestID(loggedInAccount.data.username);
-    const tx: Hive.TransferToSavingsOperation = {
-      0: 'transfer_to_savings',
-      1: {
+    const rqid = await HiveUtils.getNextRequestID(
+      loggedInAccount.data.username,
+    );
+    const op: Hive.TransferToSavingsOperation = [
+      'transfer_to_savings',
+      {
         amount: asset,
         from: values.from,
         memo: values.memo,
         request_id: rqid,
         to: values.to,
       },
-    };
-    setTransaction(tx);
+    ];
+    setOps(op);
   };
 
   const handleAssetChange = (value: string) => {
@@ -121,8 +112,9 @@ const DepositToSavingsCard: React.FC<{}> = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           amount: 0,
@@ -186,13 +178,12 @@ const DepositToSavingsCard: React.FC<{}> = () => {
                     invalidFlag={touched.memo && !!errors.memo}
                     error={errors.memo}
                   />
-                  <Expiration setExpiration={setExpiration} />
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <Expiration setExpiration={setTxExpiration} />
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

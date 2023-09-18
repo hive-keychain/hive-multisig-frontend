@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Badge,
   Button,
   Container,
   Dropdown,
@@ -15,7 +16,10 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { logout } from '../../redux/features/login/loginSlice';
+import { loginActions } from '../../redux/features/login/loginSlice';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
+import { transactionActions } from '../../redux/features/transaction/transactionSlices';
+import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
@@ -24,9 +28,16 @@ import {
 const NavBar = () => {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [destination, setDestination] = useState<string>('');
+  const [displayLoginBtn, setDisplayLoginBtn] = useState(false);
   const loginExpirationInSec = Config.login.expirationInSec;
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
+  );
+  const signRequest = useAppSelector(
+    (state) => state.multisig.multisig.signRequests,
+  );
+  const setSignRequestCount = useAppSelector(
+    (state) => state.multisig.multisig.signRequestCount,
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [isLoggedIn, setStorageIsLoggedIn] = useLocalStorage(
@@ -76,12 +87,17 @@ const NavBar = () => {
       setDestination('/login');
     }
   }, [isLoggedIn, loginTimestamp, accountDetails]);
-  const handleLogout = () => {
+
+  const handleLogout = async () => {
     if (isLoggedIn) {
-      dispatch(logout(null));
+      dispatch(loginActions.logout());
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
+      setDestination('/');
+      await dispatch(multisigActions.resetState());
+      await dispatch(transactionActions.resetState());
+      await dispatch(updateAuthorityActions.resetState());
     }
   };
   return (
@@ -93,13 +109,20 @@ const NavBar = () => {
       variant="dark"
       sticky="top">
       <Container fluid>
-        <Navbar.Brand className="nav-text-color" href="/">
+        <Navbar.Brand
+          className="nav-text-color ms-0 me-1"
+          style={{ paddingRight: 15 }}
+          onClick={() => {
+            isLoggedIn && accountDetails
+              ? setDestination('/transaction')
+              : setDestination('/');
+          }}>
           <img
             alt=""
             src="img/logohive.png"
             width="30"
             height="30"
-            className="d-inline-block align-top"
+            className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
           Hive Multisig
@@ -109,29 +132,33 @@ const NavBar = () => {
           aria-controls="responsive-navbar-nav"
         />
         <Navbar.Collapse
-          className="mt-2 mt-sm-2 mt-md-3 mt-lg-0"
+          className="mt-2 mt-sm-2 mt-md-3 mt-lg-0 pe-auto"
           id="responsive-navbar-nav ">
           {/*Search bar when not collapsed and logged out*/}
+          {!accountDetails ? (
+            <div className="text-secondary ms-2">{'Search'}</div>
+          ) : (
+            ''
+          )}
           <NavSearchBar
-            classNames="w-auto me-auto"
-            isLoggedIn={!isLoggedIn}
+            classNames="w-auto ms-1 me-auto"
+            isLoggedIn={!accountDetails}
             setDestination={setDestination}
           />
-          {isLoggedIn ? (
+          {isLoggedIn && accountDetails ? (
             <NavUserAvatar
               classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
               username={accountDetails.data.username}
             />
           ) : null}
-
           {/*Navs*/}
           <Nav className="me-2">
-            {isLoggedIn ? (
+            {isLoggedIn && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/transaction')}>
-                Transaction
+                Transactions
               </Nav.Link>
             ) : null}
-            {isLoggedIn ? (
+            {isLoggedIn && accountDetails ? (
               <Nav.Link
                 onClick={() =>
                   setDestination(`@${accountDetails.data.username}`)
@@ -139,22 +166,35 @@ const NavBar = () => {
                 Update Account
               </Nav.Link>
             ) : null}
+            {isLoggedIn && accountDetails ? (
+              <Nav.Link onClick={() => setDestination('/signRequest')}>
+                Sign Requests{' '}
+                {signRequest ? (
+                  <Badge bg="danger">
+                    {setSignRequestCount > 0 ? setSignRequestCount : ''}
+                  </Badge>
+                ) : null}
+              </Nav.Link>
+            ) : (
+              <Nav className="ml-auto">
+                <Nav.Link href="/login">Login</Nav.Link>
+              </Nav>
+            )}
           </Nav>
-
-          {/*Search bar when collapsed and logged in*/}
-
+          {/* Search bar when collapsed and logged in
           <NavSearchBar
             classNames="w-auto mt-2 me-auto d-md d-lg-none d-xl-none d-xxl-none"
             isLoggedIn={isLoggedIn}
             setDestination={setDestination}
           />
-          {/*Search bar when not collapsed and logged in*/}
+          {Search bar when not collapsed and logged in}
           <NavSearchBar
             classNames="w-auto  d-xs-none d-none d-sm-none d-md-none d-lg-flex"
             isLoggedIn={isLoggedIn}
             setDestination={setDestination}
-          />
-          {isLoggedIn ? (
+          /> 
+          */}
+          {isLoggedIn && accountDetails ? (
             <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
               <Nav.Link
                 className="nav-text-color"
@@ -166,17 +206,13 @@ const NavBar = () => {
             </div>
           ) : null}
           {/* Login button when logged out */}
-          {!isLoggedIn ? (
-            <Nav className="ms-auto">
-              <Nav.Link href="/login">Login</Nav.Link>
-            </Nav>
-          ) : (
+          {isLoggedIn && accountDetails ? (
             <NavUserAvatarDropdown
               classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
               username={accountDetails.data.username}
               handleLogout={handleLogout}
             />
-          )}
+          ) : null}
         </Navbar.Collapse>
       </Container>
     </Navbar>
@@ -217,7 +253,7 @@ const NavSearchBar = ({
         <Form.Control
           type="text"
           placeholder="Username"
-          className="bg-dark ps-1 pe-0 text-secondary navbar-input-border-color "
+          className="bg-dark ps-0 pe-0 text-secondary navbar-input-border-color "
           aria-label="Search"
           value={username}
           onChange={(e) => {
@@ -293,9 +329,12 @@ const NavUserAvatar = ({
   username,
   handleLogout,
 }: INavUserAvatarProps) => {
+  const navigate = useNavigate();
   return (
     <Stack className={classNames} direction="horizontal">
-      <Navbar.Brand className="me-md-2 me-lg-1" href="/">
+      <Navbar.Brand
+        className="me-md-2 me-lg-1"
+        onClick={() => navigate('/transaction')}>
         <img
           className="avatar-sm"
           src={`https://images.hive.blog/u/${username}/avatar`}
@@ -303,7 +342,9 @@ const NavUserAvatar = ({
         />
       </Navbar.Brand>
       <Nav>
-        <Nav.Link className="nav-text-color" href="/">
+        <Nav.Link
+          className="nav-text-color"
+          onClick={() => navigate('/transaction')}>
           {username}
         </Nav.Link>
       </Nav>

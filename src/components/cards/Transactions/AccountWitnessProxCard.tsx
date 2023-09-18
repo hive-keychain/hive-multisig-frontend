@@ -4,19 +4,25 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import * as yup from 'yup';
-import { SignResponseType } from '../../../interfaces';
+import { LoginResponseType } from '../../../interfaces';
 import { ErrorMessage } from '../../../interfaces/errors.interface';
 import { IExpiration } from '../../../interfaces/transaction.interface';
-import { RequestSignTx } from '../../../utils/hive-keychain.utils';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import {
+  setExpiration,
+  setOperation,
+} from '../../../redux/features/transaction/transactionThunks';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 
 const AccountWitnessProxCard: React.FC<{}> = () => {
-  let loggedInAccount = useReadLocalStorage<SignResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
+  const dispatch = useAppDispatch();
   const [accountDetails, setAccountDetails] =
-    useState<SignResponseType>(loggedInAccount);
-  const [transaction, setTransaction] = useState<object>();
+    useState<LoginResponseType>(loggedInAccount);
+  const [operation, setOps] = useState<Hive.AccountWitnessProxyOperation>();
   const [onErrorShow, setOnErrorShow] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<ErrorMessage>({
     Title: '',
@@ -24,10 +30,11 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
     ErrorName: '',
     ErrorMessage: '',
   });
-  const [expiration, setExpiration] = useState<IExpiration>({
+  const [expiration, setTxExpiration] = useState<IExpiration>({
     days: 0,
     hours: 0,
     minutes: 0,
+    date: undefined,
   });
 
   useEffect(() => {
@@ -51,36 +58,21 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
   }, [errorMessage]);
 
   useEffect(() => {
-    if (transaction) {
-      const sign = async () => {
-        const res = await RequestSignTx(
-          accountDetails.data.username,
-          transaction,
-          expiration,
-          setErrorMessage,
-        );
-        if (res) {
-          setErrorMessage({
-            Title: 'Transaction Success!',
-            Code: '',
-            ErrorName: '',
-            ErrorMessage: '',
-          });
-        }
-      };
-      sign().catch(() => {});
-    }
-  }, [transaction]);
+    dispatch(setExpiration(expiration));
+  }, [expiration]);
+  useEffect(() => {
+    dispatch(setOperation(operation));
+  }, [operation]);
 
   const handleTransaction = async (values: any) => {
-    const tx: Hive.AccountWitnessProxyOperation = {
-      0: 'account_witness_proxy',
-      1: {
+    const op: Hive.AccountWitnessProxyOperation = [
+      'account_witness_proxy',
+      {
         account: values.account,
         proxy: values.proxy,
       },
-    };
-    setTransaction(tx);
+    ];
+    setOps(op);
   };
   const schema = yup.object().shape({
     account: yup.string().required('Required'),
@@ -96,8 +88,9 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
       />
       <Formik
         validationSchema={schema}
-        onSubmit={(values) => {
+        onSubmit={(values, actions) => {
           handleTransaction(values);
+          actions.resetForm();
         }}
         initialValues={{
           account: accountDetails ? accountDetails.data.username : '',
@@ -133,14 +126,13 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
                     invalidFlag={touched.proxy && !!errors.proxy}
                     error={errors.proxy}
                   />
-                  <Expiration setExpiration={setExpiration} />
+                  <Expiration setExpiration={setTxExpiration} />
 
-                  <Button
-                    type="submit"
-                    className="pull-right"
-                    variant="success">
-                    Submit
-                  </Button>
+                  <div className="d-flex justify-content-end">
+                    <Button type="submit" className="" variant="success">
+                      Submit
+                    </Button>
+                  </div>
                   <br />
                   <br />
                 </Form>

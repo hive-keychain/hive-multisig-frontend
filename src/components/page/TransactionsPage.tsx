@@ -1,8 +1,31 @@
+import { KeychainKeyTypes } from 'hive-keychain-commons';
+import { HiveMultisig } from 'hive-multisig-sdk/src';
+import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useReadLocalStorage } from 'usehooks-ts';
-import { SignResponseType } from '../../interfaces';
+import useLocalStorage from 'usehooks-ts/dist/esm/useLocalStorage/useLocalStorage';
+import { Config } from '../../config';
+import {
+  ITransaction,
+  Initiator,
+} from '../../interfaces/transaction.interface';
+import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import {
+  resetOperation,
+  setAuthority,
+  setInitiator,
+  setTransactionMethod,
+  setTransactionName,
+} from '../../redux/features/transaction/transactionThunks';
+import HiveUtils from '../../utils/hive.utils';
+import HiveTxUtils from '../../utils/hivetx.utils';
+import { MultisigUtils } from '../../utils/multisig.utils';
+import {
+  getElapsedTimestampSeconds,
+  getISOStringDate,
+  getTimestampInSeconds,
+} from '../../utils/utils';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
 import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
 import BroadcastJson from '../cards/Transactions/BroadcastJson';
@@ -19,28 +42,120 @@ import { VoteOperationCard } from '../cards/Transactions/VoteOperationCard';
 import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCard';
 
 export const TransactionPage = () => {
-  const loggedInAccount =
-    useReadLocalStorage<SignResponseType>('accountDetails');
+  const loginExpirationInSec = Config.login.expirationInSec;
+
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
+    'loginTimestap',
+    null,
+  );
+
+  const transactionState = useAppSelector(
+    (state) => state.transaction.transaction,
+  );
+
+  const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+
+  const operation = useAppSelector(
+    (state) => state.transaction.transaction.operation,
+  );
+
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+
   const [transactionType, setTransactionType] =
     useState<string>('TransferOperation');
+
   const [transactionCard, setTransactionCard] = useState<ReactNode>();
+
+  const [method, setMethod] = useState<KeychainKeyTypes>(
+    KeychainKeyTypes.active,
+  );
+
   const navigate = useNavigate();
 
+  const dispatch = useAppDispatch();
+
   useEffect(() => {
-    if (loggedInAccount) {
+    if (signedAccountObj) {
       document.title = 'Hive Multisig - Transaction';
+      dispatch(resetOperation());
+      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     } else {
-      navigate('/login');
+      navigate('/');
     }
   }, []);
-  useEffect(() => {
-    if (!loggedInAccount) {
-      navigate('/login');
-    }
-  }, [loggedInAccount]);
+
   useEffect(() => {
     handleSelectOnChange(transactionType);
+    dispatch(setTransactionName(transactionType));
   }, [transactionType]);
+
+  useEffect(() => {
+    if (signedAccountObj && isLoggedIn()) {
+      dispatchTxAsync();
+    }
+  }, [method]);
+
+  useEffect(() => {
+    if (operation && isLoggedIn()) {
+      (async () => {
+        const transaction = await HiveTxUtils.createTx(
+          [operation],
+          transactionState.expiration,
+        );
+        const txEncode: IEncodeTransaction = {
+          transaction: transaction,
+          method: transactionState.method,
+          expirationDate: getISOStringDate(transactionState.expiration),
+          initiator: { ...transactionState.initiator },
+        };
+
+        try {
+          const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
+          multisig.wss.requestSignatures(encodedTxObj).then(() => {
+            dispatch(resetOperation());
+          });
+        } catch (error) {
+          alert(`${error}`);
+        }
+      })();
+    }
+  }, [operation]);
+
+  const dispatchTxAsync = async () => {
+    try {
+      const txInfo: ITransaction = {
+        username: signedAccountObj.data.username,
+        expiration: undefined,
+        method,
+      };
+      await dispatch(setTransactionMethod(method));
+      await handleSetInitiator(method);
+      dispatch(setAuthority(txInfo));
+    } catch (error) {
+      console.log('Error while dispatching transaction details');
+    }
+  };
+
+  const handleSetInitiator = async (keyType: string) => {
+    const auth = await HiveUtils.getAccountPublicKeyAuthority(
+      signedAccountObj.data.username,
+      keyType,
+    );
+    const initiator: Initiator = {
+      username: signedAccountObj.data.username,
+      publicKey: auth[0].toString(),
+      weight: auth[1],
+    };
+    await dispatch(setInitiator(initiator));
+  };
+
+  const isLoggedIn = () => {
+    const loggedinDuration = getElapsedTimestampSeconds(
+      loginTimestamp,
+      getTimestampInSeconds(),
+    );
+    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
+  };
 
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {
@@ -86,10 +201,6 @@ export const TransactionPage = () => {
       case 'CommentOperation':
         setTransactionCard(<CommentOperationCard />);
         break;
-      default:
-        setTransactionCard(undefined);
-        console.log(transaction);
-        break;
     }
   };
 
@@ -123,7 +234,23 @@ export const TransactionPage = () => {
         </Form.Select>
       </InputGroup>
       <br />
-      <div>{transactionCard ? transactionCard : ''}</div>
+      <InputGroup>
+        <InputGroup.Text id="basic-addon1">Method</InputGroup.Text>
+        <Form.Select
+          aria-label="select"
+          onChange={(e) =>
+            setMethod(
+              e.target.value === 'active'
+                ? KeychainKeyTypes.active
+                : KeychainKeyTypes.posting,
+            )
+          }>
+          <option value="active">Active</option>
+          <option value="posting">Posting</option>
+        </Form.Select>
+      </InputGroup>
+      <br />
+      <div>{transactionCard}</div>
     </div>
   );
 };
