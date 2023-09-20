@@ -111,7 +111,11 @@ const NavBar = () => {
       <Container fluid>
         <Navbar.Brand
           className="nav-text-color ms-0 me-1"
-          style={{ paddingRight: 15 }}
+          style={{
+            paddingRight: 15,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
           onClick={() => {
             isLoggedIn && accountDetails
               ? setDestination('/transaction')
@@ -119,9 +123,8 @@ const NavBar = () => {
           }}>
           <img
             alt=""
-            src="img/logohive.png"
-            width="30"
-            height="30"
+            src="img/multisig.png"
+            width="50"
             className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
