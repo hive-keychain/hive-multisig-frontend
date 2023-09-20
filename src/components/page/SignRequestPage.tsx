@@ -78,7 +78,7 @@ export const SignRequestsPage = () => {
   };
 
   const getSignRequests = async () => {
-    setListAltText('Retrieving Transactions');
+    setListAltText('No transaction found');
     if (activeConnectMessage) {
       try {
         multisig.api

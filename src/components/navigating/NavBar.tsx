@@ -140,11 +140,11 @@ const NavBar = () => {
           ) : (
             ''
           )}
-          <NavSearchBar
+          {/* <NavSearchBar
             classNames="w-auto ms-1 me-auto"
             isLoggedIn={!accountDetails}
             setDestination={setDestination}
-          />
+          /> */}
           {isLoggedIn && accountDetails ? (
             <NavUserAvatar
               classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
