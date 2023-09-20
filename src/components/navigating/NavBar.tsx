@@ -135,11 +135,11 @@ const NavBar = () => {
           className="mt-2 mt-sm-2 mt-md-3 mt-lg-0 pe-auto"
           id="responsive-navbar-nav ">
           {/*Search bar when not collapsed and logged out*/}
-          {!accountDetails ? (
+          {/* {!accountDetails ? (
             <div className="text-secondary ms-2">{'Search'}</div>
           ) : (
             ''
-          )}
+          )} */}
           {/* <NavSearchBar
             classNames="w-auto ms-1 me-auto"
             isLoggedIn={!accountDetails}
