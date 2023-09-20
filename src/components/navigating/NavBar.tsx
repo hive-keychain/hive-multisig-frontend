@@ -176,9 +176,10 @@ const NavBar = () => {
                 ) : null}
               </Nav.Link>
             ) : (
-              <Nav className="ml-auto">
-                <Nav.Link href="/login">Login</Nav.Link>
-              </Nav>
+              <></>
+              // <Nav className="ml-auto">
+              //   <Nav.Link href="/login">Login</Nav.Link>
+              // </Nav>
             )}
           </Nav>
           {/* Search bar when collapsed and logged in
