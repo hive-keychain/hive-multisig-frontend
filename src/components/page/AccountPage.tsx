@@ -18,6 +18,9 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [display, setDisplay] = useState(false);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
   const isOwnerAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isOwnerAuthUpdated,
   );
@@ -65,9 +68,56 @@ function AccountPage({ authorities }: IAccountPageProp) {
     }
   }, [accountAuthorities]);
 
+  const validOwnerThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.owner.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.owner.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
+
+    return totalWeight >= newAuthorities.owner.weight_threshold;
+  };
+
+  const validActiveThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.active.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.active.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
+
+    return totalWeight >= newAuthorities.active.weight_threshold;
+  };
+
+  const validPostingThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.posting.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.posting.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
+    return totalWeight >= newAuthorities.posting.weight_threshold;
+  };
+
   const handleUpdateBtn = () => {
     if (isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated) {
-      handleShow();
+      var validOwner = validOwnerThreshold();
+      var validActive = validActiveThreshold();
+      var validPosting = validPostingThreshold();
+      if (validOwner && validActive && validPosting) {
+        handleShow();
+      } else {
+        alert(`${validOwner ? '' : 'Owner weight assignments are invalid.\n'}${
+          validActive ? '' : 'Active weight assignments are invalid.\n'
+        }${
+          validPosting ? '' : 'Posting weight assignments are invalid.\n'
+        }Total weight must be greater than or equal to weight threshold.
+        `);
+      }
     }
   };
   const handleResetBtn = () => {
@@ -82,6 +132,11 @@ function AccountPage({ authorities }: IAccountPageProp) {
     <div>
       <UpdateAuthoritiesConfirmation show={show} handleClose={handleClose} />
       <Stack gap={3}>
+        {
+          <span>
+            &#9888; {'Authorities can only be updated every two hours'}
+          </span>
+        }
         {authorityCards
           ? authorityCards.map((e) => {
               return e;
