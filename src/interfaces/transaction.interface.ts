@@ -41,8 +41,6 @@ export interface State extends ITransaction {
   error: string;
 }
 export interface IExpiration {
-  days: number;
-  hours: number;
   minutes: number;
   date?: string;
 }

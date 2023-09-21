@@ -22,16 +22,10 @@ export const useDidMountEffect = (func: Function, deps: [any]) => {
   }, deps);
 };
 export const getSeconds = (expiration: IExpiration) => {
-  return (
-    expiration.days * 86400 + expiration.hours * 3600 + expiration.minutes * 60
-  );
+  return expiration.minutes * 60;
 };
 export const getISOStringDate = (expiration: IExpiration) => {
-  const expDate = moment()
-    .add(expiration.days, 'd')
-    .add(expiration.hours, 'h')
-    .add(expiration.minutes, 'm')
-    .toDate();
+  const expDate = moment().add(expiration.minutes, 'm').toDate();
   return expDate.toISOString();
 };
 export const removeStringElement = (

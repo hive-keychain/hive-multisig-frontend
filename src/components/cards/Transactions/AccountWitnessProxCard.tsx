@@ -31,8 +31,6 @@ const AccountWitnessProxCard: React.FC<{}> = () => {
     ErrorMessage: '',
   });
   const [expiration, setTxExpiration] = useState<IExpiration>({
-    days: 0,
-    hours: 0,
     minutes: 0,
     date: undefined,
   });
