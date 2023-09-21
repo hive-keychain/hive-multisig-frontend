@@ -153,7 +153,7 @@ function App() {
   useEffect(() => {
     if (!isLoggedIn()) {
       handleLogout();
-      navigate('/');
+      navigate('/login');
     }
   });
 
