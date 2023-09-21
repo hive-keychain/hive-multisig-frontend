@@ -94,12 +94,13 @@ const NavBar = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
-      setDestination('/');
-      await dispatch(multisigActions.resetState());
-      await dispatch(transactionActions.resetState());
-      await dispatch(updateAuthorityActions.resetState());
+      setDestination('/login');
+      dispatch(multisigActions.resetState());
+      dispatch(transactionActions.resetState());
+      dispatch(updateAuthorityActions.resetState());
     }
   };
+
   return (
     <Navbar
       collapseOnSelect
