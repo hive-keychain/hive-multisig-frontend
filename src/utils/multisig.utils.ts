@@ -14,7 +14,7 @@ const getOptions = () => {
 const multisig = HiveMultisig.getInstance(window, getOptions());
 
 const getSigners = async (username: string, keyType: KeychainKeyTypes) => {
-  const signers = await multisig.utils.getSigners(username, keyType);
+  const signers = await HiveMultisig.getSigners(username, keyType);
   return signers;
 };
 
