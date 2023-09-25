@@ -120,34 +120,36 @@ export function AccountKeysCard({
   };
   const getNewAuthorityNames = (): string[] => {
     let names: string[] = [];
-    switch (authorityName.toLowerCase()) {
-      case 'owner':
-        authAccountType.toLowerCase() === 'accounts'
-          ? (names = newAuthorities.owner.account_auths.map((e) => {
-              return e[0];
-            }))
-          : (names = newAuthorities.owner.key_auths.map((e) => {
-              return e[0].toString();
-            }));
-        break;
-      case 'active':
-        authAccountType.toLowerCase() === 'accounts'
-          ? (names = newAuthorities.active.account_auths.map((e) => {
-              return e[0];
-            }))
-          : (names = newAuthorities.active.key_auths.map((e) => {
-              return e[0].toString();
-            }));
-        break;
-      case 'posting':
-        authAccountType.toLowerCase() === 'accounts'
-          ? (names = newAuthorities.posting.account_auths.map((e) => {
-              return e[0];
-            }))
-          : (names = newAuthorities.posting.key_auths.map((e) => {
-              return e[0].toString();
-            }));
-        break;
+    if (newAuthorities) {
+      switch (authorityName.toLowerCase()) {
+        case 'owner':
+          authAccountType.toLowerCase() === 'accounts'
+            ? (names = newAuthorities.owner.account_auths.map((e) => {
+                return e[0];
+              }))
+            : (names = newAuthorities.owner.key_auths.map((e) => {
+                return e[0].toString();
+              }));
+          break;
+        case 'active':
+          authAccountType.toLowerCase() === 'accounts'
+            ? (names = newAuthorities.active.account_auths.map((e) => {
+                return e[0];
+              }))
+            : (names = newAuthorities.active.key_auths.map((e) => {
+                return e[0].toString();
+              }));
+          break;
+        case 'posting':
+          authAccountType.toLowerCase() === 'accounts'
+            ? (names = newAuthorities.posting.account_auths.map((e) => {
+                return e[0];
+              }))
+            : (names = newAuthorities.posting.key_auths.map((e) => {
+                return e[0].toString();
+              }));
+          break;
+      }
     }
     return names;
   };
