@@ -1,9 +1,15 @@
 import { FC, useEffect, useState } from 'react';
 import { Button, Col, Form, InputGroup, Row } from 'react-bootstrap';
-import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
-import { useAppDispatch } from '../../../redux/app/hooks';
+import { Authorities } from '../../../interfaces/account.interface';
+import {
+  IAccountKeyRowProps,
+  IDeleteAccount,
+  IDeleteKey,
+} from '../../../interfaces/cardInterfaces';
+import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
   deleteAccount,
+  deleteKey,
   updateAccount,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { useDidMountEffect } from '../../../utils/utils';
@@ -21,7 +27,9 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
   const [newAuth, setNewAuth] = useState<[string, number]>(accountKeyAuth);
   const dispatch = useAppDispatch();
-
+  const newAuthorities: Authorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
   useEffect(() => {
     switch (color) {
       case 'red':
@@ -58,13 +66,25 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
 
   useDidMountEffect(() => {
     if (deleteComponentKey !== '') {
-      const payload: IAccountKeyRowProps = {
-        authorityName,
-        type,
-        accountKeyAuth: [...newAuth],
-      };
-      console.log('deleteDispatchPayload: ', payload);
-      dispatch(deleteAccount(payload));
+      switch (type.toLowerCase()) {
+        case 'accounts':
+          const accountToDelete: IDeleteAccount = {
+            type: authorityName,
+            username: newAuth[0],
+            authorities: newAuthorities,
+          };
+          dispatch(deleteAccount(accountToDelete));
+          break;
+        case 'keys':
+          const keyToDelete: IDeleteKey = {
+            type: authorityName,
+            key: newAuth[0],
+            authorities: newAuthorities,
+          };
+          dispatch(deleteKey(keyToDelete));
+          break;
+      }
+
       setDeleteComponentKey('');
     }
   }, [deleteComponentKey]);

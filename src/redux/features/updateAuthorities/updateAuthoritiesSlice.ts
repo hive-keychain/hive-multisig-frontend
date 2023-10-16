@@ -7,7 +7,12 @@ import {
   IDHiveAccountUpdateBroadcast,
   IHiveAccountUpdateBroadcast,
 } from '../../../interfaces';
-import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
+import {
+  IAccountKeyRowProps,
+  IDeleteAccount,
+  IDeleteKey,
+} from '../../../interfaces/cardInterfaces';
+import { removeAccount, removeKey } from '../../../utils/account-utils';
 import {
   default as AccountUtils,
   default as HiveUtils,
@@ -57,6 +62,22 @@ export const dhiveBroadcastUpdateAccount = createAsyncThunk(
   },
 );
 
+export const deleteAccount = createAsyncThunk(
+  'updateAuthority/deleteAccount',
+  async ({ type, username, authorities }: IDeleteAccount) => {
+    const newAuth = await removeAccount(type, username, authorities);
+
+    return newAuth;
+  },
+);
+
+export const deleteKey = createAsyncThunk(
+  'updateAuthority/deleteKey',
+  async ({ type, key, authorities }: IDeleteKey) => {
+    const newAuth = await removeKey(type, key, authorities);
+    return newAuth;
+  },
+);
 export const getIndexOfStringFromTupleArray = (
   array: [string | Hive.PublicKey, number][],
   element: string | Hive.PublicKey,
@@ -82,17 +103,6 @@ export const removeAuthorityKey = (
   return [...array];
 };
 
-export const removeAuthorityAccount = (
-  array: [string, number][],
-  element: [string, number],
-): [string, number][] => {
-  const index = getIndexOfStringFromTupleArray(array, element[0]);
-  if (index !== -1) {
-    return [...array.slice(0, index), ...array.slice(index + 1)];
-  }
-  return [...array];
-};
-
 export const clearAuthorityState = createAsyncThunk(
   'updateAuthority/clearAuthorityState',
   async () => {
@@ -104,8 +114,8 @@ const updateAuthoritySlice = createSlice({
   initialState,
   reducers: {
     initializeAuthorities(state, action: PayloadAction<Authorities>) {
-      state.Authorities = { ...action.payload };
-      state.NewAuthorities = { ...action.payload };
+      state.Authorities = structuredClone(action.payload);
+      state.NewAuthorities = structuredClone(action.payload);
     },
     updateAccount(state, action: PayloadAction<IAccountKeyRowProps>) {
       switch (action.payload.authorityName.toLowerCase()) {
@@ -232,79 +242,7 @@ const updateAuthoritySlice = createSlice({
         state.Authorities.posting,
       );
     },
-    deleteAccount(state, action: PayloadAction<IAccountKeyRowProps>) {
-      switch (action.payload.authorityName.toLowerCase()) {
-        case 'owner':
-          action.payload.type.toLowerCase() === 'accounts'
-            ? {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.owner.account_auths =
-                  removeAuthorityAccount(
-                    state.NewAuthorities.owner.account_auths,
-                    action.payload.accountKeyAuth,
-                  )),
-              }
-            : {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.owner.key_auths = removeAuthorityKey(
-                  state.NewAuthorities.owner.key_auths,
-                  action.payload.accountKeyAuth,
-                )),
-              };
-        case 'active':
-          action.payload.type.toLowerCase() === 'accounts'
-            ? {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.active.account_auths =
-                  removeAuthorityAccount(
-                    state.NewAuthorities.active.account_auths,
-                    action.payload.accountKeyAuth,
-                  )),
-              }
-            : {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.active.key_auths = removeAuthorityKey(
-                  state.NewAuthorities.active.key_auths,
-                  action.payload.accountKeyAuth,
-                )),
-              };
-        case 'posting':
-          action.payload.type.toLowerCase() === 'accounts'
-            ? {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.posting.account_auths =
-                  removeAuthorityAccount(
-                    state.NewAuthorities.posting.account_auths,
-                    action.payload.accountKeyAuth,
-                  )),
-              }
-            : {
-                ...state,
-                ...state.NewAuthorities,
-                ...(state.NewAuthorities.posting.key_auths = removeAuthorityKey(
-                  state.NewAuthorities.posting.key_auths,
-                  action.payload.accountKeyAuth,
-                )),
-              };
-      }
-      state.isOwnerAuthUpdated = !_.isEqual(
-        state.NewAuthorities.owner,
-        state.Authorities.owner,
-      );
-      state.isActiveAuthUpdated = !_.isEqual(
-        state.NewAuthorities.active,
-        state.Authorities.active,
-      );
-      state.isPostingAuthUpdated = !_.isEqual(
-        state.NewAuthorities.posting,
-        state.Authorities.posting,
-      );
-    },
+
     setOwnerKey(state, action: PayloadAction<string>) {
       state.ownerKey = action.payload;
     },
@@ -341,6 +279,38 @@ const updateAuthoritySlice = createSlice({
       updateAuthoritySlice.actions.resetState,
       () => initialState,
     );
+
+    builder.addCase(deleteAccount.fulfilled, (state, action) => {
+      state.NewAuthorities = action.payload;
+      state.isOwnerAuthUpdated = !_.isEqual(
+        state.NewAuthorities.owner,
+        state.Authorities.owner,
+      );
+      state.isActiveAuthUpdated = !_.isEqual(
+        state.NewAuthorities.active,
+        state.Authorities.active,
+      );
+      state.isPostingAuthUpdated = !_.isEqual(
+        state.NewAuthorities.posting,
+        state.Authorities.posting,
+      );
+    });
+
+    builder.addCase(deleteKey.fulfilled, (state, action) => {
+      state.NewAuthorities = action.payload;
+      state.isOwnerAuthUpdated = !_.isEqual(
+        state.NewAuthorities.owner,
+        state.Authorities.owner,
+      );
+      state.isActiveAuthUpdated = !_.isEqual(
+        state.NewAuthorities.active,
+        state.Authorities.active,
+      );
+      state.isPostingAuthUpdated = !_.isEqual(
+        state.NewAuthorities.posting,
+        state.Authorities.posting,
+      );
+    });
   },
 });
 
@@ -350,7 +320,6 @@ export const {
   updateAccount,
   setOwnerKey,
   addAccount,
-  deleteAccount,
   resetState,
 } = updateAuthoritySlice.actions;
 export const updateAuthorityActions = updateAuthoritySlice.actions;
