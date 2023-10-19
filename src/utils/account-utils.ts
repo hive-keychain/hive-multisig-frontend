@@ -86,3 +86,67 @@ export const UpdateAuthorityWeightThresh = (
   }
   return newAuthorities;
 };
+
+export const removeAccount = (
+  type: string,
+  username: string,
+  newAccount: Authorities,
+) => {
+  const accountCopy = structuredClone(newAccount);
+
+  switch (type.toLocaleLowerCase()) {
+    case 'owner':
+      accountCopy.owner.account_auths = accountCopy.owner.account_auths.filter(
+        (account) => {
+          return account[0] !== username;
+        },
+      );
+      break;
+    case 'active':
+      accountCopy.active.account_auths =
+        accountCopy.active.account_auths.filter((account) => {
+          return account[0] !== username;
+        });
+      break;
+    case 'posting':
+      accountCopy.posting.account_auths =
+        accountCopy.posting.account_auths.filter((account) => {
+          return account[0] !== username;
+        });
+      break;
+  }
+
+  return accountCopy;
+};
+
+export const removeKey = (
+  type: string,
+  key: string,
+  newAccount: Authorities,
+) => {
+  const accountCopy = structuredClone(newAccount);
+  switch (type.toLocaleLowerCase()) {
+    case 'owner':
+      accountCopy.owner.key_auths = accountCopy.owner.key_auths.filter(
+        (accountKey) => {
+          return accountKey[0] !== key;
+        },
+      );
+      break;
+
+    case 'active':
+      accountCopy.active.key_auths = accountCopy.active.key_auths.filter(
+        (accountKey) => {
+          return accountKey[0] !== key;
+        },
+      );
+      break;
+    case 'posting':
+      accountCopy.posting.key_auths = accountCopy.posting.key_auths.filter(
+        (accountKey) => {
+          return accountKey[0] != key;
+        },
+      );
+  }
+  return accountCopy;
+};
