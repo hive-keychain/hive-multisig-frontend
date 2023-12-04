@@ -81,14 +81,8 @@ function BroadcastJson() {
       .required('Required')
       .max(32, 'ID string must be less than 32 characters long'),
     json: yup.string().required('Required'),
-    required_auths: yup
-      .array()
-      .required('Required')
-      .min(1, 'Minimum of 1 Authority'),
-    required_posting_auths: yup
-      .array()
-      .required('Required')
-      .min(1, 'Minimum of 1 Posting Authority'),
+    required_auths: yup.array(),
+    required_posting_auths: yup.array(),
   });
   const addAuthBtnClicked = (push: Function) => {
     if (newAuth && newAuth !== '') {
