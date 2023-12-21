@@ -1,10 +1,12 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import { createLogger } from 'redux-logger';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import keychainReducers from '../features/keyChain/keyChainReducers';
 import loginReducer from '../features/login/loginSlice';
 import multisigReducers from '../features/multisig/multisigReducers';
 import transactionReducers from '../features/transaction/transactionReducers';
+import twoFactorAuthReducers from '../features/twoFactorAuth/twoFactorAuthReducers';
 import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice';
 const persistConfig = {
   key: 'root',
@@ -16,14 +18,16 @@ const rootReducer = combineReducers({
   updateAuthorities: updateAuthoritiesSlice,
   transaction: transactionReducers,
   multisig: multisigReducers,
+  twoFactorAuth: twoFactorAuthReducers,
 });
+const logger = createLogger();
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
-    }).concat(),
+    }).concat(logger),
 });
 
 const persistor = persistStore(store);

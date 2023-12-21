@@ -181,9 +181,14 @@ const NavBar = () => {
               </Nav.Link>
             ) : (
               <></>
-              // <Nav className="ml-auto">
-              //   <Nav.Link href="/login">Login</Nav.Link>
-              // </Nav>
+            )}
+
+            {isLoggedIn && accountDetails ? (
+              <Nav.Link onClick={() => setDestination('/twoFactor')}>
+                2FA
+              </Nav.Link>
+            ) : (
+              <></>
             )}
           </Nav>
           {/* Search bar when collapsed and logged in
