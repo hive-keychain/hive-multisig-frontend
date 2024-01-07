@@ -158,7 +158,7 @@ export function AccountKeysCard({
     <Card border={cardBorder}>
       <Container>
         <Card.Body>
-          <Card.Title>{authAccountType}</Card.Title>
+          <Card.Title>{authAccountType }</Card.Title>
           {accountComponentList ? (
             accountComponentList.map((component, index) => {
               return <Row key={index}>{component[1]}</Row>;
@@ -167,12 +167,10 @@ export function AccountKeysCard({
             <div></div>
           )}
           {loginState ? (
-            <Row>
-              <AddAccountKeyRow
-                authAccountType={authAccountType}
-                setNewAccount={setNewAccount}
-              />
-            </Row>
+            <AddAccountKeyRow
+              authAccountType={authAccountType}
+              setNewAccount={setNewAccount}
+            />
           ) : (
             <div></div>
           )}

@@ -52,3 +52,32 @@ export const setTokenValidation = createAsyncThunk<
     return newState;
   },
 );
+
+export const proceedIntro = createAsyncThunk<
+  State,
+  boolean,
+  { rejectValue: string }
+>('twoFactorAuth/proceedIntro', async (proceedIntro: boolean, { getState }) => {
+  const currentState = getState() as State;
+  const newState: State = {
+    ...currentState,
+    proceedIntro,
+  };
+  return newState;
+});
+
+export const proceedMultisig = createAsyncThunk<
+  State,
+  boolean,
+  { rejectValue: string }
+>(
+  'twoFactorAuth/proceedMultisig',
+  async (proceedMultisig: boolean, { getState }) => {
+    const currentState = getState() as State;
+    const newState: State = {
+      ...currentState,
+      proceedMultisig,
+    };
+    return newState;
+  },
+);

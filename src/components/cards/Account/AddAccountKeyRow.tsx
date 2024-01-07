@@ -1,6 +1,6 @@
 import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from 'react';
-import { Button, Col, Form, InputGroup, Row } from 'react-bootstrap';
+import { Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { LoginResponseType } from '../../../interfaces';
 import { IAddAccountKeyProps } from '../../../interfaces/cardInterfaces';
@@ -12,7 +12,8 @@ export function AddAccountKeyRow({
   authAccountType,
   setNewAccount,
 }: IAddAccountKeyProps) {
-  let loggedInAccount = useReadLocalStorage<LoginResponseType>('accountDetails');
+  let loggedInAccount =
+    useReadLocalStorage<LoginResponseType>('accountDetails');
   const [user, setUser] = useState<LoginResponseType>(loggedInAccount);
   const [accountName, setAccountName] = useState<string>('');
   const [weight, setAccountWeight] = useState<number>(1);
@@ -57,70 +58,64 @@ export function AddAccountKeyRow({
           privateKey={privateKey}
         />
       </div>
-      <div className="mb-3">
-        <Row>
-          <Col md={8}>
-            <InputGroup>
-              <InputGroup.Text id="basic-addon1">
-                {authAccountType === 'Accounts' ? (
-                  '@'
+      <div>
+        <Container>
+          <Row>
+            <Col>
+              <InputGroup>
+                <InputGroup.Text>
+                  {authAccountType === 'Accounts' ? (
+                    '@'
+                  ) : (
+                    <i className="fa fa-lock"></i>
+                  )}
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder={`Add ${
+                    authAccountType === 'Accounts' ? 'Account' : 'Key'
+                  }`}
+                  onChange={(e) => {
+                    setAccountName(e.target.value);
+                  }}
+                  value={accountName}
+                />
+                <InputGroup.Text>Weight</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  min="1"
+                  step="1"
+                  id="weightInput"
+                  placeholder={'1'}
+                  onChange={(e) => {
+                    setAccountWeight(parseInt(e.target.value));
+                  }}
+                  value={weight}
+                />
+                {authAccountType === 'Keys' ? (
+                  <Button
+                    className="col-md-3 mx-auto"
+                    variant="outline-secondary"
+                    onClick={() => {
+                      handleNewKeyOnClick();
+                    }}>
+                    Get New Key
+                  </Button>
                 ) : (
-                  <i className="fa fa-lock"></i>
+                  <div></div>
                 )}
-              </InputGroup.Text>
-              <Form.Control
-                type="text"
-                placeholder={`Add ${
-                  authAccountType === 'Accounts' ? 'Account' : 'Key'
-                }`}
-                onChange={(e) => {
-                  setAccountName(e.target.value);
-                }}
-                value={accountName}
-              />
-              {authAccountType === 'Keys' ? (
                 <Button
-                  variant="outline-secondary"
+                  className="col-md-3 mx-auto"
+                  variant="outline-primary"
                   onClick={() => {
-                    handleNewKeyOnClick();
+                    handleAddOnClick();
                   }}>
-                  New Key
+                  Add
                 </Button>
-              ) : (
-                <div></div>
-              )}
-            </InputGroup>
-          </Col>
-
-          <Col md={3} sm={2}>
-            <InputGroup>
-              <InputGroup.Text id="basic-addon1">Weight</InputGroup.Text>
-              <Form.Control
-                type="number"
-                min="1"
-                step="1"
-                className="form-control"
-                id="weightInput"
-                placeholder={'1'}
-                onChange={(e) => {
-                  setAccountWeight(parseInt(e.target.value));
-                }}
-                value={weight}
-              />
-            </InputGroup>
-          </Col>
-
-          <Col sm="1">
-            <Button
-              className="acc-crd-btn"
-              variant="outline-primary"
-              onClick={() => {
-                handleAddOnClick();
-              }}>
-              Add
-            </Button>
-          </Col>
-        </Row>
+              </InputGroup>
+            </Col>
+          </Row>
+        </Container>
       </div>
     </div>
   );

@@ -1,16 +1,17 @@
 import * as Hive from '@hiveio/dhive';
+import { Card, Container, Stack } from 'react-bootstrap';
 import {
-  Card,
-  Container,
-  Stack
-} from 'react-bootstrap';
-import { IAccountKeyRowProps, IAccountKeysCardProps, IAuthorityCardProps } from '../../../interfaces/cardInterfaces';
+  IAccountKeyRowProps,
+  IAccountKeysCardProps,
+  IAuthorityCardProps,
+} from '../../../interfaces/cardInterfaces';
 import { AccountKeysCard } from './AccountKeysCard';
 import { AuthorityWeightThreshold } from './AuthorityWeightThresholdRow';
 
-
-export function AuthorityCard({authorityName, authority}: IAuthorityCardProps) {
- 
+export function AuthorityCard({
+  authorityName,
+  authority,
+}: IAuthorityCardProps) {
   const accounts: IAccountKeysCardProps = {
     authorityName: authorityName,
     authAccountType: 'Accounts',
@@ -37,7 +38,7 @@ export function AuthorityCard({authorityName, authority}: IAuthorityCardProps) {
     <Card>
       <Container>
         <Card.Body>
-          <Card.Title>{authorityName}</Card.Title>
+          <Card.Title>{authorityName + ' Authorities'}</Card.Title>
           <Stack gap={2}>
             <AccountKeysCard
               authorityName={authorityName}

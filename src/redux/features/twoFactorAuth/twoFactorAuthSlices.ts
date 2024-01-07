@@ -3,6 +3,8 @@ import { State } from '../../../interfaces/twoFactorAuth.interface';
 import {
   createQRCode,
   createSecret,
+  proceedIntro,
+  proceedMultisig,
   setTokenValidation,
 } from './twoFactorAuthThunks';
 
@@ -12,6 +14,8 @@ const initialState: State = {
   enabled: false,
   qrCodeUrl: undefined,
   isValid: false,
+  proceedIntro: false,
+  proceedMultisig: false,
 };
 
 const twoFactorAuthSlice = createSlice({
@@ -33,6 +37,13 @@ const twoFactorAuthSlice = createSlice({
 
     builder.addCase(setTokenValidation.fulfilled, (state, action) => {
       state.isValid = action.payload.isValid;
+    });
+
+    builder.addCase(proceedIntro.fulfilled, (state, action) => {
+      state.proceedIntro = action.payload.proceedIntro;
+    });
+    builder.addCase(proceedMultisig.fulfilled, (state, action) => {
+      state.proceedMultisig = action.payload.proceedMultisig;
     });
   },
 });

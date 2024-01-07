@@ -7,4 +7,6 @@ export interface ITwoFactorAuth {
 export interface State extends ITwoFactorAuth {
   qrCodeUrl: string;
   isValid: boolean;
+  proceedIntro: boolean;
+  proceedMultisig: boolean;
 }

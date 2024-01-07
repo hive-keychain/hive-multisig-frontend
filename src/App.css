@@ -17,6 +17,17 @@ a.nounderline {
     width: 50% !important;
   }
 }
+
+.authenticator-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.otp-qr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .nav-text-color {
   color: rgba(255, 255, 255, 0.55);
 }
