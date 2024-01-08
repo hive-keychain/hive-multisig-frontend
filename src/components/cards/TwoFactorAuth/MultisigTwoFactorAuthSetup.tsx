@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
-import { useAppSelector } from '../../../redux/app/hooks';
+import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
+import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { addAccount } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { AuthorityCard } from '../Account/AuthorityCard';
 
 export const MultisigTwoFactorAuthSetup = () => {
@@ -9,32 +11,43 @@ export const MultisigTwoFactorAuthSetup = () => {
   );
 
   const [thresholdIsOne, setThresholdIsOne] = useState<boolean>();
-  const newAuthorities = useAppSelector(
-    (state) => state.updateAuthorities.NewAuthorities,
+  const newActiveAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities.active,
   );
+  const dispatch = useAppDispatch();
   useEffect(() => {
-    if (active_authorities) {
-      if (active_authorities.weight_threshold > 1) {
+    if (newActiveAuthorities) {
+      if (newActiveAuthorities.weight_threshold > 1) {
         setThresholdIsOne(false);
       } else {
         setThresholdIsOne(true);
       }
+      modifyAuthority();
     }
-  }, [active_authorities]);
+  }, [newActiveAuthorities]);
 
   const validActiveThreshold = (): boolean => {
     let totalWeight = 0;
-    newAuthorities.active.account_auths.forEach((account) => {
+    newActiveAuthorities.account_auths.forEach((account) => {
       totalWeight += account[1];
     });
-    newAuthorities.active.key_auths.forEach((key) => {
+    newActiveAuthorities.key_auths.forEach((key) => {
       totalWeight += key[1];
     });
 
-    return totalWeight >= newAuthorities.active.weight_threshold;
+    return totalWeight >= newActiveAuthorities.weight_threshold;
   };
 
-  const modifyAuthority = () => {};
+  const modifyAuthority = () => {
+    if (thresholdIsOne) {
+      const newAccount: IAccountKeyRowProps = {
+        authorityName: 'active',
+        type: 'accounts',
+        accountKeyAuth: ['hive.multisig', 1],
+      };
+      dispatch(addAccount(newAccount));
+    }
+  };
   // condition 1: when threshold is 1
   // condition 2: when threshold is greater than 1
   return (
@@ -68,7 +81,7 @@ export const MultisigTwoFactorAuthSetup = () => {
                 <AuthorityCard
                   key={'Active'}
                   authorityName={'Active'}
-                  authority={active_authorities}
+                  authority={newActiveAuthorities}
                 />
 
                 <p className="justify-content-md-center">
