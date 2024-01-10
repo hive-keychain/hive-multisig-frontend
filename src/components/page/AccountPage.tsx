@@ -5,7 +5,7 @@ import { Authorities } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
-import UpdateAuthoritiesConfirmation from '../modals/UpdateAuthoritiesConfirmation';
+import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
 
 interface IAccountPageProp {
   authorities: Authorities;
