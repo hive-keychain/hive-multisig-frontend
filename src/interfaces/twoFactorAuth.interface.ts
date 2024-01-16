@@ -1,3 +1,4 @@
+import { Authorities } from '../interfaces';
 export interface ITwoFactorAuth {
   enabled: boolean;
   secret: string;

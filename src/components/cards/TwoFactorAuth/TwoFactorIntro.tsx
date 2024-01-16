@@ -30,8 +30,8 @@ export const TwoFactorIntro = () => {
                 </p>
                 <Container>
                   <Row className="justify-content-md-center justify-content-sm-center">
-                    <Col className="authenticator-icon" sm="5" md="5" lg="2">
-                      <Figure className="text-center">
+                    <Col className="authenticator-icon" sm="2" md="2" lg="2">
+                      <Figure className="text-center pull-left">
                         <Figure.Image
                           alt="googleAuthenticator"
                           src="\img\g-auth-logo.png"
@@ -39,10 +39,10 @@ export const TwoFactorIntro = () => {
                         <Figure.Caption>Google</Figure.Caption>
                       </Figure>
                     </Col>
-                    <Col className="authenticator-icon" sm="5" md="5" lg="2">
-                      <Figure className="text-center">
+                    <Col className="authenticator-icon" sm="2" md="2" lg="2">
+                      <Figure className="text-center pull-right">
                         <Figure.Image
-                          src="\img\m-auth-logo.webp"
+                          src="\img\m-auth-logo.png"
                           alt="microsoftAuthenticator"
                         />
                         <Figure.Caption>Microsoft</Figure.Caption>

@@ -12,8 +12,9 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   dhiveBroadcastUpdateAccount,
   hiveKeyChainRequestBroadCast,
-  setOwnerKey,
-} from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+} from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+
+import { setOwnerKey } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { useDidMountEffect } from '../../utils/utils';
 interface Iprops {
   show: boolean;

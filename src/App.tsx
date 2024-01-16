@@ -26,6 +26,7 @@ import {
   subscribeToSignRequests,
 } from './redux/features/multisig/multisigThunks';
 import { transactionActions } from './redux/features/transaction/transactionSlices';
+import { twoFactorAuthActions } from './redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from './redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { MultisigUtils } from './utils/multisig.utils';
 import {
@@ -294,6 +295,7 @@ function App() {
     await dispatch(multisigActions.resetState());
     await dispatch(transactionActions.resetState());
     await dispatch(updateAuthorityActions.resetState());
+    await dispatch(twoFactorAuthActions.resetState());
     setMultisig(undefined);
   };
 

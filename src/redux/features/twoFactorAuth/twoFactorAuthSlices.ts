@@ -21,11 +21,7 @@ const initialState: State = {
 const twoFactorAuthSlice = createSlice({
   name: 'twoFactorAuth',
   initialState,
-  reducers: {
-    resetState: () => {
-      initialState;
-    },
-  },
+  reducers: { resetState: () => initialState },
   extraReducers: (builder) => {
     builder.addCase(createSecret.fulfilled, (state, action) => {
       state.secret = action.payload.secret;

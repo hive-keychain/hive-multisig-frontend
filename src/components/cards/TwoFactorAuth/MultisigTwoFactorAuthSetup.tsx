@@ -1,55 +1,24 @@
+import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
-import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { addAccount } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import {
+  setThresholdWarning,
+  updateActive,
+} from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { AuthorityCard } from '../Account/AuthorityCard';
+var deepequal = require('deep-equal');
 
 export const MultisigTwoFactorAuthSetup = () => {
-  const active_authorities = useAppSelector(
-    (state) => state.updateAuthorities.Authorities.active,
-  );
-
-  const [thresholdIsOne, setThresholdIsOne] = useState<boolean>();
-  const newActiveAuthorities = useAppSelector(
-    (state) => state.updateAuthorities.NewAuthorities.active,
-  );
-  const dispatch = useAppDispatch();
+  const [originalActive, newActive] = useActiveAuthority();
+  const [_, thresholdWarning] = useSuggestedActiveAuthority();
+  const [localOriginalActive, setLocalOriginalActive] =
+    useState(originalActive);
   useEffect(() => {
-    if (newActiveAuthorities) {
-      if (newActiveAuthorities.weight_threshold > 1) {
-        setThresholdIsOne(false);
-      } else {
-        setThresholdIsOne(true);
-      }
-      modifyAuthority();
+    if (originalActive) {
+      setLocalOriginalActive(originalActive);
     }
-  }, [newActiveAuthorities]);
-
-  const validActiveThreshold = (): boolean => {
-    let totalWeight = 0;
-    newActiveAuthorities.account_auths.forEach((account) => {
-      totalWeight += account[1];
-    });
-    newActiveAuthorities.key_auths.forEach((key) => {
-      totalWeight += key[1];
-    });
-
-    return totalWeight >= newActiveAuthorities.weight_threshold;
-  };
-
-  const modifyAuthority = () => {
-    if (thresholdIsOne) {
-      const newAccount: IAccountKeyRowProps = {
-        authorityName: 'active',
-        type: 'accounts',
-        accountKeyAuth: ['hive.multisig', 1],
-      };
-      dispatch(addAccount(newAccount));
-    }
-  };
-  // condition 1: when threshold is 1
-  // condition 2: when threshold is greater than 1
+  }, [originalActive]);
   return (
     <Container>
       <Row className="justify-content-md-center">
@@ -64,34 +33,31 @@ export const MultisigTwoFactorAuthSetup = () => {
                   required to add @hive.multisig in your account authorities.
                 </p>
 
-                {thresholdIsOne ? (
+                {originalActive?.weight_threshold === 1 ? (
                   <p className="justify-content-md-center">
-                    With your current Active Authority settings, we suggest to
-                    add @hive.multisig with weight of 1 and bump the weight
+                    ⚠ With your current Active Authority settings, we suggest to
+                    add @hive.multisig with weight of 1 and bumped the weight
                     threshold to 2 as follows:
                   </p>
                 ) : (
                   <p className="justify-content-md-center">
-                    With your current Active Authority settings, we suggest to
-                    add @hive.multisig with weight of 1 and bump the weight
-                    threshold to 2 as follows:
+                    ⚠ For the 2FA to work correctly, both the user accounts,keys
+                    and @hive.multisig must have a weight less than the
+                    threshold. Therefore we suggest the following adjustments in
+                    your active authorities:
                   </p>
                 )}
 
-                <AuthorityCard
-                  key={'Active'}
-                  authorityName={'Active'}
-                  authority={newActiveAuthorities}
-                />
-
+                <AuthorityCard authorityName="Active" />
+                <br />
                 <p className="justify-content-md-center">
                   Please review the suggested modifications above. You may make
-                  your own modification as you desire. Finally, press submit to
-                  broadcast the changes.
+                  your own modification as you desire. Press submit to broadcast
+                  the changes.
                 </p>
                 <div className="d-flex justify-content-end">
                   <Button onClick={() => {}} className="" variant="success">
-                    Setup Multisig
+                    Submit
                   </Button>
                 </div>
               </Card.Body>
@@ -101,4 +67,153 @@ export const MultisigTwoFactorAuthSetup = () => {
       </Row>
     </Container>
   );
+};
+
+const useActiveAuthority = () => {
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
+  const originalAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.Authorities,
+  );
+  const [newActiveAuthorities, setNewActiveAuthorities] =
+    useState<Hive.Authority>();
+  const [originalActiveAuthorities, setOriginalActiveAuthorities] =
+    useState<Hive.Authority>();
+
+  useEffect(() => {
+    if (newAuthorities) {
+      setNewActiveAuthorities({ ...newAuthorities.active });
+    }
+  }, [newAuthorities]);
+
+  useEffect(() => {
+    if (originalAuthorities) {
+      setOriginalActiveAuthorities(originalAuthorities.active);
+    }
+  }, [originalAuthorities]);
+
+  return [originalActiveAuthorities, newActiveAuthorities];
+};
+
+const useSuggestedActiveAuthority = () => {
+  const dispatch = useAppDispatch();
+  const [originalActive, newActive] = useActiveAuthority();
+  const [thresholdWarning, setThreshWarning] = useState('');
+  const [localUpdatedActive, setLocalUpdatedActive] =
+    useState<Hive.Authority>(newActive);
+
+  useEffect(() => {
+    if (newActive) {
+      if (!deepequal(localUpdatedActive, newActive, { strict: true })) {
+        updateSuggested();
+      }
+    }
+  }, [newActive]);
+
+  useEffect(() => {
+    dispatch(setThresholdWarning(thresholdWarning));
+  }, [thresholdWarning]);
+  const updateSuggested = async () => {
+    if (newActive) {
+      let activeAuth = structuredClone(newActive);
+      const found = activeAuth.account_auths.some(
+        (account) => account[0] === 'hive.multisig',
+      );
+      if (!found) {
+        activeAuth.account_auths.push(['hive.multisig', 1]);
+        /**Enable these lines if you want to automatically suggest the weights to 1 */
+        const newAccounts = suggestNewActiveAccountConfig(activeAuth);
+        const newKeys = suggesetNewActiveKeysConfig(activeAuth);
+        activeAuth.account_auths = [...newAccounts];
+        activeAuth.key_auths = [...newKeys];
+      }
+
+      const newThreshold = suggestNewThreshold(activeAuth);
+      activeAuth.weight_threshold = newThreshold;
+      await dispatch(updateActive(activeAuth));
+      setLocalUpdatedActive(activeAuth);
+    }
+  };
+
+  const suggestNewActiveAccountConfig = (
+    activeAuthority: Hive.AuthorityType,
+  ) => {
+    if (activeAuthority) {
+      const currentThresh = activeAuthority.weight_threshold;
+      const accountesLessThanThresh = activeAuthority.account_auths.filter(
+        (account) => account[1] < currentThresh,
+      );
+
+      const accountsEqualGreaterThanThresh =
+        activeAuthority.account_auths.filter(
+          (account) => account[1] >= currentThresh,
+        );
+      let newAccounts = [...accountesLessThanThresh];
+      const suggestedWeights: [string, number][] =
+        accountsEqualGreaterThanThresh.map((account) => {
+          return [account[0], Math.max(currentThresh - 1, 1)];
+        });
+      newAccounts.push(...suggestedWeights);
+
+      return newAccounts;
+    }
+  };
+
+  const suggesetNewActiveKeysConfig = (activeAuthority: Hive.AuthorityType) => {
+    if (activeAuthority) {
+      const currentThresh = activeAuthority.weight_threshold;
+      const keysLessThanThresh = activeAuthority.key_auths.filter(
+        (key) => key[1] < currentThresh,
+      );
+      const keysEqualGreaterThanThresh = activeAuthority.key_auths.filter(
+        (key) => key[1] >= currentThresh,
+      );
+
+      let newKeys = [...keysLessThanThresh];
+
+      const suggestedWeights: [string | Hive.PublicKey, number][] =
+        keysEqualGreaterThanThresh.map((key) => {
+          return [key[0], Math.max(currentThresh - 1, 1)];
+        });
+
+      newKeys.push(...suggestedWeights);
+
+      return newKeys;
+    }
+  };
+
+  const suggestNewThreshold = (activeAuthority: Hive.AuthorityType) => {
+    if (activeAuthority) {
+      const currentThresh = activeAuthority.weight_threshold;
+
+      const totalActiveWeight = activeAuthority.account_auths.reduce(
+        (total, account) => total + account[1],
+        0,
+      );
+      const totalKeyWeight = activeAuthority.key_auths.reduce(
+        (total, key) => total + key[1],
+        0,
+      );
+
+      const totalWeight = totalActiveWeight + totalKeyWeight;
+
+      if (currentThresh < totalWeight && currentThresh !== 1) {
+        setThreshWarning('');
+        return currentThresh;
+      } else if (currentThresh === 1) {
+        setThreshWarning(
+          'Threshold must be greather than 1 for the 2FA to work properly.',
+        );
+        return currentThresh + 1;
+      } else {
+        setThreshWarning(
+          'You may not set the threshold more than the total weight.',
+        );
+        return totalWeight;
+      }
+    }
+  };
+
+  return [newActive, thresholdWarning];
 };

@@ -7,11 +7,11 @@ import {
   IDeleteKey,
 } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { updateAccount } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   deleteAccount,
   deleteKey,
-  updateAccount,
-} from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+} from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { useDidMountEffect } from '../../../utils/utils';
 
 export const AccountKeyRow: FC<IAccountKeyRowProps> = ({

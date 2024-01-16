@@ -43,6 +43,26 @@ export function AccountKeysCard({
       ];
     }),
   );
+
+  useEffect(() => {
+    const newComponents = accountKeyAuths.map(
+      (accountKeyAuth): [string, ReactNode] => {
+        return [
+          accountKeyAuth[0],
+          <AccountKeyRow
+            key={accountKeyAuth[0].toString()}
+            authorityName={authorityName}
+            type={authAccountType}
+            accountKeyAuth={accountKeyAuth}
+            isLoggedIn={loginState}
+            componentColor={'gray'}
+          />,
+        ];
+      },
+    );
+
+    setAccountComponentList(newComponents);
+  }, [accountKeyAuths]);
   useEffect(() => {
     if (isLoggedIn) {
       if (loggedInAccount.data.username == newAuthorities.account) {
@@ -158,7 +178,7 @@ export function AccountKeysCard({
     <Card border={cardBorder}>
       <Container>
         <Card.Body>
-          <Card.Title>{authAccountType }</Card.Title>
+          <Card.Title>{authAccountType}</Card.Title>
           {accountComponentList ? (
             accountComponentList.map((component, index) => {
               return <Row key={index}>{component[1]}</Row>;

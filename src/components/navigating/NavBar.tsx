@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { loginActions } from '../../redux/features/login/loginSlice';
 import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { transactionActions } from '../../redux/features/transaction/transactionSlices';
+import { twoFactorAuthActions } from '../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   getElapsedTimestampSeconds,
@@ -94,10 +95,11 @@ const NavBar = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
-      setDestination('/login');
       dispatch(multisigActions.resetState());
       dispatch(transactionActions.resetState());
+      dispatch(twoFactorAuthActions.resetState());
       dispatch(updateAuthorityActions.resetState());
+      setDestination('/login');
     }
   };
 
