@@ -12,6 +12,9 @@ const initialState: State = {
   response: null,
   loading: false,
   success: false,
+  showOtpInput: false,
+  otpSecret: '',
+  otpValid: false,
   error: null,
 };
 

@@ -6,9 +6,12 @@ import {
   setExpiration,
   setInitiator,
   setOperation,
+  setOtpSecret,
+  setOtpValidation,
   setTransactionMethod,
   setTransactionName,
   setUsername,
+  showOtpInput,
 } from './transactionThunks';
 
 const initialState: State = {
@@ -22,6 +25,9 @@ const initialState: State = {
   response: null,
   loading: false,
   success: false,
+  showOtpInput: false,
+  otpSecret: '',
+  otpValid: false,
   error: null,
 };
 
@@ -134,6 +140,17 @@ const transactionSlice = createSlice({
       state.error = 'Error setting public key';
     });
 
+    builder.addCase(showOtpInput.fulfilled, (state, action) => {
+      state.showOtpInput = action.payload;
+    });
+
+    builder.addCase(setOtpSecret.fulfilled, (state, action) => {
+      state.otpSecret = action.payload;
+    });
+
+    builder.addCase(setOtpValidation.fulfilled, (state, action) => {
+      state.otpValid = action.payload;
+    });
     builder.addCase(transactionSlice.actions.resetState, () => initialState);
   },
 });

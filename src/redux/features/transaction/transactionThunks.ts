@@ -121,3 +121,33 @@ export const setInitiator = createAsyncThunk<
   };
   return newState;
 });
+
+export const showOtpInput = createAsyncThunk(
+  'transaction/showOtpInput',
+  (show: boolean) => {
+    return show;
+  },
+);
+
+export const submitTransaction = createAsyncThunk(
+  'transaction/submitTransaction',
+  (submit: boolean) => {
+    return submit;
+  },
+);
+
+export const setOtpSecret = createAsyncThunk(
+  'transaction/setOtpSecret',
+  (secret: string) => {
+    return secret;
+  },
+);
+
+export const setOtpValidation = createAsyncThunk(
+  'transaction/setOtpValidation',
+  (valid: boolean) => {
+    return valid;
+  },
+);
+
+

@@ -39,6 +39,9 @@ export interface State extends ITransaction {
   loading: boolean;
   success: boolean;
   error: string;
+  showOtpInput: boolean;
+  otpSecret: string;
+  otpValid: boolean;
 }
 export interface IExpiration {
   minutes: number;

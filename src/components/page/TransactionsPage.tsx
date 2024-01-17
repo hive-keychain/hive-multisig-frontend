@@ -40,49 +40,55 @@ import UpdateProposalVoteCard from '../cards/Transactions/UpdateProposalVoteCard
 import VoteForWitnessCard from '../cards/Transactions/VoteForWitnessCard';
 import { VoteOperationCard } from '../cards/Transactions/VoteOperationCard';
 import WithdrawFromSavingsCard from '../cards/Transactions/WithdrawFromSavingsCard';
+import { Otp } from '../modals/Otp';
 
 export const TransactionPage = () => {
-  const loginExpirationInSec = Config.login.expirationInSec;
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const isLoggedIn = useLoginState();
+  const multisig = useMultisigState();
 
-  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
-    null,
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const operation = useAppSelector(
+    (state) => state.transaction.transaction.operation,
   );
+  const [transactionType, setTransactionType] =
+    useState<string>('TransferOperation');
+  const [transactionCard, setTransactionCard] = useState<ReactNode>();
+  const [method, setMethod] = useState<KeychainKeyTypes>(
+    KeychainKeyTypes.active,
+  );
+  const [isValidOtp, setIsValidOtp] = useState<boolean>(false);
+  const [showOtpInput, setShowOtpInput] = useState<boolean>(false);
 
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
 
-  const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
-
-  const operation = useAppSelector(
-    (state) => state.transaction.transaction.operation,
-  );
-
-  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
-
-  const [transactionType, setTransactionType] =
-    useState<string>('TransferOperation');
-
-  const [transactionCard, setTransactionCard] = useState<ReactNode>();
-
-  const [method, setMethod] = useState<KeychainKeyTypes>(
-    KeychainKeyTypes.active,
-  );
-
-  const navigate = useNavigate();
-
-  const dispatch = useAppDispatch();
+  const submittedOp = useSubmitTransactionState();
 
   useEffect(() => {
     if (signedAccountObj) {
       document.title = 'Hive Multisig - Transaction';
       dispatch(resetOperation());
-      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
+      handleMethodChange();
+      handleSetInitiator(method);
     } else {
       navigate('/');
     }
   }, []);
+
+  useEffect(() => {
+    setShowOtpInput(submittedOp);
+  }, [submittedOp]);
+
+  useEffect(() => {
+    if (isValidOtp) {
+      if (operation && isLoggedIn) {
+        handleMultisigProcess();
+      }
+    }
+  }, [isValidOtp]);
 
   useEffect(() => {
     handleSelectOnChange(transactionType);
@@ -90,52 +96,25 @@ export const TransactionPage = () => {
   }, [transactionType]);
 
   useEffect(() => {
-    if (signedAccountObj && isLoggedIn()) {
-      dispatchTxAsync();
+    if (signedAccountObj && isLoggedIn) {
+      handleMethodChange();
+      handleSetInitiator(method);
     }
   }, [method]);
 
-  useEffect(() => {
-    if (operation && isLoggedIn()) {
-      (async () => {
-        const transaction = await HiveTxUtils.createTx(
-          [operation],
-          transactionState.expiration,
-        );
-        const txEncode: IEncodeTransaction = {
-          transaction: transaction,
-          method: transactionState.method,
-          expirationDate: getISOStringDate(transactionState.expiration),
-          initiator: { ...transactionState.initiator },
-        };
-
-        try {
-          const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
-          multisig.wss.requestSignatures(encodedTxObj).then(() => {
-            dispatch(resetOperation());
-          });
-        } catch (error) {
-          alert(`${error}`);
-        }
-      })();
-    }
-  }, [operation]);
-
-  const dispatchTxAsync = async () => {
+  const handleMethodChange = async () => {
     try {
       const txInfo: ITransaction = {
         username: signedAccountObj.data.username,
         expiration: undefined,
         method,
       };
-      await dispatch(setTransactionMethod(method));
-      await handleSetInitiator(method);
+      dispatch(setTransactionMethod(method));
       dispatch(setAuthority(txInfo));
     } catch (error) {
       console.log('Error while dispatching transaction details');
     }
   };
-
   const handleSetInitiator = async (keyType: string) => {
     const auth = await HiveUtils.getAccountPublicKeyAuthority(
       signedAccountObj.data.username,
@@ -146,17 +125,32 @@ export const TransactionPage = () => {
       publicKey: auth[0].toString(),
       weight: auth[1],
     };
+    console.log(initiator);
     await dispatch(setInitiator(initiator));
   };
 
-  const isLoggedIn = () => {
-    const loggedinDuration = getElapsedTimestampSeconds(
-      loginTimestamp,
-      getTimestampInSeconds(),
+  const handleMultisigProcess = async () => {
+    const transaction = await HiveTxUtils.createTx(
+      [operation],
+      transactionState.expiration,
     );
-    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
+    const txEncode: IEncodeTransaction = {
+      transaction: transaction,
+      method: transactionState.method,
+      expirationDate: getISOStringDate(transactionState.expiration),
+      initiator: { ...transactionState.initiator },
+    };
+    console.log(txEncode);
+    try {
+      const encodedTxObj = await multisig.utils.encodeTransaction(txEncode);
+      console.log(encodedTxObj);
+      multisig.wss.requestSignatures(encodedTxObj).then(() => {
+        dispatch(resetOperation());
+      });
+    } catch (error) {
+      alert(`${error}`);
+    }
   };
-
   const handleSelectOnChange = (transaction: string) => {
     switch (transaction) {
       case 'TransferOperation':
@@ -206,6 +200,7 @@ export const TransactionPage = () => {
 
   return (
     <div>
+      <Otp setIsValidOtp={setIsValidOtp} show={showOtpInput} />
       <InputGroup>
         <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
         <Form.Select
@@ -253,4 +248,55 @@ export const TransactionPage = () => {
       <div>{transactionCard}</div>
     </div>
   );
+};
+
+const useSubmitTransactionState = () => {
+  const transactionState = useAppSelector(
+    (state) => state.transaction.transaction,
+  );
+  const [opSubmitted, setOpSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (transactionState) {
+      if (transactionState.operation) {
+        setOpSubmitted(true);
+      } else {
+        setOpSubmitted(false);
+      }
+    }
+  }, [transactionState]);
+  return opSubmitted;
+};
+
+const useLoginState = () => {
+  const loginExpirationInSec = Config.login.expirationInSec;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
+    'loginTimestap',
+    null,
+  );
+  useEffect(() => {
+    const loggedinDuration = getElapsedTimestampSeconds(
+      loginTimestamp,
+      getTimestampInSeconds(),
+    );
+    const status = !(
+      loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec
+    );
+    setIsLoggedIn(status);
+  }, []);
+
+  return isLoggedIn;
+};
+
+const useMultisigState = () => {
+  const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  useEffect(() => {
+    if (signedAccountObj) {
+      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
+    }
+  }, []);
+  return multisig;
 };

@@ -17,7 +17,18 @@ a.nounderline {
     width: 50% !important;
   }
 }
-
+.otpInputStyle {
+  width: 50% !important;
+  height: 70px;
+  border-radius: 4px;
+  border: 1px;
+  margin-left: 8px;
+  margin-right: 8px;
+  background: #dddddd;
+  font-size: 30px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
 .authenticator-icon {
   display: flex;
   align-items: center;
