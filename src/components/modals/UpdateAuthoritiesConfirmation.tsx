@@ -14,7 +14,6 @@ import {
   resetOperation,
   setInitiator,
 } from '../../redux/features/transaction/transactionThunks';
-import { setOwnerKey } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
@@ -31,6 +30,13 @@ export const UpdateAuthoritiesConfirmation = ({
   const dispatch = useAppDispatch();
 
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+  const [
+    updateAuthorityState,
+    activeState,
+    postingState,
+    isActiveKeyDeleted,
+    isPostingKeyDeleted,
+  ] = useAuthoritiesUpdateState();
 
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
@@ -38,31 +44,19 @@ export const UpdateAuthoritiesConfirmation = ({
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
-  const isOwnerAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isOwnerAuthUpdated,
-  );
-  const isPostingAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isPostingAuthUpdated,
-  );
-  const isActiveAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isActiveAuthUpdated,
-  );
 
   const isOriginalActiveSufficient =
     originalAuthorities?.active.weight_threshold <=
     originalAuthorities?.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
       originalAuthorities?.active.key_auths.reduce((a, e) => (a += e[1]), 0);
+
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
   const [isReloadWindow, setReloadWindow] = useState<boolean>(false);
   const [newAuths, setNewAuths] = useState<Authorities>(newAuthorities);
-  const [isOwnerUpdate, setIsOwnerUpdated] =
-    useState<boolean>(isOwnerAuthUpdated);
-  const [isPostingUpdate, setIsPostingUpdate] =
-    useState<boolean>(isPostingAuthUpdated);
-  const [key, setKey] = useState<string>('');
+
   const [showModal, setShowModal] = useState<boolean>(show);
 
   useEffect(() => {
@@ -71,20 +65,12 @@ export const UpdateAuthoritiesConfirmation = ({
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
   }, [show]);
 
-  useDidMountEffect(() => {
-    dispatch(setOwnerKey(key));
-  }, [key]);
-
   useEffect(() => {
     setNewAuths({ ...newAuthorities });
   }, [newAuthorities]);
   useEffect(() => {
-    setIsOwnerUpdated(isOwnerAuthUpdated);
-  }, [isOwnerAuthUpdated]);
-  useEffect(() => {
-    setIsPostingUpdate(isPostingAuthUpdated);
-  }, [isPostingUpdate]);
-
+    handleSetInitiator();
+  }, [updateAuthorityState]);
   useDidMountEffect(() => {
     if (isReloadWindow) {
       setShowModal(false);
@@ -107,8 +93,23 @@ export const UpdateAuthoritiesConfirmation = ({
     }
     return sortedArr;
   };
+
+  const isWeightEnoughForThreshold = (method: KeychainKeyTypes) => {
+    switch (method) {
+      case KeychainKeyTypes.active:
+        return (
+          originalAuthorities.active.weight_threshold <=
+          transactionState.initiator.weight
+        );
+      case KeychainKeyTypes.posting:
+        return (
+          originalAuthorities.posting.weight_threshold <=
+          transactionState.initiator.weight
+        );
+    }
+  };
   const handleUpdate = async () => {
-    if (isPostingUpdate || isActiveAuthUpdated) {
+    if (updateAuthorityState) {
       const activeAccounts = orderAlphabetically(newAuths.active.account_auths);
       const activeKeys = orderAlphabetically(newAuths.active.key_auths);
       const postingAccounts = orderAlphabetically(
@@ -130,29 +131,44 @@ export const UpdateAuthoritiesConfirmation = ({
           weight_threshold: newAuths.posting.weight_threshold,
         },
       };
-      const op = ['account_update', newAuthorities];
-      const transaction = await HiveTxUtils.createTx([op], {
-        date: undefined,
-        minutes: 60,
-      } as IExpiration);
 
-      const txToEncode: IEncodeTransaction = {
-        transaction: { ...transaction },
-        method: KeychainKeyTypes.active,
-        expirationDate: moment().add(60, 'm').toDate(),
-        initiator: { ...transactionState.initiator },
-      };
+      const keyType = isOriginalActiveSufficient
+        ? KeychainKeyTypes.active
+        : KeychainKeyTypes.posting;
 
-      try {
-        multisig.utils.encodeTransaction(txToEncode).then((encodedTxObj) => {
-          multisig.wss.requestSignatures(encodedTxObj).then(async () => {
-            await dispatch(resetOperation());
-            setReloadWindow(true);
-          });
+      if (isWeightEnoughForThreshold(keyType)) {
+        HiveUtils.accountUpdateBroadcast({
+          newAuthorities,
+          targetAuthorityType: keyType.toString(),
+        }).then(async () => {
+          await dispatch(resetOperation());
+          setReloadWindow(true);
         });
-      } catch (error) {
-        alert(`${error}`);
-        setReloadWindow(true);
+      } else {
+        const op = ['account_update', newAuthorities];
+        const transaction = await HiveTxUtils.createTx([op], {
+          date: undefined,
+          minutes: 60,
+        } as IExpiration);
+
+        const txToEncode: IEncodeTransaction = {
+          transaction: { ...transaction },
+          method: keyType,
+          expirationDate: moment().add(60, 'm').toDate(),
+          initiator: { ...transactionState.initiator },
+        };
+
+        try {
+          multisig.utils.encodeTransaction(txToEncode).then((encodedTxObj) => {
+            multisig.wss.requestSignatures(encodedTxObj).then(async () => {
+              await dispatch(resetOperation());
+              setReloadWindow(true);
+            });
+          });
+        } catch (error) {
+          alert(`${error}`);
+          setReloadWindow(true);
+        }
       }
     } else {
       setReloadWindow(false);
@@ -163,16 +179,41 @@ export const UpdateAuthoritiesConfirmation = ({
     const keyType = isOriginalActiveSufficient
       ? KeychainKeyTypes.active
       : KeychainKeyTypes.posting;
-    const auth = await HiveUtils.getAccountPublicKeyAuthority(
-      signedAccountObj.data.username,
-      keyType,
-    );
-    const initiator: Initiator = {
-      username: signedAccountObj.data.username,
-      publicKey: auth[0].toString(),
-      weight: auth[1],
-    };
-    await dispatch(setInitiator(initiator));
+    let initiator: Initiator;
+
+    switch (keyType) {
+      case KeychainKeyTypes.active:
+        const active_auth =
+          JSON.stringify(newAuthorities.active) ===
+            JSON.stringify(originalAuthorities.active) && !isActiveKeyDeleted
+            ? originalAuthorities.active.key_auths[0]
+            : !isActiveKeyDeleted
+            ? originalAuthorities.active.key_auths[0]
+            : newAuthorities.active.key_auths[0];
+        initiator = {
+          username: signedAccountObj.data.username,
+          publicKey: active_auth[0].toString(),
+          weight: active_auth[1],
+        };
+        await dispatch(setInitiator(initiator));
+
+        break;
+      case KeychainKeyTypes.posting:
+        const posting_auth =
+          JSON.stringify(newAuthorities.posting) ===
+            JSON.stringify(originalAuthorities.posting) && !isPostingKeyDeleted
+            ? originalAuthorities.posting.key_auths[0]
+            : !isActiveKeyDeleted
+            ? originalAuthorities.posting.key_auths[0]
+            : newAuthorities.posting.key_auths[0];
+        initiator = {
+          username: signedAccountObj.data.username,
+          publicKey: posting_auth[0].toString(),
+          weight: posting_auth[1],
+        };
+        await dispatch(setInitiator(initiator));
+        break;
+    }
   };
   const handleModalClose = () => {
     window.location.reload();
@@ -220,4 +261,28 @@ export const UpdateAuthoritiesConfirmation = ({
       </Modal>
     </div>
   );
+};
+
+const useAuthoritiesUpdateState = () => {
+  const isPostingAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isPostingAuthUpdated,
+  );
+  const isActiveAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isActiveAuthUpdated,
+  );
+
+  const isActiveKeyDeleted = useAppSelector(
+    (state) => state.updateAuthorities.isActiveKeyDeleted,
+  );
+  const isPostingKeyDeleted = useAppSelector(
+    (state) => state.updateAuthorities.isPostingKeyDeleted,
+  );
+
+  return [
+    isActiveAuthUpdated || isPostingAuthUpdated,
+    isActiveAuthUpdated,
+    isPostingAuthUpdated,
+    isActiveKeyDeleted,
+    isPostingKeyDeleted,
+  ];
 };

@@ -3,7 +3,15 @@ import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import {
+  initializeAuthorities,
+  setActiveAuthUpdate,
+  setActiveKeyDelete,
+  setOwnerAuthUpdate,
+  setOwnerKeyDelete,
+  setPostingAuthUpdate,
+  setPostingKeyDelete,
+} from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
 
@@ -18,19 +26,13 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [display, setDisplay] = useState(false);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
+
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
-  const isOwnerAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isOwnerAuthUpdated,
-  );
-  const isActiveAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isActiveAuthUpdated,
-  );
-  const isPostingAuthUpdated = useAppSelector(
-    (state) => state.updateAuthorities.isPostingAuthUpdated,
-  );
-
+  const [updateAuthorityState, ownerState, activeState, postingState] =
+    useAuthoritiesUpdateState();
+  useResetUpdateStates();
   useEffect(() => {
     setLoginState(isLoggedIn);
   }, [isLoggedIn]);
@@ -104,7 +106,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
   };
 
   const handleUpdateBtn = () => {
-    if (isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated) {
+    if (updateAuthorityState) {
       var validOwner = validOwnerThreshold();
       var validActive = validActiveThreshold();
       var validPosting = validPostingThreshold();
@@ -121,7 +123,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
     }
   };
   const handleResetBtn = () => {
-    if (isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated) {
+    if (updateAuthorityState) {
       window.location.reload();
     }
   };
@@ -167,5 +169,45 @@ function AccountPage({ authorities }: IAccountPageProp) {
     <div></div>
   );
 }
+const useAuthoritiesUpdateState = () => {
+  const isOwnerAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isOwnerAuthUpdated,
+  );
+  const isPostingAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isPostingAuthUpdated,
+  );
+  const isActiveAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isActiveAuthUpdated,
+  );
+  const [activeState, setIsActiveUpdated] =
+    useState<boolean>(isActiveAuthUpdated);
+  const [postingState, setIsPostingUpdate] =
+    useState<boolean>(isPostingAuthUpdated);
 
+  useEffect(() => {
+    setIsActiveUpdated(isActiveAuthUpdated);
+
+    setIsPostingUpdate(isPostingAuthUpdated);
+  }, [isPostingAuthUpdated, isActiveAuthUpdated]);
+
+  return [
+    isOwnerAuthUpdated || activeState || postingState,
+    isOwnerAuthUpdated,
+    activeState,
+    postingState,
+  ];
+};
+
+const useResetUpdateStates = () => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setOwnerAuthUpdate(false));
+    dispatch(setActiveAuthUpdate(false));
+    dispatch(setPostingAuthUpdate(false));
+    dispatch(setOwnerKeyDelete(false));
+    dispatch(setActiveKeyDelete(false));
+    dispatch(setPostingKeyDelete(false));
+  }, []);
+};
 export default AccountPage;

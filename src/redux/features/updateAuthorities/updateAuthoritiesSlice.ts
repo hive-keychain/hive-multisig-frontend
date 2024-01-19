@@ -25,6 +25,9 @@ export type AuthorityUpdateStateType = {
   isOwnerAuthUpdated: boolean;
   isActiveAuthUpdated: boolean;
   isPostingAuthUpdated: boolean;
+  isOwnerKeyDeleted: boolean;
+  isActiveKeyDeleted: boolean;
+  isPostingKeyDeleted: boolean;
   ownerAuthUpdateCount: number;
   ownerKey?: string;
   error: string;
@@ -38,6 +41,9 @@ const initialState: AuthorityUpdateStateType = {
   isOwnerAuthUpdated: false,
   isActiveAuthUpdated: false,
   isPostingAuthUpdated: false,
+  isOwnerKeyDeleted: false,
+  isActiveKeyDeleted: false,
+  isPostingKeyDeleted: false,
   ownerKey: '',
   ownerAuthUpdateCount: 0,
   error: '',
@@ -71,6 +77,45 @@ export const deleteAccount = createAsyncThunk(
   },
 );
 
+export const setOwnerKeyDelete = createAsyncThunk(
+  'updateAuthority/setOwnerKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setPostingKeyDelete = createAsyncThunk(
+  'updateAuthority/setPostingKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+export const setActiveKeyDelete = createAsyncThunk(
+  'updateAuthority/setActiveKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setOwnerAuthUpdate = createAsyncThunk(
+  'updateAuthority/setOwnerAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setActiveAuthUpdate = createAsyncThunk(
+  'updateAuthority/setActiveAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+export const setPostingAuthUpdate = createAsyncThunk(
+  'updateAuthority/setPostingAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
 export const deleteKey = createAsyncThunk(
   'updateAuthority/deleteKey',
   async ({ type, key, authorities }: IDeleteKey) => {
@@ -78,6 +123,7 @@ export const deleteKey = createAsyncThunk(
     return newAuth;
   },
 );
+
 export const getIndexOfStringFromTupleArray = (
   array: [string | Hive.PublicKey, number][],
   element: string | Hive.PublicKey,
@@ -310,6 +356,26 @@ const updateAuthoritySlice = createSlice({
         state.NewAuthorities.posting,
         state.Authorities.posting,
       );
+    });
+
+    builder.addCase(setOwnerKeyDelete.fulfilled, (state, action) => {
+      state.isOwnerKeyDeleted = action.payload;
+    });
+    builder.addCase(setActiveKeyDelete.fulfilled, (state, action) => {
+      state.isActiveKeyDeleted = action.payload;
+    });
+    builder.addCase(setPostingKeyDelete.fulfilled, (state, action) => {
+      state.isPostingKeyDeleted = action.payload;
+    });
+
+    builder.addCase(setOwnerAuthUpdate.fulfilled, (state, action) => {
+      state.isOwnerAuthUpdated = action.payload;
+    });
+    builder.addCase(setActiveAuthUpdate.fulfilled, (state, action) => {
+      state.isActiveAuthUpdated = action.payload;
+    });
+    builder.addCase(setPostingAuthUpdate.fulfilled, (state, action) => {
+      state.isPostingAuthUpdated = action.payload;
     });
   },
 });
