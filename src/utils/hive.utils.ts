@@ -1,16 +1,16 @@
 import * as Hive from '@hiveio/dhive';
-import { Client, PrivateKey } from '@hiveio/dhive';
+import {
+  Client,
+  PrivateKey,
+  SignedTransaction,
+  Transaction,
+} from '@hiveio/dhive';
+
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';
 import {
   IHiveSignatureInterface,
   LoginResponseType,
 } from '../interfaces/hive-keychain.interface';
-const client = new Client([
-  'https://api.hive.blog',
-  'https://api.hivekings.com',
-  'https://anyx.io',
-  'https://api.openhive.network',
-]);
 
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import * as hiveTx from 'hive-tx';
@@ -21,7 +21,20 @@ import {
 } from '../interfaces';
 import { getTimestampInSeconds } from './utils';
 
+let client: Client;
+const getClient = () => {
+  if (!client)
+    client = new Client([
+      'https://api.hive.blog',
+      'https://api.hivekings.com',
+      'https://api.deathwing.me',
+      'https://anyx.io',
+      'https://api.openhive.network',
+    ]);
+  return client;
+};
 const getAccount = async (username: string) => {
+  client = getClient();
   return client.database.getAccounts([username]);
 };
 const getAuthority = async (username: string, keyType: KeychainKeyTypes) => {
@@ -148,12 +161,51 @@ const getAccountAuthorities = async (username: string) => {
 };
 
 const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
+  client = getClient();
   const result = await client.broadcast.updateAccount(
     props.newAuthorities,
     Hive.PrivateKey.from(props.ownerKey),
   );
 };
 
+const requestSignTx = async (
+  tx: Transaction,
+  username: string,
+  method: KeychainKeyTypes,
+) => {
+  return new Promise<Hive.SignedTransaction | undefined>(
+    async (resolve, reject) => {
+      const keychain = window.hive_keychain;
+      let signResult: Hive.SignedTransaction | undefined = undefined;
+      try {
+        await keychain.requestSignTx(
+          username,
+          tx,
+          method,
+          async (response: { error: any; result: Hive.SignedTransaction }) => {
+            if (!response.error) {
+              signResult = response.result;
+              client.database.verifyAuthority(response.result).then((valid) => {
+                if (valid) resolve(signResult);
+                else reject(response);
+              });
+            } else {
+              reject(response);
+            }
+          },
+        );
+      } catch (e) {
+        reject(e);
+      }
+    },
+  );
+};
+
+const broadcastTx = async (transaction: SignedTransaction) => {
+  client = getClient();
+  var res = await client.broadcast.send(transaction);
+  return res;
+};
 const getPrivateKeyFromSeed = (seed: string): Hive.PrivateKey => {
   return PrivateKey.fromSeed(seed);
 };
@@ -178,6 +230,7 @@ const accountUpdateBroadcast = (props: IHiveAccountUpdateBroadcast) => {
 };
 
 const getNextRequestID = async (username: string) => {
+  client = getClient();
   let conversions = await client.database.call('get_conversion_requests', [
     username,
   ]);
@@ -226,6 +279,35 @@ const fromHP = (
   return math.format(res, { notation: 'fixed', precision: 6 });
 };
 
+const getActiveSignWeight = async (
+  username: string,
+  activeAuthorities: Hive.AuthorityType,
+) => {
+  return new Promise<number>((resolve, reject) => {
+    try {
+      signBuffer(username, KeychainKeyTypes.active)
+        .then((data) => {
+          if (data) {
+            const signer_key = data.publicKey;
+            const signer_auth = activeAuthorities.key_auths.filter(
+              (key_auth) => key_auth[0] === signer_key,
+            )[0];
+            const signer_weight = signer_auth[1];
+
+            resolve(signer_weight);
+          } else {
+            reject(data);
+          }
+        })
+        .catch((e) => {
+          alert(e.message);
+        });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
 const HiveUtils = {
   getAccount,
   getAuthority,
@@ -240,6 +322,9 @@ const HiveUtils = {
   signBuffer,
   getAccountPublicKeyAuthority,
   getPublicKey,
+  requestSignTx,
+  broadcastTx,
+  getActiveSignWeight,
 };
 
 export default HiveUtils;

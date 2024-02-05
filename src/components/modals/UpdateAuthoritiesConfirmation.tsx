@@ -44,12 +44,6 @@ export const UpdateAuthoritiesConfirmation = ({
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
-
-  const isOriginalActiveSufficient =
-    originalAuthorities?.active.weight_threshold <=
-    originalAuthorities?.active.account_auths.reduce((a, e) => (a += e[1]), 0) +
-      originalAuthorities?.active.key_auths.reduce((a, e) => (a += e[1]), 0);
-
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
@@ -94,19 +88,8 @@ export const UpdateAuthoritiesConfirmation = ({
     return sortedArr;
   };
 
-  const isWeightEnoughForThreshold = (method: KeychainKeyTypes) => {
-    switch (method) {
-      case KeychainKeyTypes.active:
-        return (
-          originalAuthorities.active.weight_threshold <=
-          transactionState.initiator.weight
-        );
-      case KeychainKeyTypes.posting:
-        return (
-          originalAuthorities.posting.weight_threshold <=
-          transactionState.initiator.weight
-        );
-    }
+  const getKeyWithHighestWeight = () => {
+    const threshold = originalAuthorities.active.weight_threshold;
   };
   const handleUpdate = async () => {
     if (updateAuthorityState) {
@@ -132,88 +115,91 @@ export const UpdateAuthoritiesConfirmation = ({
         },
       };
 
-      const keyType = isOriginalActiveSufficient
-        ? KeychainKeyTypes.active
-        : KeychainKeyTypes.posting;
+      const keyType = KeychainKeyTypes.active;
 
-      if (isWeightEnoughForThreshold(keyType)) {
-        HiveUtils.accountUpdateBroadcast({
-          newAuthorities,
-          targetAuthorityType: keyType.toString(),
-        }).then(async () => {
-          await dispatch(resetOperation());
-          setReloadWindow(true);
-        });
-      } else {
-        const op = ['account_update', newAuthorities];
-        const transaction = await HiveTxUtils.createTx([op], {
-          date: undefined,
-          minutes: 60,
-        } as IExpiration);
-
-        const txToEncode: IEncodeTransaction = {
-          transaction: { ...transaction },
-          method: keyType,
-          expirationDate: moment().add(60, 'm').toDate(),
-          initiator: { ...transactionState.initiator },
-        };
-
-        try {
-          multisig.utils.encodeTransaction(txToEncode).then((encodedTxObj) => {
-            multisig.wss.requestSignatures(encodedTxObj).then(async () => {
-              await dispatch(resetOperation());
+      const op = ['account_update', newAuthorities];
+      const transaction = await HiveTxUtils.createTx([op], {
+        date: undefined,
+        minutes: 60,
+      } as IExpiration);
+      HiveUtils.getActiveSignWeight(
+        signedAccountObj.data.username,
+        originalAuthorities.active,
+      )
+        .then((signer_weight) => {
+          if (signer_weight >= originalAuthorities.active.weight_threshold) {
+            HiveUtils.requestSignTx(
+              transaction,
+              signedAccountObj.data.username,
+              keyType,
+            )
+              .then((signedTx) => {
+                if (signedTx) {
+                  HiveUtils.broadcastTx(signedTx).then(async (res) => {
+                    if (res) {
+                      await dispatch(resetOperation());
+                      setReloadWindow(true);
+                    } else {
+                      alert('Failed to broadcast');
+                    }
+                  });
+                } else {
+                  alert('[UpdateAuthConf] Signed Tx Error');
+                }
+              })
+              .catch((e) => {
+                alert(e);
+              });
+          } else {
+            const txToEncode: IEncodeTransaction = {
+              transaction: { ...transaction },
+              method: keyType,
+              expirationDate: moment().add(60, 'm').toDate(),
+              initiator: { ...transactionState.initiator },
+            };
+            try {
+              multisig.utils
+                .encodeTransaction(txToEncode)
+                .then((encodedTxObj) => {
+                  multisig.wss
+                    .requestSignatures(encodedTxObj)
+                    .then(async () => {
+                      await dispatch(resetOperation());
+                      setReloadWindow(true);
+                    });
+                })
+                .catch((e) => {
+                  alert(e.message);
+                });
+            } catch (error) {
+              alert(`${error}`);
               setReloadWindow(true);
-            });
-          });
-        } catch (error) {
-          alert(`${error}`);
-          setReloadWindow(true);
-        }
-      }
+            }
+          }
+        })
+        .catch((e) => {
+          alert(e);
+        });
     } else {
       setReloadWindow(false);
     }
   };
 
   const handleSetInitiator = async () => {
-    const keyType = isOriginalActiveSufficient
-      ? KeychainKeyTypes.active
-      : KeychainKeyTypes.posting;
     let initiator: Initiator;
-
-    switch (keyType) {
-      case KeychainKeyTypes.active:
-        const active_auth =
-          JSON.stringify(newAuthorities.active) ===
-            JSON.stringify(originalAuthorities.active) && !isActiveKeyDeleted
-            ? originalAuthorities.active.key_auths[0]
-            : !isActiveKeyDeleted
-            ? originalAuthorities.active.key_auths[0]
-            : newAuthorities.active.key_auths[0];
-        initiator = {
-          username: signedAccountObj.data.username,
-          publicKey: active_auth[0].toString(),
-          weight: active_auth[1],
-        };
-        await dispatch(setInitiator(initiator));
-
-        break;
-      case KeychainKeyTypes.posting:
-        const posting_auth =
-          JSON.stringify(newAuthorities.posting) ===
-            JSON.stringify(originalAuthorities.posting) && !isPostingKeyDeleted
-            ? originalAuthorities.posting.key_auths[0]
-            : !isActiveKeyDeleted
-            ? originalAuthorities.posting.key_auths[0]
-            : newAuthorities.posting.key_auths[0];
-        initiator = {
-          username: signedAccountObj.data.username,
-          publicKey: posting_auth[0].toString(),
-          weight: posting_auth[1],
-        };
-        await dispatch(setInitiator(initiator));
-        break;
-    }
+    const active_auth =
+      JSON.stringify(newAuthorities.active) ===
+        JSON.stringify(originalAuthorities.active) && !isActiveKeyDeleted
+        ? originalAuthorities.active.key_auths[0]
+        : !isActiveKeyDeleted
+        ? originalAuthorities.active.key_auths[0]
+        : newAuthorities.active.key_auths[0];
+    initiator = {
+      username: signedAccountObj.data.username,
+      publicKey: active_auth[0].toString(),
+      weight: active_auth[1],
+    };
+    await dispatch(setInitiator(initiator));
   };
   const handleModalClose = () => {
     window.location.reload();
