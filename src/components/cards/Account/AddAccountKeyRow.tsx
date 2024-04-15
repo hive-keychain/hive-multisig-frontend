@@ -19,6 +19,7 @@ export function AddAccountKeyRow({
   const [weight, setAccountWeight] = useState<number>(1);
   const [privateKey, setPrivateKey] = useState<string>('');
   const [publicKey, setPublicKey] = useState<string>('');
+  const [isKeysCoppied, setIsKeysCoppied] = useState<boolean>(false);
   const [showNewKeys, setShowNewKeys] = useState<boolean>(false);
   useEffect(() => {
     setUser(loggedInAccount);
@@ -32,6 +33,12 @@ export function AddAccountKeyRow({
       setShowNewKeys(true);
     }
   }, [privateKey]);
+
+  useEffect(() => {
+    if (!showNewKeys && isKeysCoppied) {
+      handleAddOnClick();
+    }
+  }, [showNewKeys, isKeysCoppied]);
 
   const handleAddOnClick = () => {
     if (accountName !== '') {
@@ -54,6 +61,7 @@ export function AddAccountKeyRow({
         <NewKeys
           show={showNewKeys}
           setShowNewKeys={setShowNewKeys}
+          setKeysCoppied={setIsKeysCoppied}
           publicKey={publicKey}
           privateKey={privateKey}
         />

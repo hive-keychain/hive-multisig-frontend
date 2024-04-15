@@ -7,11 +7,14 @@ import {
   IDeleteKey,
 } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { updateAccount } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   deleteAccount,
   deleteKey,
-} from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+  setActiveKeyDelete,
+  setOwnerKeyDelete,
+  setPostingKeyDelete,
+  updateAccount,
+} from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { useDidMountEffect } from '../../../utils/utils';
 
 export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
@@ -82,6 +85,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
             authorities: newAuthorities,
           };
           dispatch(deleteKey(keyToDelete));
+          dispatchDeletedKey(keyToDelete);
           break;
       }
 
@@ -89,6 +93,19 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     }
   }, [deleteComponentKey]);
 
+  const dispatchDeletedKey = (keyToDelete: IDeleteKey) => {
+    switch (keyToDelete.type.toLowerCase()) {
+      case 'owner':
+        dispatch(setOwnerKeyDelete(true));
+        break;
+      case 'active':
+        dispatch(setActiveKeyDelete(true));
+        break;
+      case 'posting':
+        dispatch(setPostingKeyDelete(true));
+        break;
+    }
+  };
   const handleUpdate = (v: number) => {
     setWeight(v);
   };
