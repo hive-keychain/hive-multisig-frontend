@@ -1,22 +1,21 @@
-import * as Hive from '@hiveio/dhive';
-import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import * as _ from 'lodash';
+import { Authorities, BroadCastResponseType } from '../../../interfaces';
+import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import {
-  Authorities,
-  BroadCastResponseType,
-  IDHiveAccountUpdateBroadcast,
-  IHiveAccountUpdateBroadcast,
-} from '../../../interfaces';
-import {
-  IAccountKeyRowProps,
-  IDeleteAccount,
-  IDeleteKey,
-} from '../../../interfaces/cardInterfaces';
-import { removeAccount, removeKey } from '../../../utils/account-utils';
-import {
-  default as AccountUtils,
-  default as HiveUtils,
-} from '../../../utils/hive.utils';
+  deleteAccount,
+  deleteKey,
+  dhiveBroadcastUpdateAccount,
+  hiveKeyChainRequestBroadCast,
+  setActiveAuthUpdate,
+  setActiveKeyDelete,
+  setOwnerAuthUpdate,
+  setOwnerKeyDelete,
+  setPostingAuthUpdate,
+  setPostingKeyDelete,
+  setThresholdWarning,
+  updateActive,
+} from './updateAuthoritiesThunks';
 export type AuthorityUpdateStateType = {
   Authorities: Authorities;
   NewAuthorities: Authorities;
@@ -51,112 +50,6 @@ const initialState: AuthorityUpdateStateType = {
   thresholdWarning: '',
 };
 
-export const hiveKeyChainRequestBroadCast = createAsyncThunk(
-  'updateAuthority/hiveBroadcast',
-  async (props: IHiveAccountUpdateBroadcast) => {
-    const response = await HiveUtils.accountUpdateBroadcast(props);
-    return response;
-  },
-);
-
-export const dhiveBroadcastUpdateAccount = createAsyncThunk(
-  'updateAuthority/dhiveBroadcast',
-  async ({ newAuthorities, ownerKey }: IDHiveAccountUpdateBroadcast) => {
-    const response = await AccountUtils.broadcastUpdateAccount({
-      newAuthorities,
-      ownerKey,
-    });
-    return response;
-  },
-);
-
-export const deleteAccount = createAsyncThunk(
-  'updateAuthority/deleteAccount',
-  async ({ type, username, authorities }: IDeleteAccount) => {
-    const newAuth = await removeAccount(type, username, authorities);
-
-    return newAuth;
-  },
-);
-
-export const setOwnerKeyDelete = createAsyncThunk(
-  'updateAuthority/setOwnerKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setPostingKeyDelete = createAsyncThunk(
-  'updateAuthority/setPostingKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const setActiveKeyDelete = createAsyncThunk(
-  'updateAuthority/setActiveKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setOwnerAuthUpdate = createAsyncThunk(
-  'updateAuthority/setOwnerAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setActiveAuthUpdate = createAsyncThunk(
-  'updateAuthority/setActiveAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const setPostingAuthUpdate = createAsyncThunk(
-  'updateAuthority/setPostingAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const deleteKey = createAsyncThunk(
-  'updateAuthority/deleteKey',
-  async ({ type, key, authorities }: IDeleteKey) => {
-    const newAuth = await removeKey(type, key, authorities);
-    return newAuth;
-  },
-);
-
-export const getIndexOfStringFromTupleArray = (
-  array: [string | Hive.PublicKey, number][],
-  element: string | Hive.PublicKey,
-): number => {
-  let index = -1;
-  for (let i = 0; i < array.length; i++) {
-    if (array[i][0] === element) {
-      index = i;
-      break;
-    }
-  }
-  return index;
-};
-
-export const removeAuthorityKey = (
-  array: [string | Hive.PublicKey, number][],
-  element: [string | Hive.PublicKey, number],
-): [string | Hive.PublicKey, number][] => {
-  const index = getIndexOfStringFromTupleArray(array, element[0]);
-  if (index !== -1) {
-    return [...array.slice(0, index), ...array.slice(index + 1)];
-  }
-  return [...array];
-};
-
-export const clearAuthorityState = createAsyncThunk(
-  'updateAuthority/clearAuthorityState',
-  async () => {
-    return {} as AuthorityUpdateStateType;
-  },
-);
 const updateAuthoritySlice = createSlice({
   name: 'updateAuthority',
   initialState,
@@ -358,6 +251,14 @@ const updateAuthoritySlice = createSlice({
         state.NewAuthorities.posting,
         state.Authorities.posting,
       );
+    });
+
+    builder.addCase(updateActive.fulfilled, (state, action) => {
+      state.NewAuthorities.active = { ...action.payload };
+    });
+
+    builder.addCase(setThresholdWarning.fulfilled, (state, action) => {
+      state.thresholdWarning = action.payload;
     });
 
     builder.addCase(setOwnerKeyDelete.fulfilled, (state, action) => {

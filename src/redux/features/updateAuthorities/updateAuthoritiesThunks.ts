@@ -10,6 +10,7 @@ import {
   default as AccountUtils,
   default as HiveUtils,
 } from '../../../utils/hive.utils';
+import { AuthorityUpdateStateType } from './updateAuthoritiesSlice';
 
 export const hiveKeyChainRequestBroadCast = createAsyncThunk(
   'updateAuthority/hiveBroadcast',
@@ -61,6 +62,46 @@ export const setThresholdWarning = createAsyncThunk(
   },
 );
 
+export const setOwnerKeyDelete = createAsyncThunk(
+  'updateAuthority/setOwnerKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setPostingKeyDelete = createAsyncThunk(
+  'updateAuthority/setPostingKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+export const setActiveKeyDelete = createAsyncThunk(
+  'updateAuthority/setActiveKeyDelete',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setOwnerAuthUpdate = createAsyncThunk(
+  'updateAuthority/setOwnerAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setActiveAuthUpdate = createAsyncThunk(
+  'updateAuthority/setActiveAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+export const setPostingAuthUpdate = createAsyncThunk(
+  'updateAuthority/setPostingAuthUpdate',
+  async (flag: boolean) => {
+    return flag;
+  },
+);
+
 export const getIndexOfStringFromTupleArray = (
   array: [string | Hive.PublicKey, number][],
   element: string | Hive.PublicKey,
@@ -74,3 +115,10 @@ export const getIndexOfStringFromTupleArray = (
   }
   return index;
 };
+
+export const clearAuthorityState = createAsyncThunk(
+  'updateAuthority/clearAuthorityState',
+  async () => {
+    return {} as AuthorityUpdateStateType;
+  },
+);

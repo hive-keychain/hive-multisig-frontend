@@ -3,15 +3,15 @@ import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  initializeAuthorities,
   setActiveAuthUpdate,
   setActiveKeyDelete,
   setOwnerAuthUpdate,
   setOwnerKeyDelete,
   setPostingAuthUpdate,
   setPostingKeyDelete,
-} from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+} from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
 

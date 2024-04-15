@@ -114,12 +114,14 @@ const useSuggestedActiveAuthority = () => {
   useEffect(() => {
     dispatch(setThresholdWarning(thresholdWarning));
   }, [thresholdWarning]);
+
   const updateSuggested = async () => {
     if (newActive) {
       let activeAuth = structuredClone(newActive);
       const found = activeAuth.account_auths.some(
         (account) => account[0] === 'hive.multisig',
       );
+      console.log(`hive.multisig is ${!found ? 'NOT' : ''} FOUND`);
       if (!found) {
         activeAuth.account_auths.push(['hive.multisig', 1]);
         /**Enable these lines if you want to automatically suggest the weights to 1 */
