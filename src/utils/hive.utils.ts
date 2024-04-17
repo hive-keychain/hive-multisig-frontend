@@ -33,12 +33,23 @@ const getClient = () => {
     ]);
   return client;
 };
+
 const getAccount = async (username: string) => {
   client = getClient();
   return client.database.getAccounts([username]);
 };
+
+const getJSONMetadata = async (username: string) => {
+  try {
+    const account = await getAccount(username);
+    const jsonMetadata = JSON.parse(account[0]['json_metadata']);
+    return jsonMetadata;
+  } catch {
+    return undefined;
+  }
+};
 const getAuthority = async (username: string, keyType: KeychainKeyTypes) => {
-  const account = await HiveUtils.getAccount(username);
+  const account = await getAccount(username);
   if (account.length === 0) {
     return undefined;
   }
@@ -325,6 +336,7 @@ const HiveUtils = {
   requestSignTx,
   broadcastTx,
   getActiveSignWeight,
+  getJSONMetadata,
 };
 
 export default HiveUtils;

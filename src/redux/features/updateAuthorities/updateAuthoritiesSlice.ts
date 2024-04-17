@@ -20,7 +20,7 @@ export type AuthorityUpdateStateType = {
   Authorities: Authorities;
   NewAuthorities: Authorities;
   isUpdateSucces: boolean;
-  updateCount: number;
+  updateCount: number;  
   isOwnerAuthUpdated: boolean;
   isActiveAuthUpdated: boolean;
   isPostingAuthUpdated: boolean;

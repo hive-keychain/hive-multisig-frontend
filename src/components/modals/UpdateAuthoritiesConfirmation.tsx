@@ -1,4 +1,3 @@
-import * as Hive from '@hiveio/dhive';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
@@ -14,6 +13,7 @@ import {
   resetOperation,
   setInitiator,
 } from '../../redux/features/transaction/transactionThunks';
+import { orderAlphabetically } from '../../utils/account-utils';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
@@ -72,25 +72,6 @@ export const UpdateAuthoritiesConfirmation = ({
     }
   }, [isReloadWindow]);
 
-  const orderAlphabetically = (
-    auths: [string | Hive.PublicKey, number][],
-  ): [string, number][] => {
-    const names = auths.map((auth) => auth[0]).sort();
-    const sortedArr: [string, number][] = [];
-    for (let i = 0; i < names.length; i++) {
-      const index = auths.findIndex((e) => e[0] == names[i]);
-      const element: [string, number] = [
-        auths[index][0].toString(),
-        auths[index][1],
-      ];
-      sortedArr.push(element);
-    }
-    return sortedArr;
-  };
-
-  const getKeyWithHighestWeight = () => {
-    const threshold = originalAuthorities.active.weight_threshold;
-  };
   const handleUpdate = async () => {
     if (updateAuthorityState) {
       const activeAccounts = orderAlphabetically(newAuths.active.account_auths);

@@ -150,3 +150,19 @@ export const removeKey = (
   }
   return accountCopy;
 };
+
+export const orderAlphabetically = (
+  auths: [string | Hive.PublicKey, number][],
+): [string, number][] => {
+  const names = auths.map((auth) => auth[0]).sort();
+  const sortedArr: [string, number][] = [];
+  for (let i = 0; i < names.length; i++) {
+    const index = auths.findIndex((e) => e[0] == names[i]);
+    const element: [string, number] = [
+      auths[index][0].toString(),
+      auths[index][1],
+    ];
+    sortedArr.push(element);
+  }
+  return sortedArr;
+};
