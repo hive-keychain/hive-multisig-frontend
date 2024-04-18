@@ -39,6 +39,12 @@ const getAccount = async (username: string) => {
   return client.database.getAccounts([username]);
 };
 
+const getAccountMemoKey = async (username: string) => {
+  const account = await getAccount(username);
+  const memo = account[0]['memo_key'];
+  return memo;
+};
+
 const getJSONMetadata = async (username: string) => {
   try {
     const account = await getAccount(username);
@@ -212,6 +218,24 @@ const requestSignTx = async (
   );
 };
 
+const encodeMessage = async (
+  from: string,
+  to: string,
+  message: string,
+  method: KeychainKeyTypes,
+) => {
+  return new Promise<any>((resolve, reject) => {
+    const callback = (response: any) => {
+      if (response.result) {
+        resolve(response);
+      } else {
+        reject(response);
+      }
+    };
+    const keychain = window.hive_keychain;
+    keychain.requestEncodeMessage(from, to, '#' + message, method, callback);
+  });
+};
 const broadcastTx = async (transaction: SignedTransaction) => {
   client = getClient();
   var res = await client.broadcast.send(transaction);
@@ -322,6 +346,7 @@ const getActiveSignWeight = async (
 const HiveUtils = {
   getAccount,
   getAuthority,
+  getAccountMemoKey,
   getAccountAuthorities,
   broadcastUpdateAccount,
   getPrivateKeyFromSeed,
@@ -337,6 +362,7 @@ const HiveUtils = {
   broadcastTx,
   getActiveSignWeight,
   getJSONMetadata,
+  encodeMessage,
 };
 
 export default HiveUtils;

@@ -1,21 +1,15 @@
-import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
-import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Authorities } from '../../interfaces';
-import { IExpiration, Initiator } from '../../interfaces/transaction.interface';
+import { Initiator } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   resetOperation,
   setInitiator,
 } from '../../redux/features/transaction/transactionThunks';
-import { orderAlphabetically } from '../../utils/account-utils';
-import HiveUtils from '../../utils/hive.utils';
-import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { useDidMountEffect } from '../../utils/utils';
 interface Iprops {
@@ -74,92 +68,20 @@ export const UpdateAuthoritiesConfirmation = ({
 
   const handleUpdate = async () => {
     if (updateAuthorityState) {
-      const activeAccounts = orderAlphabetically(newAuths.active.account_auths);
-      const activeKeys = orderAlphabetically(newAuths.active.key_auths);
-      const postingAccounts = orderAlphabetically(
-        newAuths.posting.account_auths,
-      );
-      const postingKeys = orderAlphabetically(newAuths.posting.key_auths);
-
-      const newAuthorities: Authorities = {
-        ...newAuths,
-        owner: undefined,
-        active: {
-          account_auths: activeAccounts,
-          key_auths: activeKeys,
-          weight_threshold: newAuths.active.weight_threshold,
-        },
-        posting: {
-          account_auths: postingAccounts,
-          key_auths: postingKeys,
-          weight_threshold: newAuths.posting.weight_threshold,
-        },
-      };
-
-      const keyType = KeychainKeyTypes.active;
-
-      const op = ['account_update', newAuthorities];
-      const transaction = await HiveTxUtils.createTx([op], {
-        date: undefined,
-        minutes: 60,
-      } as IExpiration);
-      HiveUtils.getActiveSignWeight(
+      MultisigUtils.accountUpdateWithActiveAuthority(
         signedAccountObj.data.username,
+        transactionState.initiator,
         originalAuthorities.active,
+        newAuthorities,
       )
-        .then((signer_weight) => {
-          if (signer_weight >= originalAuthorities.active.weight_threshold) {
-            HiveUtils.requestSignTx(
-              transaction,
-              signedAccountObj.data.username,
-              keyType,
-            )
-              .then((signedTx) => {
-                if (signedTx) {
-                  HiveUtils.broadcastTx(signedTx).then(async (res) => {
-                    if (res) {
-                      await dispatch(resetOperation());
-                      setReloadWindow(true);
-                    } else {
-                      alert('Failed to broadcast');
-                    }
-                  });
-                } else {
-                  alert('[UpdateAuthConf] Signed Tx Error');
-                }
-              })
-              .catch((e) => {
-                alert(e);
-              });
-          } else {
-            const txToEncode: IEncodeTransaction = {
-              transaction: { ...transaction },
-              method: keyType,
-              expirationDate: moment().add(60, 'm').toDate(),
-              initiator: { ...transactionState.initiator },
-            };
-            try {
-              multisig.utils
-                .encodeTransaction(txToEncode)
-                .then((encodedTxObj) => {
-                  multisig.wss
-                    .requestSignatures(encodedTxObj)
-                    .then(async () => {
-                      await dispatch(resetOperation());
-                      setReloadWindow(true);
-                    });
-                })
-                .catch((e) => {
-                  alert(e.message);
-                });
-            } catch (error) {
-              alert(`${error}`);
-              setReloadWindow(true);
-            }
+        .then(async (res) => {
+          if (res) {
+            await dispatch(resetOperation());
+            window.location.reload();
           }
         })
-        .catch((e) => {
-          alert(e);
+        .catch((reason) => {
+          alert(reason);
         });
     } else {
       setReloadWindow(false);

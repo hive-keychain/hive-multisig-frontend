@@ -1,4 +1,3 @@
-import { Authorities } from '../interfaces';
 export interface ITwoFactorAuth {
   enabled: boolean;
   secret: string;
@@ -10,4 +9,8 @@ export interface State extends ITwoFactorAuth {
   isValid: boolean;
   proceedIntro: boolean;
   proceedMultisig: boolean;
+}
+
+export interface TwoFACodes {
+  [botName: string]: string;
 }
