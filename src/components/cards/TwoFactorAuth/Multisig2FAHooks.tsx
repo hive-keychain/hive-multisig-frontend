@@ -37,11 +37,14 @@ const useActiveAuthority = () => {
   return [originalActiveAuthorities, newActiveAuthorities];
 };
 
-const useHiveKeychainBotAccount = () => {
+const useHiveKeychainBotAccount = (initialState: boolean = true) => {
   const dispatch = useAppDispatch();
   const [originalActive, newActive] = useActiveAuthority();
-  const [useKeychainBot, setUseKeychainBot] = useState(true);
+  const [useKeychainBot, setUseKeychainBot] = useState(initialState);
 
+  useEffect(() => {
+    if (originalActive) updateUseBot();
+  }, [originalActive]);
   useEffect(() => {
     updateUseBot();
   }, [useKeychainBot]);

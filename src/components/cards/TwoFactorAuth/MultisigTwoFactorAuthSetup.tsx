@@ -1,6 +1,6 @@
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { useEffect, useState } from 'react';
-import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { resetOperation } from '../../../redux/features/transaction/transactionThunks';
 import { MultisigUtils } from '../../../utils/multisig.utils';
@@ -19,6 +19,9 @@ export const MultisigTwoFactorAuthSetup = () => {
     isPostingKeyDeleted,
   ] = MultisigTwoFAHooks.useAuthoritiesUpdateState();
   const [multisigInitiator] = MultisigTwoFAHooks.useMultisigInitiatorHandler();
+
+  const [setUseHiveKeychainAccount] =
+    MultisigTwoFAHooks.useHiveKeychainBotAccount(true);
   const [localOriginalActive, setLocalOriginalActive] =
     useState(originalActive);
   const secret = useAppSelector(
@@ -45,6 +48,22 @@ export const MultisigTwoFactorAuthSetup = () => {
       setLocalOriginalActive(originalActive);
     }
   }, [originalActive]);
+  const [isUseMultisigBotAccount, setUseMultisigBotAccount] = useState(true);
+  const [debouncedRadioStatus, setDebouncedRadio] = useState(
+    isUseMultisigBotAccount,
+  );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedRadio(isUseMultisigBotAccount);
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [isUseMultisigBotAccount]);
+
+  useEffect(() => {
+    setUseHiveKeychainAccount(debouncedRadioStatus);
+  }, [debouncedRadioStatus]);
 
   const handleUpdateAccount = async () => {
     if (updateAuthorityState) {
@@ -100,6 +119,11 @@ export const MultisigTwoFactorAuthSetup = () => {
   //   // encrypt 2fa secret
   //   //
   // };
+
+  const handleRadioChange = (e: any) => {
+    const value = e.target.value === 'yes';
+    setUseMultisigBotAccount(value);
+  };
   return (
     <Container>
       <Row className="justify-content-md-center">
@@ -116,11 +140,33 @@ export const MultisigTwoFactorAuthSetup = () => {
                 </p>
 
                 <p>
-                  You may use <strong>@hive.multisig</strong> as the bot
-                  provided by Hive Keychain otherwise you may use your own
-                  account configured as a bot.
+                  Do you wish to use <strong>@hive.multisig</strong> as the bot
+                  provided by Hive Keychain?
                 </p>
 
+                <div>
+                  <Form>
+                    <Form.Check
+                      inline
+                      type="radio"
+                      label="Yes"
+                      value="yes"
+                      checked={isUseMultisigBotAccount}
+                      onChange={handleRadioChange}
+                    />
+                    <Form.Check
+                      inline
+                      type="radio"
+                      label="No"
+                      value="no"
+                      checked={!isUseMultisigBotAccount}
+                      onChange={handleRadioChange}
+                    />
+                  </Form>
+                </div>
+                <p>
+                  Otherwise you may use your own account configured as a bot.
+                </p>
                 {originalActive?.weight_threshold === 1 ? (
                   <p className="justify-content-md-center">
                     ⚠ With your current Active Authority settings, we suggest to
