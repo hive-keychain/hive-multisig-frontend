@@ -4,6 +4,8 @@ import { Initiator } from '../../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setInitiator } from '../../../redux/features/transaction/transactionThunks';
 import {
+  addAccountWarning,
+  removeAccountWarning,
   setThresholdWarning,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
@@ -188,6 +190,35 @@ const useWeightRestriction = () => {
 const useBotJSONMetadataChecker = () => {
   const [originalActive, newActive] = useActiveAuthority();
   const [nonBots, setNonBots] = useState([]);
+  const [bots, setBots] = useState([]);
+
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (newActive) {
+      handleCheck();
+    }
+  }, [newActive]);
+  useEffect(() => {
+    if (nonBots.length > 0) {
+      nonBots.forEach((nonBot) => {
+        dispatch(
+          addAccountWarning([
+            nonBot[0],
+            `${nonBot[0]} is not configurd as a multisig bot.`,
+          ]),
+        );
+      });
+    }
+  }, [nonBots]);
+
+  useEffect(() => {
+    if (bots.length > 0) {
+      bots.forEach((bot) => {
+        dispatch(removeAccountWarning(bot[0]));
+      });
+    }
+  }, [bots]);
 
   const handleCheck = async () => {
     const originalAccSet = new Set(
@@ -198,6 +229,7 @@ const useBotJSONMetadataChecker = () => {
     );
 
     let newNonBots: [string, number][] = [];
+    let newBots: [string, number][] = [];
 
     for (let i = 0; i < newAccs.length; i++) {
       const username = newAccs[i][0];
@@ -205,18 +237,17 @@ const useBotJSONMetadataChecker = () => {
       if (!isValid) {
         const exists = nonBots.some((t) => t[0] === username);
         if (!exists) {
-          newNonBots = newNonBots.concat([newAccs[i]]);
+          newNonBots = nonBots.concat([newAccs[i]]);
+        } else {
+          newBots = bots.concat([newAccs[i]]);
         }
       }
     }
     setNonBots(newNonBots);
+    setBots(newBots);
   };
 
-  if (newActive) {
-    handleCheck();
-  }
-
-  return [nonBots];
+  return [bots, nonBots];
 };
 
 const useAuthoritiesUpdateState = () => {

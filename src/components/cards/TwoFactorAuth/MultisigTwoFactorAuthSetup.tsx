@@ -10,6 +10,7 @@ var deepequal = require('deep-equal');
 
 export const MultisigTwoFactorAuthSetup = () => {
   const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
+  const [bots, nonBots] = MultisigTwoFAHooks.useBotJSONMetadataChecker();
   const [thresholdWarning] = MultisigTwoFAHooks.useWeightRestriction();
   const [
     updateAuthorityState,

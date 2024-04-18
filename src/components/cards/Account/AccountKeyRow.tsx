@@ -24,6 +24,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   componentColor,
 }) => {
   const [color, setColor] = useState<string>(componentColor);
+  const [warningText, setWarningText] = useState<string>('');
   const [outlineColor, setOutlineColor] =
     useState<string>('gray-input-outline');
   const [deleteComponentKey, setDeleteComponentKey] = useState<string>();
@@ -33,6 +34,39 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   const newAuthorities: Authorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
+
+  const accountWarning: [string, string][] = useAppSelector(
+    (state) => state.updateAuthorities.accountRowWarning,
+  );
+  const keyWarning: [string, string][] = useAppSelector(
+    (state) => state.updateAuthorities.keyRowWarning,
+  );
+
+  useEffect(() => {
+    switch (type.toLowerCase()) {
+      case 'accounts':
+        const accWarn = accountWarning.filter(
+          (acc) => acc[0] === accountKeyAuth[0],
+        );
+        if (accWarn.length > 0 && accWarn[0][1] !== '') {
+          setWarningText(accWarn[0][1]);
+        } else {
+          setWarningText('');
+        }
+        break;
+      case 'keys':
+        const keyWarn = keyWarning.filter(
+          (key) => key[0] === accountKeyAuth[0],
+        );
+        if (keyWarn.length > 0 && keyWarn[0][1] !== '') {
+          setWarningText(keyWarn[0][1]);
+        } else {
+          setWarningText('');
+        }
+        break;
+    }
+  }, [accountWarning, keyWarning]);
+
   useEffect(() => {
     switch (color) {
       case 'red':
@@ -118,6 +152,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
       <Container>
         <Row>
           <Col>
+            <div className="text-danger">{warningText}</div>
             <InputGroup>
               <InputGroup.Text className={outlineColor}>
                 {type === 'Accounts' ? '@' : <i className="fa fa-lock"></i>}

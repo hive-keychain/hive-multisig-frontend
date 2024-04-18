@@ -3,10 +3,14 @@ import * as _ from 'lodash';
 import { Authorities, BroadCastResponseType } from '../../../interfaces';
 import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import {
+  addAccountWarning,
+  addKeyWarning,
   deleteAccount,
   deleteKey,
   dhiveBroadcastUpdateAccount,
   hiveKeyChainRequestBroadCast,
+  removeAccountWarning,
+  removeKeyWarning,
   setActiveAuthUpdate,
   setActiveKeyDelete,
   setOwnerAuthUpdate,
@@ -20,7 +24,7 @@ export type AuthorityUpdateStateType = {
   Authorities: Authorities;
   NewAuthorities: Authorities;
   isUpdateSucces: boolean;
-  updateCount: number;  
+  updateCount: number;
   isOwnerAuthUpdated: boolean;
   isActiveAuthUpdated: boolean;
   isPostingAuthUpdated: boolean;
@@ -31,6 +35,8 @@ export type AuthorityUpdateStateType = {
   ownerKey?: string;
   error: string;
   thresholdWarning?: string;
+  accountRowWarning?: [string, string][];
+  keyRowWarning?: [string, string][];
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -48,6 +54,8 @@ const initialState: AuthorityUpdateStateType = {
   ownerAuthUpdateCount: 0,
   error: '',
   thresholdWarning: '',
+  accountRowWarning: [],
+  keyRowWarning: [],
 };
 
 const updateAuthoritySlice = createSlice({
@@ -279,6 +287,33 @@ const updateAuthoritySlice = createSlice({
     });
     builder.addCase(setPostingAuthUpdate.fulfilled, (state, action) => {
       state.isPostingAuthUpdated = action.payload;
+    });
+
+    builder.addCase(addAccountWarning.fulfilled, (state, action) => {
+      const warnings = state.accountRowWarning.filter(
+        (acc) => acc[0] !== action.payload.username,
+      );
+      state.accountRowWarning = [
+        ...warnings.concat([[action.payload.username, action.payload.warning]]),
+      ];
+    });
+
+    builder.addCase(removeAccountWarning.fulfilled, (state, action) => {
+      state.accountRowWarning = state.accountRowWarning.filter(
+        (acc) => acc[0] !== action.payload,
+      );
+    });
+
+    builder.addCase(addKeyWarning.fulfilled, (state, action) => {
+      state.keyRowWarning = state.keyRowWarning.concat([
+        [action.payload.key, action.payload.warning],
+      ]);
+    });
+
+    builder.addCase(removeKeyWarning.fulfilled, (state, action) => {
+      state.keyRowWarning = state.keyRowWarning.filter(
+        (key) => key[0] !== action.payload,
+      );
     });
   },
 });

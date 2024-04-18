@@ -10,7 +10,6 @@ import {
   default as AccountUtils,
   default as HiveUtils,
 } from '../../../utils/hive.utils';
-import { AuthorityUpdateStateType } from './updateAuthoritiesSlice';
 
 export const hiveKeyChainRequestBroadCast = createAsyncThunk(
   'updateAuthority/hiveBroadcast',
@@ -102,23 +101,28 @@ export const setPostingAuthUpdate = createAsyncThunk(
   },
 );
 
-export const getIndexOfStringFromTupleArray = (
-  array: [string | Hive.PublicKey, number][],
-  element: string | Hive.PublicKey,
-): number => {
-  let index = -1;
-  for (let i = 0; i < array.length; i++) {
-    if (array[i][0] === element) {
-      index = i;
-      break;
-    }
-  }
-  return index;
-};
+export const addAccountWarning = createAsyncThunk(
+  'updateAuthority/addAccountWarning',
+  async ([username, warning]: [string, string]) => {
+    return { username, warning };
+  },
+);
+export const addKeyWarning = createAsyncThunk(
+  'updateAuthority/addKeyWarning',
+  async ([key, warning]: [string, string]) => {
+    return { key, warning };
+  },
+);
 
-export const clearAuthorityState = createAsyncThunk(
-  'updateAuthority/clearAuthorityState',
-  async () => {
-    return {} as AuthorityUpdateStateType;
+export const removeAccountWarning = createAsyncThunk(
+  'updateAuthority/removeAccountWarning',
+  async (username: string) => {
+    return username;
+  },
+);
+export const removeKeyWarning = createAsyncThunk(
+  'updateAuthority/removeKeyWarning',
+  async (username: string) => {
+    return username;
   },
 );
