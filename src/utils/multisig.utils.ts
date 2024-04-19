@@ -5,7 +5,6 @@ import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-mess
 import moment from 'moment';
 import { Authorities } from '../interfaces';
 import { IExpiration, Initiator } from '../interfaces/transaction.interface';
-import { TwoFACodes } from './../interfaces/twoFactorAuth.interface';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
@@ -109,11 +108,11 @@ const multisigTxBroadcast = async (
         })
         .catch((e) => {
           alert(e.message);
-          reject(undefined);
+          reject(e);
         });
     } catch (error) {
       alert(`${error}`);
-      reject(undefined);
+      reject(error);
     }
   });
 };
@@ -159,6 +158,29 @@ const accountUpdateWithActiveAuthority = async (
   });
 };
 
+const twoFAConfigBroadcast = async (
+  username: string,
+  bot: [string | Hive.PublicKey, number],
+  twoFASecret: string,
+  initiator: Initiator,
+  activeAuthority: Hive.AuthorityType,
+  newAuthorities: Authorities,
+) => {
+  return new Promise(async (resolve, reject) => {
+    const customJsonOp = await getCustomJsonOp(username, bot, twoFASecret);
+    const updateAccountOp = await getUpdateAccountOp(newAuthorities);
+    const transaction = await HiveTxUtils.createTx(
+      [customJsonOp, updateAccountOp],
+      {
+        date: undefined,
+        minutes: 60,
+      } as IExpiration,
+    );
+    broadcastTransaction(transaction, username, initiator, activeAuthority)
+      .then((res) => resolve(res))
+      .catch((reason) => reject(reason));
+  });
+};
 const broadcastTransaction = async (
   transaction: Hive.Transaction,
   username: string,
@@ -166,38 +188,37 @@ const broadcastTransaction = async (
   activeAuthority: Hive.AuthorityType,
 ) => {
   return new Promise(async (resolve, reject) => {
-    const signer_weight = await HiveUtils.getActiveSignWeight(
-      username,
-      activeAuthority,
-    );
-    if (signer_weight >= activeAuthority.weight_threshold) {
-      nonMultisigTxBroadcast(transaction, username).then(async (res) => {
-        if (res) {
+    try {
+      const signer_weight = await HiveUtils.getActiveSignWeight(
+        username,
+        activeAuthority,
+      );
+      if (signer_weight >= activeAuthority.weight_threshold) {
+        //non multisig transaction
+        nonMultisigTxBroadcast(transaction, username).then(async (res) => {
           resolve(res);
-        } else {
-          reject('Failed to broadcast non-multisig account_update');
-        }
-      });
-    } //multisig transaction
-    else {
-      multisigTxBroadcast(transaction, initiator).then(async (res) => {
-        if (res) {
-          resolve(res);
-        } else {
-          reject('Failed to broadcast multisig account_update');
-        }
-      });
+        });
+      } else {
+        //multisig transaction
+        multisigTxBroadcast(transaction, initiator)
+          .then(async (res) => {
+            resolve(res);
+          })
+          .catch((e) => {
+            reject(e);
+          });
+      }
+    } catch (e) {
+      reject(e);
     }
   });
 };
-const botConfigBroadcast = async (
+const getCustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
   twoFASecret: string,
-  initiator: Initiator,
-  activeAuthority: Hive.AuthorityType,
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise<any>(async (resolve, reject) => {
     try {
       const isValid = await MultisigUtils.checkMultisigBot(bot[0].toString());
       if (isValid) {
@@ -210,37 +231,30 @@ const botConfigBroadcast = async (
         );
         if (encodingResult.success) {
           const encodedMessage = encodingResult.result[memoKey];
-          const twoFACodes: TwoFACodes = {
-            [`${bot[0]}`]: `${encodedMessage}`,
-          };
           const customJsonOp = {
+            required_auths: [username],
             required_posting_auths: [] as string[],
             id: 'setTwoFaId',
-            json: `"${JSON.stringify(twoFACodes)}"`,
+            json: JSON.stringify({
+              botName: bot[0],
+              twoFaId: encodedMessage,
+            }),
           };
           const op = ['custom_json', customJsonOp];
-          const transaction = await HiveTxUtils.createTx([op], {
-            date: undefined,
-            minutes: 60,
-          } as IExpiration);
-          broadcastTransaction(
-            transaction,
-            username,
-            initiator,
-            activeAuthority,
-          )
-            .then((res) => {
-              resolve(res);
-            })
-            .catch((reason) => {
-              reject(reason);
-            });
+
+          resolve(op);
         }
       }
     } catch (e) {
       reject(e);
     }
   });
+};
+
+const getUpdateAccountOp = async (newAuthorities: Authorities) => {
+  const updatedAuthorities: Authorities = parseNewAuthorities(newAuthorities);
+  const op = ['account_update', updatedAuthorities];
+  return op;
 };
 export const MultisigUtils = {
   getSigners,
@@ -250,5 +264,6 @@ export const MultisigUtils = {
   nonMultisigTxBroadcast,
   multisigTxBroadcast,
   accountUpdateWithActiveAuthority,
-  botConfigBroadcast,
+  broadcastTransaction,
+  twoFAConfigBroadcast,
 };

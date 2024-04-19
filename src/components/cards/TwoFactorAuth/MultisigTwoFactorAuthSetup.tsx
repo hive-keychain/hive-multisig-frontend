@@ -68,31 +68,21 @@ export const MultisigTwoFactorAuthSetup = () => {
 
   const handleUpdateAccount = async () => {
     if (updateAuthorityState) {
-      MultisigUtils.accountUpdateWithActiveAuthority(
+      MultisigUtils.twoFAConfigBroadcast(
         signedAccountObj.data.username,
+        botAccount as [string, number],
+        secret,
         transactionState.initiator,
         originalActive,
         newAuthorities,
       )
-        .then(async (res) => {})
+        .then(async (res) => {
+          alert(res);
+        })
         .catch((reason) => {
           alert(reason);
         });
     }
-  };
-
-  const handle2FAConfigBroadcast = async () => {
-    MultisigUtils.botConfigBroadcast(
-      originalAuthorities.account,
-      botAccount as [string, number],
-      secret,
-      transactionState.initiator,
-      originalActive,
-    )
-      .then((res) => {
-        console.log(JSON.stringify(res));
-      })
-      .catch((reason) => console.log(JSON.stringify(reason)));
   };
 
   const handleRadioChange = (e: any) => {
@@ -167,9 +157,7 @@ export const MultisigTwoFactorAuthSetup = () => {
                 <div className="d-flex justify-content-end">
                   <Button
                     onClick={() => {
-                      // handleUpdateAccount();
-
-                      handle2FAConfigBroadcast();
+                      handleUpdateAccount();
                     }}
                     className=""
                     variant="success">
