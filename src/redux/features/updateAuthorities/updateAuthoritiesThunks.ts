@@ -126,3 +126,17 @@ export const removeKeyWarning = createAsyncThunk(
     return username;
   },
 );
+
+export const allowAddAccount = createAsyncThunk(
+  'updateAuthority/allowAddAccount',
+  async (allow: boolean) => {
+    return allow;
+  },
+);
+
+export const allowAddKey = createAsyncThunk(
+  'updateAuthority/allowAddKey',
+  async (allow: boolean) => {
+    return allow;
+  },
+);

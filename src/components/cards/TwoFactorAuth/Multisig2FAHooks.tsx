@@ -1,11 +1,13 @@
 import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from 'react';
+import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { Initiator } from '../../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setInitiator } from '../../../redux/features/transaction/transactionThunks';
 import {
-  addAccountWarning,
-  removeAccountWarning,
+  allowAddAccount,
+  allowAddKey,
+  deleteAccount,
   setThresholdWarning,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
@@ -187,67 +189,114 @@ const useWeightRestriction = () => {
   return [thresholdWarning];
 };
 
-const useBotJSONMetadataChecker = () => {
+const useAllowOnlyBot = () => {
   const [originalActive, newActive] = useActiveAuthority();
-  const [nonBots, setNonBots] = useState([]);
-  const [bots, setBots] = useState([]);
-
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
+  const [bot, setBot] = useState<[string, string]>();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (newActive) {
-      handleCheck();
-    }
-  }, [newActive]);
-  useEffect(() => {
-    if (nonBots.length > 0) {
-      nonBots.forEach((nonBot) => {
-        dispatch(
-          addAccountWarning([
-            nonBot[0],
-            `${nonBot[0]} is not configurd as a multisig bot.`,
-          ]),
-        );
-      });
-    }
-  }, [nonBots]);
-
-  useEffect(() => {
-    if (bots.length > 0) {
-      bots.forEach((bot) => {
-        dispatch(removeAccountWarning(bot[0]));
-      });
-    }
-  }, [bots]);
-
+    if (newAuthorities) handleCheck();
+  }, [newAuthorities]);
   const handleCheck = async () => {
-    const originalAccSet = new Set(
-      originalActive.account_auths.map((t) => JSON.stringify(t)),
-    );
-    const newAccs = newActive.account_auths.filter(
-      (acc) => !originalAccSet.has(JSON.stringify(acc)),
-    );
+    if (newActive) {
+      const originalAccSet = new Set(
+        originalActive.account_auths.map((t) => JSON.stringify(t)),
+      );
+      const newAccs = newActive.account_auths.filter(
+        (acc) => !originalAccSet.has(JSON.stringify(acc)),
+      );
 
-    let newNonBots: [string, number][] = [];
-    let newBots: [string, number][] = [];
-
-    for (let i = 0; i < newAccs.length; i++) {
-      const username = newAccs[i][0];
-      const isValid = await MultisigUtils.checkMultisigBot(username);
-      if (!isValid) {
-        const exists = nonBots.some((t) => t[0] === username);
-        if (!exists) {
-          newNonBots = nonBots.concat([newAccs[i]]);
-        } else {
-          newBots = bots.concat([newAccs[i]]);
+      if (newAccs.length > 0) {
+        let nonBots = 0;
+        for (let i = 0; i < newAccs.length; i++) {
+          const username = newAccs[i][0];
+          const isValid = await MultisigUtils.checkMultisigBot(username);
+          if (!isValid) {
+            const accountToDelete: IDeleteAccount = {
+              type: `Active`,
+              username: username,
+              authorities: newAuthorities,
+            };
+            dispatch(deleteAccount(accountToDelete));
+            nonBots++;
+          }
+        }
+        if (nonBots > 0) {
+          alert(`You can only use account configured as bot.`);
         }
       }
     }
-    setNonBots(newNonBots);
-    setBots(newBots);
   };
 
-  return [bots, nonBots];
+  return [0];
+};
+
+const useAllowOnlyOneBot = () => {
+  const [originalActive, newActive] = useActiveAuthority();
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
+  const [isBotExists, setIsBotExists] = useState<boolean>();
+  const [bot, setBot] = useState<[string | Hive.PublicKey, number]>();
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    if (newAuthorities) {
+      handleCheck();
+    }
+  }, [newAuthorities]);
+
+  useEffect(() => {
+    if (isBotExists) {
+      dispatch(allowAddAccount(false));
+      dispatch(allowAddKey(false));
+    } else {
+      dispatch(allowAddAccount(true));
+      dispatch(allowAddKey(true));
+    }
+  }, [isBotExists]);
+  const handleCheck = async () => {
+    if (newActive && originalActive) {
+      let botCount = 0;
+
+      const originalAccSet = new Set(
+        originalActive.account_auths.map((acc) => JSON.stringify(acc)),
+      );
+      const originalKeySet = new Set(
+        originalActive.key_auths.map((key) => JSON.stringify(key)),
+      );
+      const newAccounts = newActive.account_auths.filter(
+        (acc) => !originalAccSet.has(JSON.stringify(acc)),
+      );
+      const newKeys = newActive.key_auths.filter(
+        (key) => !originalKeySet.has(JSON.stringify(key)),
+      );
+      if (newAccounts.length > 0) {
+        newAccounts.forEach((acc) => {
+          const isBot = MultisigUtils.checkMultisigBot(acc[0]);
+          if (isBot) {
+            setBot(acc);
+            botCount++;
+          }
+        });
+      }
+
+      if (newKeys.length > 0) {
+        newKeys.forEach((key) => {
+          const isBot = MultisigUtils.checkMultisigBot(key[0].toString());
+          if (isBot) {
+            setBot(key);
+            botCount++;
+          }
+        });
+      }
+      setIsBotExists(botCount > 0);
+    }
+  };
+
+  return [isBotExists, bot];
 };
 
 const useAuthoritiesUpdateState = () => {
@@ -322,7 +371,8 @@ export const MultisigTwoFAHooks = {
   useActiveAuthority,
   useHiveKeychainBotAccount,
   useWeightRestriction,
-  useBotJSONMetadataChecker,
   useAuthoritiesUpdateState,
   useMultisigInitiatorHandler,
+  useAllowOnlyBot,
+  useAllowOnlyOneBot,
 };

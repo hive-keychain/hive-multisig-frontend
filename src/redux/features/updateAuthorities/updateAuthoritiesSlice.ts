@@ -5,6 +5,8 @@ import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import {
   addAccountWarning,
   addKeyWarning,
+  allowAddAccount,
+  allowAddKey,
   deleteAccount,
   deleteKey,
   dhiveBroadcastUpdateAccount,
@@ -37,6 +39,8 @@ export type AuthorityUpdateStateType = {
   thresholdWarning?: string;
   accountRowWarning?: [string, string][];
   keyRowWarning?: [string, string][];
+  allowAddAccount: boolean;
+  allowAddKey: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -56,6 +60,8 @@ const initialState: AuthorityUpdateStateType = {
   thresholdWarning: '',
   accountRowWarning: [],
   keyRowWarning: [],
+  allowAddAccount: true,
+  allowAddKey: true,
 };
 
 const updateAuthoritySlice = createSlice({
@@ -314,6 +320,13 @@ const updateAuthoritySlice = createSlice({
       state.keyRowWarning = state.keyRowWarning.filter(
         (key) => key[0] !== action.payload,
       );
+    });
+
+    builder.addCase(allowAddAccount.fulfilled, (state, action) => {
+      state.allowAddAccount = action.payload;
+    });
+    builder.addCase(allowAddKey.fulfilled, (state, action) => {
+      state.allowAddKey = action.payload;
     });
   },
 });

@@ -236,6 +236,35 @@ const encodeMessage = async (
     keychain.requestEncodeMessage(from, to, '#' + message, method, callback);
   });
 };
+
+const encodeMessageWithKeys = async (
+  username: string,
+  publicKeys: string[],
+  message: string,
+  method: KeychainKeyTypes,
+) => {
+  return new Promise<any>(async (resolve, reject) => {
+    try {
+      const callback = (response: any) => {
+        if (response.result) {
+          resolve(response);
+        } else {
+          reject(response);
+        }
+      };
+      const keychain = window.hive_keychain;
+      keychain.requestEncodeWithKeys(
+        username,
+        publicKeys,
+        message,
+        method,
+        callback,
+      );
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 const broadcastTx = async (transaction: SignedTransaction) => {
   client = getClient();
   var res = await client.broadcast.send(transaction);
@@ -363,6 +392,7 @@ const HiveUtils = {
   getActiveSignWeight,
   getJSONMetadata,
   encodeMessage,
+  encodeMessageWithKeys,
 };
 
 export default HiveUtils;

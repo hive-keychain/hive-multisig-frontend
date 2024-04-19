@@ -2,7 +2,6 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { resetOperation } from '../../../redux/features/transaction/transactionThunks';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 import { AuthorityCard } from '../Account/AuthorityCard';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
@@ -10,7 +9,8 @@ var deepequal = require('deep-equal');
 
 export const MultisigTwoFactorAuthSetup = () => {
   const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
-  const [bots, nonBots] = MultisigTwoFAHooks.useBotJSONMetadataChecker();
+  const [_] = MultisigTwoFAHooks.useAllowOnlyBot();
+  const [isBotExists, botAccount] = MultisigTwoFAHooks.useAllowOnlyOneBot();
   const [thresholdWarning] = MultisigTwoFAHooks.useWeightRestriction();
   const [
     updateAuthorityState,
@@ -74,52 +74,26 @@ export const MultisigTwoFactorAuthSetup = () => {
         originalActive,
         newAuthorities,
       )
-        .then(async (res) => {
-          if (res) {
-            await dispatch(resetOperation());
-            window.location.reload();
-          }
-        })
+        .then(async (res) => {})
         .catch((reason) => {
           alert(reason);
         });
     }
   };
 
-  // const handle2FAConfigBroadcast = async () => {
-  //   newAuthorities.active.account_auths.forEach(async (bot) => {
-  //     const isValid = await MultisigUtils.checkMultisigBot(bot[0]);
-  //     let twoFACodes: TwoFACodes;
-  //     if (isValid) {
-  //       const memoKey = await HiveUtils.getAccountMemoKey(bot[0]);
-  //       const keyType = KeychainKeyTypes.active;
-
-  //       const customJsonOp = {
-  //         required_auths: [originalAuthorities.account],
-  //         required_posting_auths: [] as string[],
-  //         id: 'setToFAId'
-  //         json:
-  //       };
-  //       const op = ['account_update', updatedAuthorities];
-  //       const transaction = await HiveTxUtils.createTx([op], {
-  //         date: undefined,
-  //         minutes: 60,
-  //       } as IExpiration);
-
-  //       // const encodedMessage = await HiveUtils.encodeMessage(
-  //       //   originalAuthorities.account,
-  //       //   bot[0],
-  //       //   memoKey,
-  //       //   KeychainKeyTypes.active,
-  //       // );
-  //       // twoFACodes[bot[0]] = encodedMessage;
-  //     }
-  //   });
-
-  //   //get bot memokey
-  //   // encrypt 2fa secret
-  //   //
-  // };
+  const handle2FAConfigBroadcast = async () => {
+    MultisigUtils.botConfigBroadcast(
+      originalAuthorities.account,
+      botAccount as [string, number],
+      secret,
+      transactionState.initiator,
+      originalActive,
+    )
+      .then((res) => {
+        console.log(JSON.stringify(res));
+      })
+      .catch((reason) => console.log(JSON.stringify(reason)));
+  };
 
   const handleRadioChange = (e: any) => {
     const value = e.target.value === 'yes';
@@ -182,7 +156,7 @@ export const MultisigTwoFactorAuthSetup = () => {
                     your active authorities:
                   </p>
                 )}
-                {<p>The following account/s are not bot: </p>}
+
                 <AuthorityCard authorityName="Active" />
                 <br />
                 <p className="justify-content-md-center">
@@ -193,7 +167,9 @@ export const MultisigTwoFactorAuthSetup = () => {
                 <div className="d-flex justify-content-end">
                   <Button
                     onClick={() => {
-                      handleUpdateAccount();
+                      // handleUpdateAccount();
+
+                      handle2FAConfigBroadcast();
                     }}
                     className=""
                     variant="success">

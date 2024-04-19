@@ -20,9 +20,16 @@ export function AccountKeysCard({
   const newAuthorities: Authorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
+  const allowAddAccount = useAppSelector(
+    (state) => state.updateAuthorities.allowAddAccount,
+  );
+  const allowAddKey = useAppSelector(
+    (state) => state.updateAuthorities.allowAddKey,
+  );
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
+  const [allowAdd, setAllowAdd] = useState<boolean>(true);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [cardBorder, setCardBorder] = useState<string>('secondary');
   const [newAccount, setNewAccount] = useState<[string, number]>(['', 1]);
@@ -44,6 +51,13 @@ export function AccountKeysCard({
     }),
   );
 
+  useEffect(() => {
+    if (authAccountType.toLowerCase() === 'accounts') {
+      setAllowAdd(allowAddAccount);
+    } else {
+      setAllowAdd(allowAddKey);
+    }
+  }, [allowAddAccount, allowAddKey]);
   useEffect(() => {
     const newComponents = accountKeyAuths.map(
       (accountKeyAuth): [string, ReactNode] => {
@@ -186,7 +200,7 @@ export function AccountKeysCard({
           ) : (
             <div></div>
           )}
-          {loginState ? (
+          {loginState && allowAdd ? (
             <AddAccountKeyRow
               authAccountType={authAccountType}
               setNewAccount={setNewAccount}
