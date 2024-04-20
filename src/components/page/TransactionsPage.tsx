@@ -200,51 +200,56 @@ export const TransactionPage = () => {
 
   return (
     <div>
-      <Otp setIsValidOtp={setIsValidOtp} show={showOtpInput} />
-      <InputGroup>
-        <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
-        <Form.Select
-          aria-label="select"
-          onChange={(e) => setTransactionType(e.target.value)}>
-          <option value="TransferOperation">Transfer</option>
-          <option value="DelegateVestingSharesOperation">Delegations</option>
-          <option value="TransferToVestingOperation">Power Up</option>
-          <option value="WithdrawVestingOperation">Power Down</option>
-          <option value="TransferToSavingsOperation">Deposit to Savings</option>
-          <option value="TransferFromSavingsOperation">
-            Withdraw from Savings
-          </option>
-          <option value="AccountWitnessVoteOperation">Vote for Witness</option>
-          <option value="AccountWitnessProxyOperation">Choose Proxy</option>
-          <option value="UpdateProposalVotesOperation">
-            Vote for Proposal
-          </option>
-          <option value="RecurrentTransferOperation">
-            Recrurrent Transfer
-          </option>
-          <option value="CustomJsonOperation">Broadcast JSON</option>
-          <option value="VoteOperation">Vote</option>
-          <option value="BlogOperation">Blog Post</option>
-          <option value="CommentOperation">Comment</option>
-        </Form.Select>
-      </InputGroup>
-      <br />
-      <InputGroup>
-        <InputGroup.Text id="basic-addon1">Method</InputGroup.Text>
-        <Form.Select
-          aria-label="select"
-          onChange={(e) =>
-            setMethod(
-              e.target.value === 'active'
-                ? KeychainKeyTypes.active
-                : KeychainKeyTypes.posting,
-            )
-          }>
-          <option value="active">Active</option>
-          <option value="posting">Posting</option>
-        </Form.Select>
-      </InputGroup>
-      <br />
+      <div>
+        <Otp setIsValidOtp={setIsValidOtp} show={showOtpInput} />
+        <InputGroup>
+          <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
+          <Form.Select
+            aria-label="select"
+            onChange={(e) => setTransactionType(e.target.value)}>
+            <option value="TransferOperation">Transfer</option>
+            <option value="DelegateVestingSharesOperation">Delegations</option>
+            <option value="TransferToVestingOperation">Power Up</option>
+            <option value="WithdrawVestingOperation">Power Down</option>
+            <option value="TransferToSavingsOperation">
+              Deposit to Savings
+            </option>
+            <option value="TransferFromSavingsOperation">
+              Withdraw from Savings
+            </option>
+            <option value="AccountWitnessVoteOperation">
+              Vote for Witness
+            </option>
+            <option value="AccountWitnessProxyOperation">Choose Proxy</option>
+            <option value="UpdateProposalVotesOperation">
+              Vote for Proposal
+            </option>
+            <option value="RecurrentTransferOperation">
+              Recrurrent Transfer
+            </option>
+            <option value="CustomJsonOperation">Broadcast JSON</option>
+            <option value="VoteOperation">Vote</option>
+            <option value="BlogOperation">Blog Post</option>
+            <option value="CommentOperation">Comment</option>
+          </Form.Select>
+        </InputGroup>
+        <br />
+        <InputGroup>
+          <InputGroup.Text id="basic-addon1">Method</InputGroup.Text>
+          <Form.Select
+            aria-label="select"
+            onChange={(e) =>
+              setMethod(
+                e.target.value === 'active'
+                  ? KeychainKeyTypes.active
+                  : KeychainKeyTypes.posting,
+              )
+            }>
+            <option value="active">Active</option>
+            <option value="posting">Posting</option>
+          </Form.Select>
+        </InputGroup>
+      </div>
       <div>{transactionCard}</div>
     </div>
   );
