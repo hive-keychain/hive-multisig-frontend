@@ -14,7 +14,6 @@ import {
 } from '../../../redux/features/transaction/transactionThunks';
 import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
-import { Transaction2FACard } from '../TwoFactorAuth/Transaction2FACard';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
 function Transfer() {
@@ -98,7 +97,6 @@ function Transfer() {
     to: yup.string().required('Required'),
     memo: yup.string(),
     day: yup.number().typeError('Must be a number').required('Required'),
-    otp: yup.number().required('Required'),
   });
 
   return (
@@ -120,7 +118,6 @@ function Transfer() {
           to: '',
           memo: '',
           day: 0,
-          otp: null,
         }}>
         {({ handleSubmit, handleChange, values, touched, errors }) => (
           <Card border="secondary">
@@ -180,18 +177,21 @@ function Transfer() {
                     error={errors.to}
                   />
 
-                  <div>
+                  {/* <div>
                     <Transaction2FACard botName="Carlo" />
                   </div>
                   <div>
                     <Transaction2FACard botName="Carlo" />
-                  </div>
+                  </div> */}
 
                   {
                     //TODO: before submission, make sure that all 2FA are verified otherwise dont allow submission
                   }
                   <div className="d-flex justify-content-end">
-                    <Button type="submit" variant="success">
+                    <Button
+                      type="submit"
+                      variant="success"
+                      onClick={() => handleSubmit()}>
                       Submit
                     </Button>
                   </div>

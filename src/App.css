@@ -18,17 +18,19 @@ a.nounderline {
   }
 }
 .otpInputStyle {
-  width: 50% !important;
-  height: 70px;
+  width: '30px';
+  height: '30px';
   border-radius: 4px;
   border: 1px;
   margin-left: 8px;
   margin-right: 8px;
   background: #dddddd;
-  font-size: 30px;
+  font-size: 20px;
   margin-bottom: 20px;
   margin-top: 10px;
+  align-content: center;
 }
+
 .authenticator-icon {
   display: flex;
   align-items: center;

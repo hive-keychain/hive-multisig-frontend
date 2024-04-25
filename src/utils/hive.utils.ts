@@ -371,6 +371,11 @@ const getActiveSignWeight = async (
     }
   });
 };
+const getKeyReferences = async (publicKey: string) => {
+  var client = getClient();
+  const accounts = await client.keys.getKeyReferences([publicKey]);
+  return accounts;
+};
 
 const HiveUtils = {
   getAccount,
@@ -393,6 +398,7 @@ const HiveUtils = {
   getJSONMetadata,
   encodeMessage,
   encodeMessageWithKeys,
+  getKeyReferences,
 };
 
 export default HiveUtils;

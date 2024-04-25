@@ -7,6 +7,7 @@ import {
 
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
 import { State } from '../../../interfaces/multisig.interface';
+import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
 
 export const signerConnectMessageActive = createAsyncThunk<
   State,
@@ -154,6 +155,19 @@ export const setSignRequestCount = createAsyncThunk(
   'multisig/setSignRequestCount',
   async (count: number) => {
     return count;
+  },
+);
+
+export const setTwoFASigners = createAsyncThunk(
+  'multisig/setTwoFASigners',
+  async (twoFASigners: TwoFACodes) => {
+    return twoFASigners;
+  },
+);
+export const setBotOtp = createAsyncThunk(
+  'multisig/setBotOtp',
+  async (twoFa: TwoFACodes) => {
+    return twoFa;
   },
 );
 
