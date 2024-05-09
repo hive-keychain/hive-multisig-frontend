@@ -56,8 +56,8 @@ export const AuthenticatorSetup = () => {
   useEffect(() => {
     if (secret && signedAccountObj) {
       const otpauth = authenticator.keyuri(
-        signedAccountObj.data.username,
-        'hive-multisig',
+        `@${signedAccountObj.data.username}`,
+        `hive`,
         secret,
       );
       dispatch(createQRCode(otpauth));
