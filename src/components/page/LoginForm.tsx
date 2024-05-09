@@ -21,6 +21,8 @@ import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+  const [posting, setPosting] = useState(true);
+  const [active, setActive] = useState(true);
 
   const loginExpirationInSec = Config.login.expirationInSec;
 
@@ -111,6 +113,21 @@ const LoginForm = () => {
           keyType: KeychainKeyTypes.active,
         }),
       );
+      if (!posting)
+        dispatch(
+          login({
+            data: {
+              key: 'active',
+              message: signerConnectResponse.message,
+              method: KeychainKeyTypes.active,
+              username: username,
+            },
+            result: signerConnectResponse.message,
+            publicKey: signerConnectResponse.publicKey,
+            success: true,
+          }),
+        );
+
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
           signerConnectResponse.result.pendingSignatureRequests[username];
@@ -181,8 +198,9 @@ const LoginForm = () => {
 
   const handleOnLoginSubmit = async () => {
     try {
-      await connectPosting();
-      await connectActive();
+      if (!active && !posting) alert(`Choose at least one login method!`);
+      if (posting) await connectPosting();
+      if (active) await connectActive();
     } catch (error) {
       alert(`Login Failed \n ${error.message}`);
     }
@@ -211,6 +229,25 @@ const LoginForm = () => {
           Login
         </Button>
       </InputGroup>
+      <div style={{ display: 'flex', flexDirection: 'row', columnGap: '20px' }}>
+        Login with:
+        <Form.Check
+          type={'checkbox'}
+          label={`Posting Key`}
+          checked={posting}
+          onChange={() => {
+            setPosting(!posting);
+          }}
+        />
+        <Form.Check
+          type={'checkbox'}
+          label={`Active Key`}
+          checked={active}
+          onChange={() => {
+            setActive(!active);
+          }}
+        />
+      </div>
     </div>
   );
 };
