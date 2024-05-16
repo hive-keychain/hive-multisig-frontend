@@ -60,14 +60,14 @@ const useHiveKeychainBotAccount = (initialState: boolean = true) => {
     if (newActive) {
       let activeAuth = structuredClone(newActive);
       const found = activeAuth.account_auths.some(
-        (account) => account[0] === 'hive.multisig',
+        (account) => account[0] === 'tshiuan.tests2',
       );
-      console.log(`hive.multisig is ${!found ? 'NOT' : ''} FOUND`);
+      console.log(`tshiuan.tests2 is ${!found ? 'NOT' : ''} FOUND`);
       if (useKeychainBot && !found) {
-        activeAuth.account_auths.push(['hive.multisig', 1]);
+        activeAuth.account_auths.push(['tshiuan.tests2', 1]);
       } else {
         activeAuth.account_auths = activeAuth.account_auths.filter(
-          (acc) => acc[0] !== 'hive.multisig',
+          (acc) => acc[0] !== 'tshiuan.tests2',
         );
       }
 

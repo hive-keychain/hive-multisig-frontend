@@ -17,6 +17,10 @@ import {
   setTokenValidation,
 } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { base64ToImage } from '../../../utils/utils';
+authenticator.options = {
+  window: 1,
+};
+
 export const AuthenticatorSetup = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
