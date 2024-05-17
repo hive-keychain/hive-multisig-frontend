@@ -7,9 +7,9 @@ import {
   setThresholdWarning,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
-import { MultisigUtils } from '../../../utils/multisig.utils';
 var deepequal = require('deep-equal');
 const defaultBot = process.env.BOT;
+
 const useActiveAuthority = () => {
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
@@ -35,41 +35,6 @@ const useActiveAuthority = () => {
   }, [originalAuthorities]);
 
   return [originalActiveAuthorities, newActiveAuthorities];
-};
-
-const useHiveKeychainBotAccount = (initialState: boolean = true) => {
-  const dispatch = useAppDispatch();
-  const [originalActive, newActive] = useActiveAuthority();
-  const [useKeychainBot, setUseKeychainBot] = useState(initialState);
-
-  useEffect(() => {
-    if (originalActive) updateUseBot();
-  }, [originalActive]);
-  useEffect(() => {
-    updateUseBot();
-  }, [useKeychainBot]);
-
-  const setUseHiveKeychainAccount = (use: boolean) => {
-    setUseKeychainBot(use);
-  };
-  const updateUseBot = async () => {
-    if (newActive) {
-      let activeAuth = structuredClone(newActive);
-      const found = activeAuth.account_auths.some(
-        (account) => account[0] === defaultBot,
-      );
-      if (useKeychainBot && !found) {
-        activeAuth.account_auths.push([defaultBot, 1]);
-      } else {
-        activeAuth.account_auths = activeAuth.account_auths.filter(
-          (acc) => acc[0] !== defaultBot,
-        );
-      }
-
-      await dispatch(updateActive(activeAuth));
-    }
-  };
-  return [setUseHiveKeychainAccount];
 };
 
 const useWeightRestriction = () => {
@@ -195,72 +160,6 @@ const useWeightRestriction = () => {
   return [thresholdWarning];
 };
 
-const useAddOnlyBot = () => {
-  const [originalActive, newActive] = useActiveAuthority();
-  const [nonBot, setNonBot] = useState(undefined);
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    if (newActive) {
-      handleCheck();
-    }
-  }, [newActive]);
-  useEffect(() => {
-    if (nonBot) {
-      alert(`Warning @${nonBot[0]} is not a bot`);
-      dispatch(updateActive(originalActive));
-    }
-  }, [nonBot]);
-  const handleCheck = async () => {
-    if (newActive && originalActive) {
-      const originalAccSet = new Set(
-        originalActive.account_auths.map((acc) => JSON.stringify(acc)),
-      );
-
-      const newAccounts = newActive.account_auths.filter(
-        (acc) => !originalAccSet.has(JSON.stringify(acc)),
-      );
-      if (newAccounts?.length > 0) {
-        const isBot = await MultisigUtils.checkMultisigBot(newAccounts[0][0]);
-        if (!isBot) {
-          setNonBot(newAccounts[0]);
-        }
-      }
-    }
-  };
-
-  return [0];
-};
-
-const useAddOnlyOneBot = () => {
-  const [originalActive, newActive] = useActiveAuthority();
-  const [isBot, setIsBot] = useState(false);
-  const dispatch = useAppDispatch();
-  useEffect(() => {
-    if (newActive) {
-      handleCheck();
-    }
-  }, [newActive]);
-  const handleCheck = async () => {
-    if (newActive && originalActive) {
-      const originalAccSet = new Set(
-        originalActive.account_auths.map((acc) => JSON.stringify(acc)),
-      );
-
-      const newAccounts = newActive.account_auths.filter(
-        (acc) => !originalAccSet.has(JSON.stringify(acc)),
-      );
-      if (newAccounts?.length > 0) {
-        const isBot = await MultisigUtils.checkMultisigBot(newAccounts[0][0]);
-        setIsBot(isBot);
-      }
-    }
-  };
-
-  return [isBot];
-};
-
-const useAllowOnlyOneBot = () => {};
-
 const useAuthoritiesUpdateState = () => {
   const isPostingAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isPostingAuthUpdated,
@@ -331,10 +230,6 @@ const useMultisigInitiatorHandler = () => {
 
 export const MultisigTwoFAHooks = {
   useActiveAuthority,
-  useHiveKeychainBotAccount,
   useWeightRestriction,
-  useAuthoritiesUpdateState,
   useMultisigInitiatorHandler,
-  useAddOnlyOneBot,
-  useAddOnlyBot,
 };
