@@ -1,26 +1,29 @@
-import { authenticator } from 'otplib';
 import { useEffect, useState } from 'react';
 import { Button, Col, Container, Modal, Row } from 'react-bootstrap';
 import OtpInput from 'react-otp-input';
+import { TxStatus } from '../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { setBotOtp } from '../../redux/features/multisig/multisigThunks';
+import { setTxStatus } from '../../redux/features/transaction/transactionThunks';
 
 interface IOtpModal {
   handleSubmit: Function;
+  show: boolean;
 }
-export const OtpModal = ({ handleSubmit }: IOtpModal) => {
+export const OtpModal = ({ handleSubmit, show }: IOtpModal) => {
+  const dispatch = useAppDispatch();
   const twoFactorSigners = useAppSelector(
     (state) => state.multisig.multisig.twoFASigners,
   );
-  const [isShow, setIsShow] = useState(false);
+  const [isShow, setIsShow] = useState<boolean>(show);
   const [otpInputs, setOtpInputs] = useState([]);
-  useEffect(() => {
-    setIsShow(twoFactorSigners && Object.keys(twoFactorSigners).length > 0);
-  }, [twoFactorSigners]);
 
   useEffect(() => {
-    if (isShow) {
+    setIsShow(show);
+  }, [show]);
+  useEffect(() => {
+    if (isShow && twoFactorSigners) {
       const botNames = Object.keys(twoFactorSigners);
       let inputs = [];
       for (let i = 0; i < botNames.length; i++) {
@@ -32,7 +35,10 @@ export const OtpModal = ({ handleSubmit }: IOtpModal) => {
     }
   }, [isShow]);
 
-  const handleClose = () => setIsShow(false);
+  const handleClose = () => {
+    setIsShow(false);
+    dispatch(setTxStatus(TxStatus.cancel));
+  };
   const handleSubmitOnclick = () => {
     handleSubmit();
   };
@@ -70,18 +76,11 @@ interface IOtpProp {
 }
 const Otp = ({ botName }: IOtpProp) => {
   const [otp, setOtp] = useState('');
-  const [isValid, setIsValid] = useState(false);
   const dispatch = useAppDispatch();
   useEffect(() => {
     let twoFa: TwoFACodes = {};
     twoFa[botName] = otp;
     dispatch(setBotOtp(twoFa));
-
-    const valid = authenticator.check(
-      otp,
-      'SBDP633KXD4R3JAFJFPI6YY4NKXF3XUJHA7PRDRNND7NQRMDCAHQ',
-    );
-    setIsValid(valid);
   }, [otp]);
   const handleOnChange = (input: string) => {
     setOtp(input);
@@ -100,7 +99,6 @@ const Otp = ({ botName }: IOtpProp) => {
           shouldAutoFocus
           inputStyle="otpInputStyle"
         />
-        {`OTP is : ${isValid ? 'Valid' : 'Invalid'}`}
       </Col>
     </Row>
   );

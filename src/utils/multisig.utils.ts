@@ -5,6 +5,8 @@ import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-mess
 import moment from 'moment';
 import { Authorities } from '../interfaces';
 import { IExpiration, Initiator } from '../interfaces/transaction.interface';
+import { TwoFACodes } from '../interfaces/twoFactorAuth.interface';
+import AccountUtils from '../utils/hive.utils';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
@@ -66,9 +68,11 @@ const nonMultisigTxBroadcast = async (
     HiveUtils.requestSignTx(transaction, username, keyType)
       .then((signedTx) => {
         if (signedTx) {
-          HiveUtils.broadcastTx(signedTx).then(async (res) => {
-            resolve(res);
-          });
+          HiveUtils.broadcastTx(signedTx)
+            .then(async (res) => {
+              resolve(res);
+            })
+            .catch((e) => reject(e));
         } else {
           alert('[UpdateAuthConf] Signed Tx Error');
           reject(undefined);
@@ -84,6 +88,7 @@ const nonMultisigTxBroadcast = async (
 const multisigTxBroadcast = async (
   transaction: Hive.Transaction,
   initiator: Initiator,
+  twoFACodes?: TwoFACodes,
 ) => {
   return new Promise((resolve, reject) => {
     const keyType = KeychainKeyTypes.active;
@@ -100,7 +105,7 @@ const multisigTxBroadcast = async (
 
     try {
       multisig.utils
-        .encodeTransaction(txToEncode)
+        .encodeTransaction(txToEncode, twoFACodes)
         .then((encodedTxObj) => {
           multisig.wss.requestSignatures(encodedTxObj).then(async (res) => {
             resolve(res);
@@ -163,7 +168,6 @@ const twoFAConfigBroadcast = async (
   bot: [string | Hive.PublicKey, number],
   twoFASecret: string,
   initiator: Initiator,
-  activeAuthority: Hive.AuthorityType,
   newAuthorities: Authorities,
 ) => {
   return new Promise(async (resolve, reject) => {
@@ -177,7 +181,7 @@ const twoFAConfigBroadcast = async (
           minutes: 60,
         } as IExpiration,
       );
-      broadcastTransaction(transaction, username, initiator, activeAuthority)
+      broadcastTransaction(transaction, username, initiator)
         .then((res) => resolve(res))
         .catch((reason) => reject(reason));
     } catch (e) {
@@ -189,22 +193,27 @@ const broadcastTransaction = async (
   transaction: Hive.Transaction,
   username: string,
   initiator: Initiator,
-  activeAuthority: Hive.AuthorityType,
+  twoFACodes?: TwoFACodes,
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
+      const auth = await AccountUtils.getActiveAuthorities(username);
       const signer_weight = await HiveUtils.getActiveSignWeight(
         username,
-        activeAuthority,
+        auth.active,
       );
-      if (signer_weight >= activeAuthority.weight_threshold) {
+      if (signer_weight >= auth.active.weight_threshold) {
         //non multisig transaction
-        nonMultisigTxBroadcast(transaction, username).then(async (res) => {
-          resolve(res);
-        });
+        nonMultisigTxBroadcast(transaction, username)
+          .then(async (res) => {
+            resolve(res);
+          })
+          .catch((e) => {
+            reject(e);
+          });
       } else {
         //multisig transaction
-        multisigTxBroadcast(transaction, initiator)
+        multisigTxBroadcast(transaction, initiator, twoFACodes)
           .then(async (res) => {
             resolve(res);
           })

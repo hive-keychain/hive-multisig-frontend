@@ -1,18 +1,15 @@
 import * as Hive from '@hiveio/dhive';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import {
-  IEncodeTransaction,
-  RequestSignatureMessage,
-} from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { ReactNode, useEffect, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import {useLocalStorage} from 'usehooks-ts';
+import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import {
   ITransaction,
   Initiator,
+  TxStatus,
 } from '../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
@@ -23,13 +20,13 @@ import {
   setInitiator,
   setTransactionMethod,
   setTransactionName,
+  setTxStatus,
 } from '../../redux/features/transaction/transactionThunks';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import {
   getElapsedTimestampSeconds,
-  getISOStringDate,
   getTimestampInSeconds,
 } from '../../utils/utils';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
@@ -61,7 +58,7 @@ export const TransactionPage = () => {
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
-
+  useTxStatus();
   const twoFASigners = useAppSelector(
     (state) => state.multisig.multisig.twoFASigners,
   );
@@ -74,6 +71,7 @@ export const TransactionPage = () => {
   const [otpBots, setOtpBots] = useState<
     { bot: [string, number]; otp: string }[]
   >([]);
+  const [askOtp, setAskOtp] = useState<boolean>(false);
 
   const [transaction, setTransaction] = useState<Hive.Transaction>(undefined);
 
@@ -93,13 +91,9 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (operation && isLoggedIn) {
       handleMultisigTransaciton();
+      //handle non multisig
     }
   }, [submittedOp]);
-
-  useEffect(() => {
-    if (otpBots.length > 0) {
-    }
-  }, [otpBots]);
 
   useEffect(() => {
     handleSelectOnChange(transactionType);
@@ -153,12 +147,19 @@ export const TransactionPage = () => {
 
     if (twoFASigners.length === 0) {
       try {
-        const encodedTx = await encodeTransaction(transaction);
-        if (encodedTx) {
-          multisigRequestSignatures(encodedTx);
-        }
+        MultisigUtils.broadcastTransaction(
+          transaction,
+          signedAccountObj.data.username,
+          transactionState.initiator,
+        )
+          .then(() => {
+            dispatch(setTxStatus(TxStatus.success));
+          })
+          .catch((e) => {
+            dispatch(setTxStatus(TxStatus.failed));
+          });
       } catch (error) {
-        alert(`${error}`);
+        dispatch(setTxStatus(TxStatus.failed));
       }
     } else {
       setTransaction(transaction);
@@ -167,40 +168,27 @@ export const TransactionPage = () => {
         bots[twoFASigners[i][0]] = '';
       }
       dispatch(setTwoFASigners(bots));
+      setAskOtp(true);
     }
   };
 
-  const encodeTransaction = async (
-    transaction: Hive.Transaction,
-    twoFACodes?: TwoFACodes,
-  ) => {
-    const txEncode: IEncodeTransaction = {
-      transaction: transaction,
-      method: transactionState.method,
-      expirationDate: getISOStringDate(transactionState.expiration),
-      initiator: { ...transactionState.initiator },
-    };
-
-    return await multisig.utils.encodeTransaction(txEncode, twoFACodes);
-  };
-
-  const multisigRequestSignatures = async (
-    encodedTxObj: RequestSignatureMessage,
-  ) => {
-    multisig.wss.requestSignatures(encodedTxObj).then(() => {
-      dispatch(resetOperation());
-    });
-  };
   const handleOtpSubmit = async () => {
     try {
-      const encodedTx = await encodeTransaction(transaction, twoFASigners);
-      if (encodedTx) {
-        multisigRequestSignatures(encodedTx);
-      }
+      MultisigUtils.broadcastTransaction(
+        transaction,
+        signedAccountObj.data.username,
+        transactionState.initiator,
+        twoFASigners,
+      )
+        .then(() => {
+          dispatch(setTxStatus(TxStatus.success));
+        })
+        .catch((e) => {
+          dispatch(setTxStatus(TxStatus.failed));
+        });
     } catch (error) {
-      alert(`${error}`);
+      dispatch(setTxStatus(TxStatus.failed));
     }
-    //encode each otp with transaction method
   };
 
   const handleSelectOnChange = (transaction: string) => {
@@ -253,7 +241,7 @@ export const TransactionPage = () => {
   return (
     <div>
       <div>
-        <OtpModal handleSubmit={handleOtpSubmit} />
+        <OtpModal handleSubmit={handleOtpSubmit} show={askOtp} />
         <InputGroup>
           <InputGroup.Text id="basic-addon1">Transaction</InputGroup.Text>
           <Form.Select
@@ -357,4 +345,28 @@ const useMultisigState = () => {
     }
   }, []);
   return multisig;
+};
+
+const useTxStatus = () => {
+  const txStatus = useAppSelector(
+    (state) => state.transaction.transaction.transactionStatus,
+  );
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    switch (txStatus) {
+      case TxStatus.success:
+        dispatch(setTxStatus(TxStatus.none));
+        navigate('/');
+        break;
+      case TxStatus.failed:
+        dispatch(setTxStatus(TxStatus.none));
+        navigate('/');
+        break;
+      case TxStatus.cancel:
+        dispatch(setTxStatus(TxStatus.none));
+        navigate('/');
+        break;
+    }
+  }, [txStatus]);
 };

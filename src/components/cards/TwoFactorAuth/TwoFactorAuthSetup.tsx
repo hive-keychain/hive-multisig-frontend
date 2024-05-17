@@ -74,7 +74,6 @@ export const TwoFactorAuthSetup = () => {
         [defaultBot, 1] as [string, number],
         secret,
         transactionState.initiator,
-        originalActive,
         newAuthorities,
       )
         .then(async (res) => {

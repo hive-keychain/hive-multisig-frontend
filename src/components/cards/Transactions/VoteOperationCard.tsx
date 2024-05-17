@@ -94,7 +94,7 @@ export const VoteOperationCard = () => {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           author: '',

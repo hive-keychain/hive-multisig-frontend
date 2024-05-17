@@ -110,7 +110,6 @@ function Transfer() {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
         }}
         initialValues={{
           amount: 0,
@@ -177,16 +176,6 @@ function Transfer() {
                     error={errors.to}
                   />
 
-                  {/* <div>
-                    <Transaction2FACard botName="Carlo" />
-                  </div>
-                  <div>
-                    <Transaction2FACard botName="Carlo" />
-                  </div> */}
-
-                  {
-                    //TODO: before submission, make sure that all 2FA are verified otherwise dont allow submission
-                  }
                   <div className="d-flex justify-content-end">
                     <Button
                       type="submit"

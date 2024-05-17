@@ -5,6 +5,7 @@ import {
   ITransaction,
   Initiator,
   State,
+  TxStatus,
 } from '../../../interfaces/transaction.interface';
 import HiveUtils from '../../../utils/hive.utils';
 
@@ -150,4 +151,9 @@ export const setOtpValidation = createAsyncThunk(
   },
 );
 
-
+export const setTxStatus = createAsyncThunk(
+  'transaction/txStatus',
+  (status: TxStatus) => {
+    return status;
+  },
+);

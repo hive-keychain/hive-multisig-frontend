@@ -93,7 +93,7 @@ export const BlogpostOperationCard = () => {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           author: accountDetails ? accountDetails.data.username : '',

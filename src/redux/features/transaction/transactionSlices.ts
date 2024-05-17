@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { State } from '../../../interfaces/transaction.interface';
+import { State, TxStatus } from '../../../interfaces/transaction.interface';
 import {
   resetOperation,
   setAuthority,
@@ -10,6 +10,7 @@ import {
   setOtpValidation,
   setTransactionMethod,
   setTransactionName,
+  setTxStatus,
   setUsername,
   showOtpInput,
 } from './transactionThunks';
@@ -29,6 +30,7 @@ const initialState: State = {
   otpSecret: '',
   otpValid: false,
   error: null,
+  transactionStatus: TxStatus.none,
 };
 
 const transactionSlice = createSlice({
@@ -152,6 +154,10 @@ const transactionSlice = createSlice({
       state.otpValid = action.payload;
     });
     builder.addCase(transactionSlice.actions.resetState, () => initialState);
+
+    builder.addCase(setTxStatus.fulfilled, (state, action) => {
+      state.transactionStatus = action.payload;
+    });
   },
 });
 
