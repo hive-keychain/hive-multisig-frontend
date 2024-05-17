@@ -37,6 +37,10 @@
     "fs-extra": "^10.0.0",
     "generate-password-ts": "^1.6.5",
     "hive-keychain-commons": "^1.2.2",
+<<<<<<< HEAD
+=======
+    "hive-multisig-sdk": "^0.1.5",
+>>>>>>> 8d840e875f9c306fb8b274379aa3182f31abdc5d
     "hive-qrcode": "github:hive-keychain/hive-qrcode",
     "hive-tx": "^4.2.2",
     "hive-uri": "^0.2.4",

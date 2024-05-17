@@ -19,6 +19,10 @@ import {
 import { base64ToImage, generateRandomKey } from '../../../utils/utils';
 var base32 = require('thirty-two');
 const defaultBot = process.env.BOT;
+authenticator.options = {
+  window: 1,
+};
+
 export const AuthenticatorSetup = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
@@ -61,8 +65,8 @@ export const AuthenticatorSetup = () => {
   useEffect(() => {
     if (secret && signedAccountObj) {
       const otpauth = authenticator.keyuri(
-        signedAccountObj.data.username,
-        defaultBot,
+        `@${signedAccountObj.data.username}`,
+        `hive`,
         secret,
       );
       dispatch(createQRCode(otpauth));
