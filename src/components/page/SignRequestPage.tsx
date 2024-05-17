@@ -14,7 +14,8 @@ import {
   ToastContainer,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import useLocalStorage from 'usehooks-ts/dist/esm/useLocalStorage/useLocalStorage';
+import { useLocalStorage } from 'usehooks-ts';
+
 import { Config } from '../../config';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
