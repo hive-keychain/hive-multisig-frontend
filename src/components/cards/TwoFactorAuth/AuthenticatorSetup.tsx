@@ -1,4 +1,4 @@
-import { authenticator } from '@otplib/preset-browser';
+import { authenticator } from 'otplib';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -16,7 +16,9 @@ import {
   proceedMultisig,
   setTokenValidation,
 } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
-import { base64ToImage } from '../../../utils/utils';
+import { base64ToImage, generateRandomKey } from '../../../utils/utils';
+var base32 = require('thirty-two');
+const defaultBot = process.env.BOT;
 export const AuthenticatorSetup = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
@@ -37,10 +39,13 @@ export const AuthenticatorSetup = () => {
   const [token, setOtp] = useState<string>(undefined);
   const [validToken, setValidToken] = useState<boolean>(false);
   const [otpSubitted, setOtpSubmitted] = useState<boolean>(false);
+  const [resultMessage, setResultMessage] = useState(<div></div>);
   const dispatch = useAppDispatch();
 
   const generateSecret = () => {
-    const secret = authenticator.generateSecret(32).toString();
+    const key = generateRandomKey();
+    var encoded = base32.encode(key);
+    var secret = encoded.toString().replace(/=/g, '');
     dispatch(createSecret(secret));
   };
   useEffect(() => {
@@ -57,7 +62,7 @@ export const AuthenticatorSetup = () => {
     if (secret && signedAccountObj) {
       const otpauth = authenticator.keyuri(
         signedAccountObj.data.username,
-        'hive-multisig',
+        defaultBot,
         secret,
       );
       dispatch(createQRCode(otpauth));
@@ -73,6 +78,14 @@ export const AuthenticatorSetup = () => {
   useEffect(() => {
     setValidToken(tokenValidation);
   }, [tokenValidation]);
+
+  useEffect(() => {
+    if (validToken) {
+      setResultMessage(<div className="text-success">Valid</div>);
+    } else {
+      setResultMessage(<div className="text-danger">Invalid</div>);
+    }
+  }, [validToken]);
 
   const handleOTPValidation = () => {
     const isValid = authenticator.check(token, secret);
@@ -140,11 +153,6 @@ export const AuthenticatorSetup = () => {
                 <Container>
                   <Row className="justify-content-md-center justify-content-sm-center">
                     <Col sm md="5">
-                      {otpSubitted ? (
-                        <div>{validToken ? 'Valid OTP' : 'Invalid OTP'}</div>
-                      ) : (
-                        ''
-                      )}
                       <InputGroup>
                         <InputGroup.Text>OTP</InputGroup.Text>
                         <Form.Control
@@ -155,6 +163,7 @@ export const AuthenticatorSetup = () => {
                             setOtp(e.target.value);
                           }}
                         />
+
                         <Button
                           variant="outline-secondary"
                           onClick={() => {
@@ -163,6 +172,7 @@ export const AuthenticatorSetup = () => {
                           Verify
                         </Button>
                       </InputGroup>
+                      {otpSubitted ? resultMessage : ''}
                     </Col>
                   </Row>
                 </Container>

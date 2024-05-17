@@ -1,3 +1,4 @@
+import { authenticator } from 'otplib';
 import { useEffect, useState } from 'react';
 import { Button, Col, Container, Modal, Row } from 'react-bootstrap';
 import OtpInput from 'react-otp-input';
@@ -69,11 +70,18 @@ interface IOtpProp {
 }
 const Otp = ({ botName }: IOtpProp) => {
   const [otp, setOtp] = useState('');
+  const [isValid, setIsValid] = useState(false);
   const dispatch = useAppDispatch();
   useEffect(() => {
     let twoFa: TwoFACodes = {};
     twoFa[botName] = otp;
     dispatch(setBotOtp(twoFa));
+
+    const valid = authenticator.check(
+      otp,
+      'SBDP633KXD4R3JAFJFPI6YY4NKXF3XUJHA7PRDRNND7NQRMDCAHQ',
+    );
+    setIsValid(valid);
   }, [otp]);
   const handleOnChange = (input: string) => {
     setOtp(input);
@@ -92,6 +100,7 @@ const Otp = ({ botName }: IOtpProp) => {
           shouldAutoFocus
           inputStyle="otpInputStyle"
         />
+        {`OTP is : ${isValid ? 'Valid' : 'Invalid'}`}
       </Col>
     </Row>
   );

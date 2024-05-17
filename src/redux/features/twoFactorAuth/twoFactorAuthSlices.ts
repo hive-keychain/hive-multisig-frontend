@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/twoFactorAuth.interface';
 import {
+  checkDefaultBot,
   createQRCode,
   createSecret,
   proceedIntro,
@@ -16,6 +17,7 @@ const initialState: State = {
   isValid: false,
   proceedIntro: false,
   proceedMultisig: false,
+  hasDefaultBot: false,
 };
 
 const twoFactorAuthSlice = createSlice({
@@ -40,6 +42,10 @@ const twoFactorAuthSlice = createSlice({
     });
     builder.addCase(proceedMultisig.fulfilled, (state, action) => {
       state.proceedMultisig = action.payload.proceedMultisig;
+    });
+
+    builder.addCase(checkDefaultBot.fulfilled, (state, action) => {
+      state.hasDefaultBot = action.payload;
     });
   },
 });

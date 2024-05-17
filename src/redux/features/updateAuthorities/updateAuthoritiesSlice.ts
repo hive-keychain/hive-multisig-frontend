@@ -10,6 +10,7 @@ import {
   deleteAccount,
   deleteKey,
   dhiveBroadcastUpdateAccount,
+  disableDeleteBtn,
   hiveKeyChainRequestBroadCast,
   removeAccountWarning,
   removeKeyWarning,
@@ -41,6 +42,7 @@ export type AuthorityUpdateStateType = {
   keyRowWarning?: [string, string][];
   allowAddAccount: boolean;
   allowAddKey: boolean;
+  disableDetele: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -62,6 +64,7 @@ const initialState: AuthorityUpdateStateType = {
   keyRowWarning: [],
   allowAddAccount: true,
   allowAddKey: true,
+  disableDetele: false,
 };
 
 const updateAuthoritySlice = createSlice({
@@ -327,6 +330,9 @@ const updateAuthoritySlice = createSlice({
     });
     builder.addCase(allowAddKey.fulfilled, (state, action) => {
       state.allowAddKey = action.payload;
+    });
+    builder.addCase(disableDeleteBtn.fulfilled, (state, action) => {
+      state.disableDetele = action.payload;
     });
   },
 });

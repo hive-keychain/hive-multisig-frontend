@@ -81,3 +81,11 @@ export const proceedMultisig = createAsyncThunk<
     return newState;
   },
 );
+
+export const checkDefaultBot = createAsyncThunk<
+  boolean,
+  boolean,
+  { rejectValue: string }
+>('twoFactorAuth/checkDefaultBot', async (hasDefaultBot: boolean) => {
+  return hasDefaultBot;
+});

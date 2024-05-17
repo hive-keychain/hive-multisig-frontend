@@ -20,6 +20,7 @@ export function AuthorityWeightThreshold({
   const thresholdWarningRedux = useAppSelector(
     (state) => state.updateAuthorities.thresholdWarning,
   );
+
   useEffect(() => {
     setThreshWarning(thresholdWarningRedux);
   }, [thresholdWarningRedux]);
@@ -47,13 +48,6 @@ export function AuthorityWeightThreshold({
 
   return (
     <div>
-      <div>
-        {threshWarining !== '' ? (
-          <label className="text-danger">{threshWarining}</label>
-        ) : (
-          ''
-        )}
-      </div>
       <InputGroup className="mb-3">
         <InputGroup.Text className={editFlag} id="basic-addon1">
           Weight Threshold
@@ -71,6 +65,13 @@ export function AuthorityWeightThreshold({
           value={weight}
         />
       </InputGroup>
+      <div>
+        {threshWarining !== '' ? (
+          <label className="text-danger">{threshWarining}</label>
+        ) : (
+          ''
+        )}
+      </div>
     </div>
   );
 }

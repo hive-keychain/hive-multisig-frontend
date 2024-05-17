@@ -26,6 +26,10 @@ export function AccountKeysCard({
   const allowAddKey = useAppSelector(
     (state) => state.updateAuthorities.allowAddKey,
   );
+
+  const disableDeleteBtn = useAppSelector(
+    (state) => state.updateAuthorities.disableDetele,
+  );
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -46,6 +50,7 @@ export function AccountKeysCard({
           accountKeyAuth={accountKeyAuth}
           isLoggedIn={loginState}
           componentColor={'gray'}
+          disableDelete={disableDeleteBtn}
         />,
       ];
     }),
@@ -70,6 +75,7 @@ export function AccountKeysCard({
             accountKeyAuth={accountKeyAuth}
             isLoggedIn={loginState}
             componentColor={'gray'}
+            disableDelete={disableDeleteBtn}
           />,
         ];
       },
@@ -97,6 +103,7 @@ export function AccountKeysCard({
         accountKeyAuth={newAccount}
         isLoggedIn={loginState}
         componentColor={'blue'}
+        disableDelete={disableDeleteBtn}
       />,
     ];
 

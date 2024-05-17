@@ -177,6 +177,18 @@ const getAccountAuthorities = async (username: string) => {
   return auths;
 };
 
+const getActiveAuthorities = async (username: string) => {
+  const account = await getAccount(username);
+
+  if (account.length === 0) {
+    return undefined;
+  }
+  const auths = {
+    active: account[0].active,
+  };
+  return auths;
+};
+
 const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
   client = getClient();
   const result = await client.broadcast.updateAccount(
@@ -217,7 +229,6 @@ const requestSignTx = async (
     },
   );
 };
-//pampampompom
 const encodeMessage = async (
   from: string,
   to: string,
@@ -229,6 +240,7 @@ const encodeMessage = async (
       if (response.result) {
         resolve(response);
       } else {
+        console.log(`${JSON.stringify(response)}`);
         reject(response);
       }
     };
@@ -256,7 +268,7 @@ const encodeMessageWithKeys = async (
       keychain.requestEncodeWithKeys(
         username,
         publicKeys,
-        message,
+        '#' + message,
         method,
         callback,
       );
@@ -383,6 +395,7 @@ const HiveUtils = {
   getAccountMemoKey,
   getAccountAuthorities,
   broadcastUpdateAccount,
+  getActiveAuthorities,
   getPrivateKeyFromSeed,
   fromHP,
   getDynamicGlobalProperties,

@@ -1,4 +1,5 @@
 import * as Hive from '@hiveio/dhive';
+import crypto from 'crypto';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import * as moment from 'moment';
 import { useEffect, useRef } from 'react';
@@ -109,4 +110,12 @@ export const generateRandomUint8Array = (length: number): Uint8Array => {
     }
     return array;
   }
+};
+
+// Function to generate a random 32-character key
+export const generateRandomKey = () => {
+  const randomBytes = crypto.randomBytes(16);
+  const randomHex = randomBytes.toString('hex');
+  const key = randomHex.padEnd(32, '0').slice(0, 32);
+  return key;
 };

@@ -22,6 +22,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   type,
   accountKeyAuth,
   componentColor,
+  disableDelete = false,
 }) => {
   const [color, setColor] = useState<string>(componentColor);
   const [warningText, setWarningText] = useState<string>('');
@@ -96,6 +97,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
         authorityName,
         type,
         accountKeyAuth: [...newAuth],
+        disableDelete,
       };
       dispatch(updateAccount(payload));
     }
@@ -175,14 +177,20 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 placeholder={weight.toString()}
                 value={weight}
               />
-              <Button
-                className="col-md-3 mx-auto"
-                variant="outline-danger"
-                onClick={() => {
-                  handleDelete();
-                }}>
-                Delete
-              </Button>
+
+              {disableDelete ? (
+                ''
+              ) : (
+                <Button
+                  className="col-md-3 mx-auto"
+                  variant="outline-danger"
+                  onClick={() => {
+                    handleDelete();
+                  }}
+                  disabled={disableDelete}>
+                  Delete
+                </Button>
+              )}
             </InputGroup>
           </Col>
         </Row>

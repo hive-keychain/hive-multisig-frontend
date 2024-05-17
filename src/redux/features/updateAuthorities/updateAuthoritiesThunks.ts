@@ -47,6 +47,12 @@ export const deleteKey = createAsyncThunk(
   },
 );
 
+export const disableDeleteBtn = createAsyncThunk(
+  'updateAuthority/disableDeleteBtn',
+  async (disable: boolean) => {
+    return disable;
+  },
+);
 export const updateActive = createAsyncThunk(
   'updateAuthority/updateActive',
   async (authority: Hive.AuthorityType) => {

@@ -167,18 +167,22 @@ const twoFAConfigBroadcast = async (
   newAuthorities: Authorities,
 ) => {
   return new Promise(async (resolve, reject) => {
-    const customJsonOp = await getCustomJsonOp(username, bot, twoFASecret);
-    const updateAccountOp = await getUpdateAccountOp(newAuthorities);
-    const transaction = await HiveTxUtils.createTx(
-      [customJsonOp, updateAccountOp],
-      {
-        date: undefined,
-        minutes: 60,
-      } as IExpiration,
-    );
-    broadcastTransaction(transaction, username, initiator, activeAuthority)
-      .then((res) => resolve(res))
-      .catch((reason) => reject(reason));
+    try {
+      const customJsonOp = await getCustomJsonOp(username, bot, twoFASecret);
+      const updateAccountOp = await getUpdateAccountOp(newAuthorities);
+      const transaction = await HiveTxUtils.createTx(
+        [customJsonOp, updateAccountOp],
+        {
+          date: undefined,
+          minutes: 60,
+        } as IExpiration,
+      );
+      broadcastTransaction(transaction, username, initiator, activeAuthority)
+        .then((res) => resolve(res))
+        .catch((reason) => reject(reason));
+    } catch (e) {
+      reject(e);
+    }
   });
 };
 const broadcastTransaction = async (
@@ -217,18 +221,21 @@ const getCustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
   twoFASecret: string,
+  isMultisig: boolean = false,
 ) => {
   return new Promise<any>(async (resolve, reject) => {
     try {
       const isValid = await MultisigUtils.checkMultisigBot(bot[0].toString());
       if (isValid) {
         const memoKey = await HiveUtils.getAccountMemoKey(bot[0].toString());
-        const encodingResult = await HiveUtils.encodeMessageWithKeys(
+        let encodingResult = undefined;
+        encodingResult = await HiveUtils.encodeMessageWithKeys(
           username,
           [memoKey],
-          `#${twoFASecret}`,
+          `${twoFASecret}`,
           KeychainKeyTypes.active,
         );
+
         if (encodingResult.success) {
           const encodedMessage = encodingResult.result[memoKey];
           const customJsonOp = {

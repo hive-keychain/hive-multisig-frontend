@@ -5,12 +5,16 @@ import { Authorities } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
+  allowAddAccount,
+  allowAddKey,
+  disableDeleteBtn,
   setActiveAuthUpdate,
   setActiveKeyDelete,
   setOwnerAuthUpdate,
   setOwnerKeyDelete,
   setPostingAuthUpdate,
   setPostingKeyDelete,
+  setThresholdWarning,
 } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
@@ -33,6 +37,13 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [updateAuthorityState, ownerState, activeState, postingState] =
     useAuthoritiesUpdateState();
   useResetUpdateStates();
+
+  useEffect(() => {
+    dispatch(allowAddAccount(true));
+    dispatch(allowAddKey(true));
+    dispatch(disableDeleteBtn(false));
+    dispatch(setThresholdWarning(''));
+  }, []);
   useEffect(() => {
     setLoginState(isLoggedIn);
   }, [isLoggedIn]);
