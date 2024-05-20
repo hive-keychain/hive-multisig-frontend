@@ -45,6 +45,11 @@ const getAccountMemoKey = async (username: string) => {
   return memo;
 };
 
+const getAccountActiveKey = async (username: string) => {
+  const account = await getAccount(username);
+  const active = account[0].active.key_auths[0][0];
+  return active;
+};
 const getJSONMetadata = async (username: string) => {
   try {
     const account = await getAccount(username);
@@ -393,6 +398,7 @@ const HiveUtils = {
   getAccount,
   getAuthority,
   getAccountMemoKey,
+  getAccountActiveKey,
   getAccountAuthorities,
   broadcastUpdateAccount,
   getActiveAuthorities,

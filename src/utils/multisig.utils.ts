@@ -235,18 +235,35 @@ const getCustomJsonOp = async (
   return new Promise<any>(async (resolve, reject) => {
     try {
       const isValid = await MultisigUtils.checkMultisigBot(bot[0].toString());
+      const auth = await AccountUtils.getActiveAuthorities(username);
       if (isValid) {
-        const memoKey = await HiveUtils.getAccountMemoKey(bot[0].toString());
-        let encodingResult = undefined;
-        encodingResult = await HiveUtils.encodeMessageWithKeys(
+        const activeKey = auth.active.key_auths[0][0];
+        const signer_weight = await HiveUtils.getActiveSignWeight(
           username,
-          [memoKey],
-          `${twoFASecret}`,
-          KeychainKeyTypes.active,
+          auth.active,
         );
-
+        let encodingResult = undefined;
+        if (signer_weight >= auth.active.weight_threshold) {
+          //non multisig
+          encodingResult = await HiveUtils.encodeMessage(
+            username,
+            username,
+            `${twoFASecret}`,
+            KeychainKeyTypes.memo,
+          );
+        } else {
+          //multisig
+          let encodingResult = undefined;
+          encodingResult = await HiveUtils.encodeMessageWithKeys(
+            username,
+            [activeKey.toString()],
+            `${twoFASecret}`,
+            KeychainKeyTypes.memo,
+          );
+        }
+        console.log({ encodingResult });
         if (encodingResult.success) {
-          const encodedMessage = encodingResult.result[memoKey];
+          const encodedMessage = encodingResult.result[activeKey.toString()];
           const customJsonOp = {
             required_auths: [username],
             required_posting_auths: [] as string[],
