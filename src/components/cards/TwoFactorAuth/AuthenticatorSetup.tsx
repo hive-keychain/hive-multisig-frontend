@@ -16,7 +16,11 @@ import {
   proceedMultisig,
   setTokenValidation,
 } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
-import { base64ToImage, generateRandomKey } from '../../../utils/utils';
+import {
+  base64ToImage,
+  copyTextToClipboard,
+  generateRandomKey,
+} from '../../../utils/utils';
 var base32 = require('thirty-two');
 const defaultBot = process.env.BOT;
 authenticator.options = {
@@ -144,6 +148,13 @@ export const AuthenticatorSetup = () => {
                             generateSecret();
                           }}>
                           Regenerate
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          onClick={() => {
+                            copyTextToClipboard(secret);
+                          }}>
+                          Copy
                         </Button>
                       </InputGroup>
                     </Col>
