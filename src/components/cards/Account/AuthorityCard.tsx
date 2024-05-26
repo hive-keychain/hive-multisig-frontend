@@ -22,6 +22,9 @@ export function AuthorityCard({ authorityName }: IAuthoritiCardProp) {
     (state) => state.updateAuthorities.NewAuthorities,
   );
 
+  const allowEdit = useAppSelector(
+    (state) => state.updateAuthorities.allowEdit,
+  );
   useEffect(() => {
     if (newAuthorities) {
       switch (authorityName.toLowerCase()) {
@@ -113,6 +116,7 @@ export function AuthorityCard({ authorityName }: IAuthoritiCardProp) {
                   type={thresh.type}
                   authorityName={thresh.authorityName}
                   threshold={thresh.threshold}
+                  enableEdit={allowEdit}
                 />
               ) : (
                 ''

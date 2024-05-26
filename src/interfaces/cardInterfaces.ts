@@ -20,6 +20,7 @@ export interface IAccountKeyRowProps {
   isLoggedIn?: boolean;
   componentColor?: string;
   disableDelete?: boolean;
+  enableEdit?: boolean;
 }
 
 export interface IAuthorityCardProps {

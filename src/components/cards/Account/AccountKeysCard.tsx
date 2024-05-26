@@ -30,6 +30,11 @@ export function AccountKeysCard({
   const disableDeleteBtn = useAppSelector(
     (state) => state.updateAuthorities.disableDetele,
   );
+
+  const allowEdit = useAppSelector(
+    (state) => state.updateAuthorities.allowEdit,
+  );
+
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -51,6 +56,7 @@ export function AccountKeysCard({
           isLoggedIn={loginState}
           componentColor={'gray'}
           disableDelete={disableDeleteBtn}
+          enableEdit={allowEdit}
         />,
       ];
     }),
@@ -63,6 +69,7 @@ export function AccountKeysCard({
       setAllowAdd(allowAddKey);
     }
   }, [allowAddAccount, allowAddKey]);
+
   useEffect(() => {
     const newComponents = accountKeyAuths.map(
       (accountKeyAuth): [string, ReactNode] => {
@@ -75,6 +82,7 @@ export function AccountKeysCard({
             accountKeyAuth={accountKeyAuth}
             isLoggedIn={loginState}
             componentColor={'gray'}
+            enableEdit={allowEdit}
             disableDelete={disableDeleteBtn}
           />,
         ];
@@ -103,6 +111,7 @@ export function AccountKeysCard({
         accountKeyAuth={newAccount}
         isLoggedIn={loginState}
         componentColor={'blue'}
+        enableEdit={allowEdit}
         disableDelete={disableDeleteBtn}
       />,
     ];

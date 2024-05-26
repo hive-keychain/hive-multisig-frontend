@@ -21,6 +21,9 @@ export const CustomTwoFactorAuthSetup = () => {
           Add the username of the bot below and make sure to set the proper
           weight and threshold.
         </p>
+        <p className="justify-content-md-center">
+          Threshold must be at least equal to 2 for the 2FA to work properly.
+        </p>
       </div>
       <div>
         <AuthorityCard authorityName="Active" />

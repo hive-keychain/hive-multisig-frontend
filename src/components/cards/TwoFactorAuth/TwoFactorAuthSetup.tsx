@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
   allowAddAccount,
+  allowEdit,
   disableDeleteBtn,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
@@ -121,8 +122,10 @@ export const TwoFactorAuthSetup = () => {
             updateUseBot(true);
           }
         }
+        dispatch(allowEdit(false));
         dispatch(disableDeleteBtn(true));
         dispatch(allowAddAccount(false));
+
         break;
       case 'custom':
         if (activeAuth) {
@@ -130,8 +133,10 @@ export const TwoFactorAuthSetup = () => {
             updateUseBot(false);
           }
         }
+        dispatch(allowEdit(true));
         dispatch(disableDeleteBtn(false));
         dispatch(allowAddAccount(true));
+        console.log('custom');
         break;
     }
   }, [key]);
@@ -165,7 +170,7 @@ export const TwoFactorAuthSetup = () => {
                   </Tab>
                 </Tabs>
               </Card.Body>
-              {hasDefaultBot && key=== 'default' ? (
+              {hasDefaultBot && key === 'default' ? (
                 ''
               ) : (
                 <div>
@@ -177,14 +182,14 @@ export const TwoFactorAuthSetup = () => {
                         }}
                         type={'checkbox'}
                         id={`owner-key-agreement`}
-                        label={`* My account @${signedAccountObj.data.username} owner key is safely stored offline`}></Form.Check>
+                        label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}></Form.Check>
                       <Form.Check
                         onChange={(e) => {
                           handle2faDisablingAgreement(e.target.checked);
                         }}
                         type={'checkbox'}
                         id={`2fa-disabling-agreement`}
-                        label={`* I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
+                        label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
                     </Form>
                   </div>
                   <div className="d-flex justify-content-end mb-3 me-3">

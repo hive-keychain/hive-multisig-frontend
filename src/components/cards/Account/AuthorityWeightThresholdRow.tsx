@@ -10,10 +10,12 @@ export function AuthorityWeightThreshold({
   authorityName,
   type,
   threshold,
+  enableEdit,
 }: IAccountKeyRowProps) {
   const dispatch = useAppDispatch();
   const [weight, setNewWeightThresh] = useState<number>(threshold);
   const [editFlag, setEdiFlag] = useState<string>('text-body');
+  const [readOnly, setReadOnly] = useState<boolean>(!enableEdit);
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [threshWarining, setThreshWarning] = useState<string>('');
@@ -21,6 +23,9 @@ export function AuthorityWeightThreshold({
     (state) => state.updateAuthorities.thresholdWarning,
   );
 
+  useEffect(() => {
+    setReadOnly(!enableEdit);
+  }, [enableEdit]);
   useEffect(() => {
     setThreshWarning(thresholdWarningRedux);
   }, [thresholdWarningRedux]);
@@ -63,6 +68,7 @@ export function AuthorityWeightThreshold({
           }}
           placeholder={weight.toString()}
           value={weight}
+          readOnly={readOnly}
         />
       </InputGroup>
       <div>

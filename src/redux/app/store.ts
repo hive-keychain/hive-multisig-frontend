@@ -1,5 +1,4 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { createLogger } from 'redux-logger';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import keychainReducers from '../features/keyChain/keyChainReducers';
@@ -20,7 +19,6 @@ const rootReducer = combineReducers({
   multisig: multisigReducers,
   twoFactorAuth: twoFactorAuthReducers,
 });
-const logger = createLogger();
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({
   reducer: persistedReducer,

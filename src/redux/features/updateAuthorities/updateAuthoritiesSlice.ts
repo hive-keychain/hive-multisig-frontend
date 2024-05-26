@@ -7,6 +7,7 @@ import {
   addKeyWarning,
   allowAddAccount,
   allowAddKey,
+  allowEdit,
   deleteAccount,
   deleteKey,
   dhiveBroadcastUpdateAccount,
@@ -43,6 +44,7 @@ export type AuthorityUpdateStateType = {
   allowAddAccount: boolean;
   allowAddKey: boolean;
   disableDetele: boolean;
+  allowEdit: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -65,6 +67,7 @@ const initialState: AuthorityUpdateStateType = {
   allowAddAccount: true,
   allowAddKey: true,
   disableDetele: false,
+  allowEdit: true,
 };
 
 const updateAuthoritySlice = createSlice({
@@ -331,8 +334,12 @@ const updateAuthoritySlice = createSlice({
     builder.addCase(allowAddKey.fulfilled, (state, action) => {
       state.allowAddKey = action.payload;
     });
+
     builder.addCase(disableDeleteBtn.fulfilled, (state, action) => {
       state.disableDetele = action.payload;
+    });
+    builder.addCase(allowEdit.fulfilled, (state, action) => {
+      state.allowEdit = action.payload;
     });
   },
 });

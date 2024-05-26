@@ -23,6 +23,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   accountKeyAuth,
   componentColor,
   disableDelete = false,
+  enableEdit = true,
 }) => {
   const [color, setColor] = useState<string>(componentColor);
   const [warningText, setWarningText] = useState<string>('');
@@ -31,6 +32,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   const [deleteComponentKey, setDeleteComponentKey] = useState<string>();
   const [weight, setWeight] = useState<number>(accountKeyAuth[1]);
   const [newAuth, setNewAuth] = useState<[string, number]>(accountKeyAuth);
+  const [readOnly, setReadOnly] = useState<boolean>(!enableEdit);
   const dispatch = useAppDispatch();
   const newAuthorities: Authorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
@@ -40,8 +42,12 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     (state) => state.updateAuthorities.accountRowWarning,
   );
   const keyWarning: [string, string][] = useAppSelector(
-    (state) => state.updateAuthorities.keyRowWarning,
+    (state) => state.updateAuthorities.keyRowWarning,   
   );
+
+  useEffect(() => {
+    setReadOnly(!enableEdit);
+  }, [enableEdit]);
 
   useEffect(() => {
     switch (type.toLowerCase()) {
@@ -164,7 +170,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 type="text"
                 placeholder={accountKeyAuth[0].toString()}
                 value={accountKeyAuth[0]}
-                readOnly
+                readOnly={readOnly}
               />
               <InputGroup.Text className={outlineColor}>Weight</InputGroup.Text>
               <Form.Control
@@ -176,6 +182,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 onChange={(e) => handleUpdate(parseInt(e.target.value))}
                 placeholder={weight.toString()}
                 value={weight}
+                readOnly={readOnly}
               />
 
               {disableDelete ? (

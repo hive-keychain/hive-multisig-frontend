@@ -1,16 +1,16 @@
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { useAppSelector } from '../../../redux/app/hooks';
 import { AuthorityCard } from '../Account/AuthorityCard';
 const defaultBot = process.env.BOT;
 export const DefaultTwoFactorAuthSetup = () => {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const hasDefaultBot = useAppSelector(
     (state) => state.twoFactorAuth.twoFactorAuth.hasDefaultBot,
   );
   return (
     <div>
       <div className="mb-2">
+        <p className="justify-content-md-center">
+          Threshold must be at least equal to 2 for the 2FA to work properly.
+        </p>
         {hasDefaultBot ? (
           <div>
             <strong>{`@${defaultBot}`}</strong>

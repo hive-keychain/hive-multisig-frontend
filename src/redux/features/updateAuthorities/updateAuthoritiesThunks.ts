@@ -146,3 +146,10 @@ export const allowAddKey = createAsyncThunk(
     return allow;
   },
 );
+
+export const allowEdit = createAsyncThunk(
+  'updateAuthority/allowEdit',
+  async (allow: boolean) => {
+    return allow;
+  },
+);
