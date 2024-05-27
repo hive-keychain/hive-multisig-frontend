@@ -360,34 +360,6 @@ const fromHP = (
   return math.format(res, { notation: 'fixed', precision: 6 });
 };
 
-const getActiveSignWeight = async (
-  username: string,
-  activeAuthorities: Hive.AuthorityType,
-) => {
-  return new Promise<number>((resolve, reject) => {
-    try {
-      signBuffer(username, KeychainKeyTypes.active)
-        .then((data) => {
-          if (data) {
-            const signer_key = data.publicKey;
-            const signer_auth = activeAuthorities.key_auths.filter(
-              (key_auth) => key_auth[0] === signer_key,
-            )[0];
-            const signer_weight = signer_auth[1];
-
-            resolve(signer_weight);
-          } else {
-            reject(data);
-          }
-        })
-        .catch((e) => {
-          alert(e.message);
-        });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
 const getKeyReferences = async (publicKey: string) => {
   var client = getClient();
   const accounts = await client.keys.getKeyReferences([publicKey]);
@@ -413,7 +385,6 @@ const HiveUtils = {
   getPublicKey,
   requestSignTx,
   broadcastTx,
-  getActiveSignWeight,
   getJSONMetadata,
   encodeMessage,
   encodeMessageWithKeys,

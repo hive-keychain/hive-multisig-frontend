@@ -137,10 +137,8 @@ const accountUpdateWithActiveAuthority = async (
       minutes: 60,
     } as IExpiration);
     // determine if the transaction could be done with or without multisig
-    const signer_weight = await HiveUtils.getActiveSignWeight(
-      username,
-      activeAuthority,
-    );
+    const signer_weight = activeAuthority.key_auths[0][1];
+
     //non multisig transaction
     if (signer_weight >= activeAuthority.weight_threshold) {
       nonMultisigTxBroadcast(transaction, username).then(async (res) => {
@@ -198,10 +196,8 @@ const broadcastTransaction = async (
   return new Promise(async (resolve, reject) => {
     try {
       const auth = await AccountUtils.getActiveAuthorities(username);
-      const signer_weight = await HiveUtils.getActiveSignWeight(
-        username,
-        auth.active,
-      );
+      //TODO: Test here
+      const signer_weight = auth.active.key_auths[0][1];
       if (signer_weight >= auth.active.weight_threshold) {
         //non multisig transaction
         nonMultisigTxBroadcast(transaction, username)
@@ -238,10 +234,7 @@ const getCustomJsonOp = async (
       const auth = await AccountUtils.getActiveAuthorities(username);
       if (isValid) {
         const activeKey = auth.active.key_auths[0][0];
-        const signer_weight = await HiveUtils.getActiveSignWeight(
-          username,
-          auth.active,
-        );
+        const signer_weight = auth.active.key_auths[0][1];
         let encodingResult = undefined;
         if (signer_weight >= auth.active.weight_threshold) {
           //non multisig

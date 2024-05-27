@@ -91,7 +91,6 @@ export const TransactionPage = () => {
   useEffect(() => {
     if (operation && isLoggedIn) {
       handleMultisigTransaciton();
-      //handle non multisig
     }
   }, [submittedOp]);
 
