@@ -226,7 +226,6 @@ const getCustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
   twoFASecret: string,
-  isMultisig: boolean = false,
 ) => {
   return new Promise<any>(async (resolve, reject) => {
     try {
@@ -235,8 +234,11 @@ const getCustomJsonOp = async (
       if (isValid) {
         const activeKey = auth.active.key_auths[0][0];
         const signer_weight = auth.active.key_auths[0][1];
+        console.log({ activeKey });
+        console.log({ signer_weight });
         let encodingResult = undefined;
-        if (signer_weight >= auth.active.weight_threshold) {
+        const isNonMultisig = signer_weight >= auth.active.weight_threshold;
+        if (isNonMultisig) {
           //non multisig
           encodingResult = await HiveUtils.encodeMessage(
             username,
@@ -246,7 +248,6 @@ const getCustomJsonOp = async (
           );
         } else {
           //multisig
-          let encodingResult = undefined;
           encodingResult = await HiveUtils.encodeMessageWithKeys(
             username,
             [activeKey.toString()],
@@ -254,9 +255,10 @@ const getCustomJsonOp = async (
             KeychainKeyTypes.memo,
           );
         }
-        console.log({ encodingResult });
         if (encodingResult.success) {
-          const encodedMessage = encodingResult.result[activeKey.toString()];
+          const encodedMessage = isNonMultisig
+            ? encodingResult.result
+            : encodingResult.result[activeKey.toString()];
           const customJsonOp = {
             required_auths: [username],
             required_posting_auths: [] as string[],
