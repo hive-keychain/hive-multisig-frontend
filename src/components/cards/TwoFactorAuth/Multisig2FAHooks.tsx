@@ -131,15 +131,15 @@ const useWeightRestriction = () => {
 
       if (currentThresh === 1) {
         setThreshWarning(
-          `Threshold must be greather than 1 or atleast ${
+          `Threshold must be at least ${
             currentThresh + 1
           } for the 2FA to work properly.`,
         );
         return currentThresh + 1;
       } else if (currentThresh > totalWeight) {
         setThreshWarning(
-          'You may not set the threshold more than the total weight. ' +
-            `Try increasing the weight of your authorities or decrease the weight threshold less than or equal to the total weights (${totalWeight})`,
+          'You may not set a threshold bigger than the sum of the authority weights. ' +
+            `Please increase the weights of your authorities or decrease the threshold to ${totalWeight}`,
         );
         return totalWeight;
       } else {

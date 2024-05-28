@@ -18,8 +18,9 @@ export const CustomTwoFactorAuthSetup = () => {
           a multisig bot account in your account authorities.
         </p>
         <p className="justify-content-md-center">
-          Add the username of the bot below and make sure to set the proper
-          weight and threshold.
+          Add the 2FA bot
+          <strong>{` @${defaultBot}`}</strong> to your authorities below and
+          make sure to set the proper weight and threshold.
         </p>
         <p className="justify-content-md-center">
           Threshold must be at least equal to 2 for the 2FA to work properly.

@@ -18,9 +18,8 @@ export const DefaultTwoFactorAuthSetup = () => {
           </div>
         ) : (
           <div>
-            <strong>
-              <strong>{`@${defaultBot}`}</strong>
-            </strong>
+            The 2FA bot
+            <strong>{` @${defaultBot}`}</strong>
             {` will be added to your active authorities and the weight threshold will be increased by 1.`}
           </div>
         )}

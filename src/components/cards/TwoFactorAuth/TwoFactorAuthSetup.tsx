@@ -69,6 +69,10 @@ export const TwoFactorAuthSetup = () => {
   const handleUpdateAccount = () => {
     if (thresholdWarning !== '') {
       alert(`Invalid Threshold: ${thresholdWarning}`);
+    } else if (
+      !newAuthorities.active.account_auths.find((e) => e[0] === defaultBot)
+    ) {
+      alert(`Please add bot ${defaultBot} to your active authority`);
     } else {
       MultisigUtils.twoFAConfigBroadcast(
         signedAccountObj.data.username,
