@@ -63,9 +63,9 @@ function AccountPage({ authorities }: IAccountPageProp) {
       dispatch(initializeAuthorities(accountAuthorities));
       setDisplay(true);
       const newCards = [
-        <AuthorityCard authorityName={'Owner'} />,
-        <AuthorityCard authorityName={'Active'} />,
-        <AuthorityCard authorityName={'Posting'} />,
+        <AuthorityCard authorityName={'Owner'} key="ownercard" />,
+        <AuthorityCard authorityName={'Active'} key="activecard" />,
+        <AuthorityCard authorityName={'Posting'} key="postingcard" />,
       ];
       setAuthorityCards([...newCards]);
     }
