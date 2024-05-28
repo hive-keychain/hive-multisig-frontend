@@ -7,6 +7,7 @@ import { initializeAuthorities } from '../../redux/features/updateAuthorities/up
 import {
   allowAddAccount,
   allowAddKey,
+  allowEdit,
   disableDeleteBtn,
   setActiveAuthUpdate,
   setActiveKeyDelete,
@@ -39,6 +40,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
   useResetUpdateStates();
 
   useEffect(() => {
+    dispatch(allowEdit(true));
     dispatch(allowAddAccount(true));
     dispatch(allowAddKey(true));
     dispatch(disableDeleteBtn(false));
