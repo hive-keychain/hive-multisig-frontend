@@ -97,8 +97,8 @@ const NavBar = () => {
       setStorageIsLoggedIn(false);
       dispatch(multisigActions.resetState());
       dispatch(transactionActions.resetState());
-      dispatch(twoFactorAuthActions.resetState());
       dispatch(updateAuthorityActions.resetState());
+      dispatch(twoFactorAuthActions.resetState());
       setDestination('/login');
     }
   };

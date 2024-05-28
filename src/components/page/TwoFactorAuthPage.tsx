@@ -23,11 +23,13 @@ export const TwoFactorAuthPage = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [authorities, setAuthorities] = useState(undefined);
   const getAuthorities = async () => {
-    const auth = await AccountUtils.getAccountAuthorities(
-      signedAccountObj.data.username,
-    );
-    if (auth) {
-      setAuthorities(auth);
+    if (signedAccountObj) {
+      const auth = await AccountUtils.getAccountAuthorities(
+        signedAccountObj.data.username,
+      );
+      if (auth) {
+        setAuthorities(auth);
+      }
     }
   };
 
