@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { twoFactorAuthActions } from '../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { checkDefaultBot } from '../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { allowAddKey } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
@@ -43,6 +44,7 @@ export const TwoFactorAuthPage = () => {
   };
 
   useEffect(() => {
+    dispatch(twoFactorAuthActions.resetState());
     getAuthorities();
     dispatch(allowAddKey(false));
   }, []);

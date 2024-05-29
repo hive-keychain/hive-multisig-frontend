@@ -232,17 +232,20 @@ const getCustomJsonOp = async (
       const isValid = await MultisigUtils.checkMultisigBot(bot[0].toString());
       const auth = await AccountUtils.getActiveAuthorities(username);
       if (isValid) {
-        const activeKey = auth.active.key_auths[0][0];
+        //get bot's memo key
+        const botMemoKey = await AccountUtils.getAccountMemoKey(
+          bot[0].toString(),
+        );
         const signer_weight = auth.active.key_auths[0][1];
-        console.log({ activeKey });
         console.log({ signer_weight });
+        console.log({ botMemoKey });
         let encodingResult = undefined;
         const isNonMultisig = signer_weight >= auth.active.weight_threshold;
         if (isNonMultisig) {
           //non multisig
           encodingResult = await HiveUtils.encodeMessage(
             username,
-            username,
+            bot[0].toString(),
             `${twoFASecret}`,
             KeychainKeyTypes.memo,
           );
@@ -250,7 +253,7 @@ const getCustomJsonOp = async (
           //multisig
           encodingResult = await HiveUtils.encodeMessageWithKeys(
             username,
-            [activeKey.toString()],
+            [botMemoKey],
             `${twoFASecret}`,
             KeychainKeyTypes.memo,
           );
@@ -258,7 +261,7 @@ const getCustomJsonOp = async (
         if (encodingResult.success) {
           const encodedMessage = isNonMultisig
             ? encodingResult.result
-            : encodingResult.result[activeKey.toString()];
+            : encodingResult.result[botMemoKey.toString()];
           const customJsonOp = {
             required_auths: [username],
             required_posting_auths: [] as string[],
