@@ -13,7 +13,6 @@ import {
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { twoFactorAuthActions } from '../../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import {
   allowAddAccount,
   allowEdit,
@@ -84,14 +83,11 @@ export const TwoFactorAuthSetup = () => {
       )
         .then(async (res) => {
           if (confirm('Multisig 2FA Setup Success!')) {
-            dispatch(twoFactorAuthActions.resetState());
             navigate('/');
           }
         })
         .catch((reason) => {
-          alert(
-            `Failed to setup Multisig 2FA: ${JSON.stringify(reason.error)}`,
-          );
+          alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
           navigate('/twoFactor');
         });
     }

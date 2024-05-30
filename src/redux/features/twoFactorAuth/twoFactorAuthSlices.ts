@@ -30,7 +30,7 @@ const twoFactorAuthSlice = createSlice({
     });
 
     builder.addCase(createQRCode.fulfilled, (state, action) => {
-      state.qrCodeUrl = action.payload.qrCodeUrl;
+      state.qrCodeUrl = action.payload;
     });
 
     builder.addCase(setTokenValidation.fulfilled, (state, action) => {

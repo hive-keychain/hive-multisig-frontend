@@ -1,5 +1,4 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import qrcode from 'qrcode';
 import { State } from '../../../interfaces/twoFactorAuth.interface';
 export const createSecret = createAsyncThunk<
   State,
@@ -21,21 +20,12 @@ export const createSecret = createAsyncThunk<
   return newState;
 });
 
-export const createQRCode = createAsyncThunk<
-  State,
-  string,
-  { rejectValue: string }
->('twoFactorAuth/createQRCode', async (otpauth: string, { getState }) => {
-  const currentState = getState() as State;
-  console.log(`Current state secret: ${currentState.secret}`);
-
-  const qrCodeUrl = await qrcode.toDataURL(otpauth);
-  const newState: State = {
-    ...currentState,
-    qrCodeUrl,
-  };
-  return newState;
-});
+export const createQRCode = createAsyncThunk(
+  'twoFactorAuth/createQRCode',
+  async (qrCodeUrl: string, { getState }) => {
+    return qrCodeUrl;
+  },
+);
 
 export const setTokenValidation = createAsyncThunk<
   State,

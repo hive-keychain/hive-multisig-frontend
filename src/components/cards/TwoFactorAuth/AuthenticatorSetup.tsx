@@ -1,4 +1,5 @@
 import { authenticator } from 'otplib';
+import qrcode from 'qrcode';
 import { useEffect, useState } from 'react';
 import {
   Button,
@@ -68,12 +69,7 @@ export const AuthenticatorSetup = () => {
 
   useEffect(() => {
     if (secret && signedAccountObj) {
-      const otpauth = authenticator.keyuri(
-        `@${signedAccountObj.data.username}`,
-        `hive`,
-        secret,
-      );
-      dispatch(createQRCode(otpauth));
+      handleCreateQrCode();
     }
   }, [secret]);
 
@@ -95,6 +91,15 @@ export const AuthenticatorSetup = () => {
     }
   }, [validToken]);
 
+  const handleCreateQrCode = async () => {
+    const otpauth = authenticator.keyuri(
+      `@${signedAccountObj.data.username}`,
+      `hive`,
+      secret,
+    );
+    const qrurl = await qrcode.toDataURL(otpauth);
+    dispatch(createQRCode(qrurl));
+  };
   const handleOTPValidation = () => {
     const isValid = authenticator.check(token, secret);
     dispatch(setTokenValidation(isValid));
