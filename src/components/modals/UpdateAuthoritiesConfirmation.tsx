@@ -4,7 +4,6 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Authorities } from '../../interfaces';
-import { Initiator } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   resetOperation,
@@ -89,15 +88,8 @@ export const UpdateAuthoritiesConfirmation = ({
   };
 
   const handleSetInitiator = async () => {
-    let initiator: Initiator;
-    const active_auth =
-      JSON.stringify(newAuthorities.active) ===
-        JSON.stringify(originalAuthorities.active) && !isActiveKeyDeleted
-        ? originalAuthorities.active.key_auths[0]
-        : !isActiveKeyDeleted
-        ? originalAuthorities.active.key_auths[0]
-        : newAuthorities.active.key_auths[0];
-    initiator = {
+    const active_auth = originalAuthorities.active.key_auths[0];
+    const initiator = {
       username: signedAccountObj.data.username,
       publicKey: active_auth[0].toString(),
       weight: active_auth[1],
