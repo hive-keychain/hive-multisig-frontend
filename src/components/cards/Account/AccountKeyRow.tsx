@@ -92,7 +92,6 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     if (bots) {
       const index = bots.findIndex((bot) => bot[0] === accountKeyAuth[0]);
       const bot = bots[index];
-      console.log({ bot });
       if (bot)
         if (bot[1] === 'default') {
           setMultisigBotType(MiltisigAuthorityTypes.MULTISIG_BOT);

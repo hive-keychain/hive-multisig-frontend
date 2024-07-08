@@ -86,10 +86,7 @@ export function AccountKeysCard({
           bots?.findIndex((bot) => bot[0] === accountKeyAuth[0].toString()) >=
           0;
         const disableDlt = isBot ? !allowDeleteOnlyBot : disableDeleteBtn;
-        console.log(accountKeyAuth[0].toString());
-        console.log({ allowDeleteOnlyBot });
-        console.log({ disableDeleteBtn });
-        console.log({ isBot });
+
         return [
           accountKeyAuth[0],
           <AccountKeyRow
