@@ -146,6 +146,7 @@ const accountUpdateWithActiveAuthority = async (
   initiator: Initiator,
   activeAuthority: Hive.AuthorityType,
   newAuthorities: Authorities,
+  twoFACodes?: TwoFACodes,
 ) => {
   return new Promise(async (resolve, reject) => {
     //construct transaction for account_update
@@ -169,13 +170,15 @@ const accountUpdateWithActiveAuthority = async (
       });
     } //multisig transaction
     else {
-      multisigTxBroadcast(transaction, initiator).then(async (res) => {
-        if (res) {
-          resolve(res);
-        } else {
-          reject('Failed to broadcast multisig account_update');
-        }
-      });
+      multisigTxBroadcast(transaction, initiator, twoFACodes).then(
+        async (res) => {
+          if (res) {
+            resolve(res);
+          } else {
+            reject('Failed to broadcast multisig account_update');
+          }
+        },
+      );
     }
   });
 };

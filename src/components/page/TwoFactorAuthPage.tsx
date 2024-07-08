@@ -29,6 +29,9 @@ export const TwoFactorAuthPage = () => {
   const hasDefaultBot = useAppSelector(
     (state) => state.twoFactorAuth.twoFactorAuth.hasDefaultBot,
   );
+   const twoFaBots = useAppSelector(
+     (state) => state.twoFactorAuth.twoFactorAuth.bots,
+   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   const [authorities, setAuthorities] = useState(undefined);
@@ -56,6 +59,7 @@ export const TwoFactorAuthPage = () => {
       });
       dispatch(checkDefaultBot(hasDefaultBot >= 0));
     } else {
+      dispatch(setTwoFABots(bots));
       dispatch(checkDefaultBot(false));
     }
   };
@@ -88,7 +92,7 @@ export const TwoFactorAuthPage = () => {
         return <TwoFactorAuthSetup />;
       } else if (proceedIntro) {
         return <AuthenticatorSetup />;
-      } else if (hasDefaultBot) {
+      } else if (hasDefaultBot || twoFaBots.length>0) {
         return <ManageTwoFaAccount />;
       } else {
         return <TwoFactorIntro />;

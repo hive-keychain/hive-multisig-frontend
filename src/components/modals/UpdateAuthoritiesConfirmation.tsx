@@ -4,13 +4,16 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Authorities } from '../../interfaces';
+import { TxStatus } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   resetOperation,
   setInitiator,
+  setTxStatus,
 } from '../../redux/features/transaction/transactionThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { useDidMountEffect } from '../../utils/utils';
+import { OtpModal } from './OtpModal';
 interface Iprops {
   show: boolean;
   handleClose: Function;
@@ -30,6 +33,7 @@ export const UpdateAuthoritiesConfirmation = ({
     isActiveKeyDeleted,
     isPostingKeyDeleted,
   ] = useAuthoritiesUpdateState();
+  const [askOtp, setAskOtp] = useState<boolean>(false);
 
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
@@ -45,6 +49,9 @@ export const UpdateAuthoritiesConfirmation = ({
   const [newAuths, setNewAuths] = useState<Authorities>(newAuthorities);
 
   const [showModal, setShowModal] = useState<boolean>(show);
+  const twoFASigners = useAppSelector(
+    (state) => state.multisig.multisig.twoFASigners,
+  );
 
   useEffect(() => {
     setShowModal(show);
@@ -72,19 +79,27 @@ export const UpdateAuthoritiesConfirmation = ({
         transactionState.initiator,
         originalAuthorities.active,
         newAuthorities,
+        twoFASigners,
       )
         .then(async (res) => {
           if (res) {
             await dispatch(resetOperation());
+            dispatch(setTxStatus(TxStatus.success));
             window.location.reload();
           }
         })
         .catch((reason) => {
           alert(reason);
+          dispatch(setTxStatus(TxStatus.failed));
         });
     } else {
       setReloadWindow(false);
     }
+  };
+
+  const handleOtp = async () => {
+    setShowModal(false);
+    setAskOtp(true);
   };
 
   const handleSetInitiator = async () => {
@@ -101,45 +116,50 @@ export const UpdateAuthoritiesConfirmation = ({
     handleClose();
   };
   return (
-    <div
-      className="modal updateAuthoritiesModal"
-      style={{ display: 'block', position: 'initial' }}>
-      <Modal
-        size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        show={showModal}
-        onHide={() => {
-          handleModalClose();
-        }}
-        backdrop="static"
-        keyboard={false}
-        centered>
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
-            Update Account Authorities
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Label>Are you sure you want to update?</Form.Label>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => {
-              handleModalClose();
-            }}>
-            Close
-          </Button>
+    <div>
+      <div>
+        <OtpModal handleSubmit={handleUpdate} show={askOtp} />
+      </div>
+      <div
+        className="modal updateAuthoritiesModal"
+        style={{ display: 'block', position: 'initial' }}>
+        <Modal
+          size="lg"
+          aria-labelledby="contained-modal-title-vcenter"
+          show={showModal}
+          onHide={() => {
+            handleModalClose();
+          }}
+          backdrop="static"
+          keyboard={false}
+          centered>
+          <Modal.Header closeButton>
+            <Modal.Title id="contained-modal-title-vcenter">
+              Update Account Authorities
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Label>Are you sure you want to update?</Form.Label>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                handleModalClose();
+              }}>
+              Close
+            </Button>
 
-          <Button
-            variant="primary"
-            onClick={() => {
-              handleUpdate();
-            }}>
-            Update
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            <Button
+              variant="primary"
+              onClick={() => {
+                twoFASigners ? handleOtp() : handleUpdate();
+              }}>
+              Update
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </div>
     </div>
   );
 };

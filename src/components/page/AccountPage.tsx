@@ -2,7 +2,9 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../../interfaces';
+import { TwoFACodes } from '../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { setTwoFASigners } from '../../redux/features/multisig/multisigThunks';
 import {
   checkDefaultBot,
   setTwoFABots,
@@ -39,7 +41,9 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
-
+  const bots = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.bots,
+  );
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
@@ -54,6 +58,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
     dispatch(disableDeleteBtn(false));
     dispatch(setThresholdWarning(''));
     dispatch(allowDeleteOnlyBot(true));
+    scanBots();
   }, []);
   useEffect(() => {
     setLoginState(isLoggedIn);
@@ -77,23 +82,40 @@ function AccountPage({ authorities }: IAccountPageProp) {
         <AuthorityCard authorityName={'Posting'} key="postingcard" />,
       ];
       setAuthorityCards([...newCards]);
-      scanBots();
     }
   }, [accountAuthorities]);
 
+  useEffect(() => {
+    initi2FASigners();
+  }, [bots]);
+
+  const initi2FASigners = async () => {
+    if (!bots) {
+      dispatch(setTwoFASigners(undefined));
+    } else {
+      let botSigners: TwoFACodes = {};
+      for (let i = 0; i < bots.length; i++) {
+        botSigners[bots[i][0]] = '';
+      }
+      dispatch(setTwoFASigners(botSigners));
+    }
+  };
   const scanBots = async () => {
     const bots = await MultisigUtils.getMultisigBots(
       signedAccountObj.data.username,
     );
-
     if (bots) {
       dispatch(setTwoFABots(bots));
       const hasDefaultBot = bots.findIndex((acc) => {
         return acc[0] === defaultBot;
       });
       dispatch(checkDefaultBot(hasDefaultBot >= 0));
+    } else {
+      dispatch(setTwoFABots(bots));
+      dispatch(checkDefaultBot(false));
     }
   };
+
   const validOwnerThreshold = (): boolean => {
     let totalWeight = 0;
     newAuthorities.owner.account_auths.forEach((account) => {
