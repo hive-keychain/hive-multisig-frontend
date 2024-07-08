@@ -68,9 +68,7 @@ export const TransactionPage = () => {
   const [method, setMethod] = useState<KeychainKeyTypes>(
     KeychainKeyTypes.active,
   );
-  const [otpBots, setOtpBots] = useState<
-    { bot: [string, number]; otp: string }[]
-  >([]);
+
   const [askOtp, setAskOtp] = useState<boolean>(false);
 
   const [transaction, setTransaction] = useState<Hive.Transaction>(undefined);

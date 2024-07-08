@@ -79,3 +79,17 @@ export const checkDefaultBot = createAsyncThunk<
 >('twoFactorAuth/checkDefaultBot', async (hasDefaultBot: boolean) => {
   return hasDefaultBot;
 });
+
+export const setTwoFABots = createAsyncThunk(
+  'twoFactorAuth/setTwoFABots',
+  async (bots: string[][]) => {
+    return bots;
+  },
+);
+
+export const isManageTwoFA = createAsyncThunk(
+  'twoFactorAuth/isManageTwoFA',
+  (manage: boolean) => {
+    return manage;
+  },
+);

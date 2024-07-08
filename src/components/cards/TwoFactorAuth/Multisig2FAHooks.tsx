@@ -3,10 +3,7 @@ import { useEffect, useState } from 'react';
 import { Initiator } from '../../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setInitiator } from '../../../redux/features/transaction/transactionThunks';
-import {
-  setThresholdWarning,
-  updateActive,
-} from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+import { setThresholdWarning } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 var deepequal = require('deep-equal');
 const defaultBot = process.env.BOT;
 
@@ -43,6 +40,7 @@ const useWeightRestriction = () => {
   const [originalActive, newActive] = useActiveAuthority();
   const [localUpdatedActive, setLocalUpdatedActive] =
     useState<Hive.Authority>(newActive);
+
   useEffect(() => {
     if (newActive) {
       if (!deepequal(localUpdatedActive, newActive, { strict: true }))
@@ -56,62 +54,7 @@ const useWeightRestriction = () => {
 
   const handleRestriction = async () => {
     let activeAuth = structuredClone(newActive);
-    const newAccounts = suggestNewActiveAccountConfig(activeAuth);
-    const newKeys = suggesetNewActiveKeysConfig(activeAuth);
-    activeAuth.account_auths = [...newAccounts];
-    activeAuth.key_auths = [...newKeys];
-
     const newThreshold = suggestNewThreshold(activeAuth);
-    // activeAuth.weight_threshold = newThreshold;
-    await dispatch(updateActive(activeAuth));
-    setLocalUpdatedActive(activeAuth);
-  };
-
-  const suggestNewActiveAccountConfig = (
-    activeAuthority: Hive.AuthorityType,
-  ) => {
-    if (activeAuthority) {
-      const currentThresh = activeAuthority.weight_threshold;
-      const accountesLessThanThresh = activeAuthority.account_auths.filter(
-        (account) => account[1] < currentThresh,
-      );
-
-      const accountsEqualGreaterThanThresh =
-        activeAuthority.account_auths.filter(
-          (account) => account[1] >= currentThresh,
-        );
-      let newAccounts = [...accountesLessThanThresh];
-      const suggestedWeights: [string, number][] =
-        accountsEqualGreaterThanThresh.map((account) => {
-          return [account[0], Math.max(currentThresh - 1, 1)];
-        });
-      newAccounts.push(...suggestedWeights);
-
-      return newAccounts;
-    }
-  };
-
-  const suggesetNewActiveKeysConfig = (activeAuthority: Hive.AuthorityType) => {
-    if (activeAuthority) {
-      const currentThresh = activeAuthority.weight_threshold;
-      const keysLessThanThresh = activeAuthority.key_auths.filter(
-        (key) => key[1] < currentThresh,
-      );
-      const keysEqualGreaterThanThresh = activeAuthority.key_auths.filter(
-        (key) => key[1] >= currentThresh,
-      );
-
-      let newKeys = [...keysLessThanThresh];
-
-      const suggestedWeights: [string | Hive.PublicKey, number][] =
-        keysEqualGreaterThanThresh.map((key) => {
-          return [key[0], Math.max(currentThresh - 1, 1)];
-        });
-
-      newKeys.push(...suggestedWeights);
-
-      return newKeys;
-    }
   };
 
   const suggestNewThreshold = (activeAuthority: Hive.AuthorityType) => {
@@ -221,8 +164,23 @@ const useMultisigInitiatorHandler = () => {
   return [multisigInitiator];
 };
 
+const useAccountEditedFlag = () => {
+  const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
+  const [edited, setEdited] = useState(false);
+  useEffect(() => {
+    if (newActive) {
+      if (!deepequal(originalActive, newActive, { strict: true })) {
+        setEdited(true);
+      } else {
+        setEdited(false);
+      }
+    }
+  }, [newActive]);
+  return [!edited];
+};
 export const MultisigTwoFAHooks = {
   useActiveAuthority,
   useWeightRestriction,
   useMultisigInitiatorHandler,
+  useAccountEditedFlag,
 };

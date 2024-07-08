@@ -10,6 +10,8 @@ export interface State extends ITwoFactorAuth {
   proceedIntro: boolean;
   proceedMultisig: boolean;
   hasDefaultBot: boolean;
+  bots: string[][];
+  isManageTwoFA: boolean;
 }
 
 export interface TwoFACodes {

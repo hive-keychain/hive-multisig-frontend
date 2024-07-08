@@ -10,6 +10,7 @@ import AccountUtils from '../utils/hive.utils';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
+const defaultBot = process.env.BOT;
 
 const getOptions = () => {
   return {
@@ -20,6 +21,7 @@ const getOptions = () => {
     clientAddress: 'https://api.deathwing.me',
   };
 };
+
 const multisig = HiveMultisig.getInstance(window, getOptions());
 
 const getSigners = async (username: string, keyType: KeychainKeyTypes) => {
@@ -29,6 +31,23 @@ const getSigners = async (username: string, keyType: KeychainKeyTypes) => {
 const checkMultisigBot = async (username: string) => {
   const metadata = await HiveUtils.getJSONMetadata(username);
   return metadata?.isMultisigBot === true ? true : false;
+};
+
+const getMultisigBots = async (username: string) => {
+  const activeAuth = await HiveUtils.getAuthority(
+    username,
+    KeychainKeyTypes.active,
+  );
+  let bots = [];
+
+  for (let i = 0; i < activeAuth.account_auths.length; i++) {
+    const botName = activeAuth.account_auths[i][0];
+    const isBot = await checkMultisigBot(botName);
+    if (isBot) {
+      bots.push([botName, botName === defaultBot ? 'default' : 'custom']);
+    }
+  }
+  return !bots || bots.length === 0 ? undefined : bots;
 };
 
 const parseNewAuthorities = (newAuthorities: Authorities) => {
@@ -187,6 +206,7 @@ const twoFAConfigBroadcast = async (
     }
   });
 };
+
 const broadcastTransaction = async (
   transaction: Hive.Transaction,
   username: string,
@@ -196,7 +216,6 @@ const broadcastTransaction = async (
   return new Promise(async (resolve, reject) => {
     try {
       const auth = await AccountUtils.getActiveAuthorities(username);
-      //TODO: Test here
       const signer_weight = auth.active.key_auths[0][1];
       if (signer_weight >= auth.active.weight_threshold) {
         //non multisig transaction
@@ -297,4 +316,6 @@ export const MultisigUtils = {
   accountUpdateWithActiveAuthority,
   broadcastTransaction,
   twoFAConfigBroadcast,
+  getMultisigBots,
+  getUpdateAccountOp,
 };

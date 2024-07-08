@@ -131,7 +131,7 @@ const NavBar = () => {
             className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
-          Hive Multisig
+          {/* {`Hive Multisig`} */}
         </Navbar.Brand>
         <Navbar.Toggle
           onClick={() => setExpanded(expanded ? false : true)}

@@ -27,3 +27,10 @@ export interface State extends IMultisig {
   success: boolean;
   error: string;
 }
+
+export enum MiltisigAuthorityTypes{
+  AUTHORITY = "authority",
+  MULTISIG_BOT = "default bot",
+  CUSTOM_BOT = "custom bot"
+
+}

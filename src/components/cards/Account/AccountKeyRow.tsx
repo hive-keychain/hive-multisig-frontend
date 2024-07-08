@@ -1,11 +1,20 @@
 import { FC, useEffect, useState } from 'react';
-import { Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap';
+import {
+  Badge,
+  Button,
+  Col,
+  Container,
+  Form,
+  InputGroup,
+  Row,
+} from 'react-bootstrap';
 import { Authorities } from '../../../interfaces/account.interface';
 import {
   IAccountKeyRowProps,
   IDeleteAccount,
   IDeleteKey,
 } from '../../../interfaces/cardInterfaces';
+import { MiltisigAuthorityTypes } from '../../../interfaces/multisig.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { updateAccount } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
@@ -38,11 +47,16 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
     (state) => state.updateAuthorities.NewAuthorities,
   );
 
+  const bots = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.bots,
+  );
+  const [multisigBotType, setMultisigBotType] = useState('');
+
   const accountWarning: [string, string][] = useAppSelector(
     (state) => state.updateAuthorities.accountRowWarning,
   );
   const keyWarning: [string, string][] = useAppSelector(
-    (state) => state.updateAuthorities.keyRowWarning,   
+    (state) => state.updateAuthorities.keyRowWarning,
   );
 
   useEffect(() => {
@@ -73,6 +87,22 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
         break;
     }
   }, [accountWarning, keyWarning]);
+
+  useEffect(() => {
+    if (bots) {
+      const index = bots.findIndex((bot) => bot[0] === accountKeyAuth[0]);
+      const bot = bots[index];
+      console.log({ bot });
+      if (bot)
+        if (bot[1] === 'default') {
+          setMultisigBotType(MiltisigAuthorityTypes.MULTISIG_BOT);
+        } else if (bot[1] === 'custom') {
+          setMultisigBotType(MiltisigAuthorityTypes.CUSTOM_BOT);
+        } else {
+          setMultisigBotType('');
+        }
+    }
+  }, [accountKeyAuth[0], bots]);
 
   useEffect(() => {
     switch (color) {
@@ -158,11 +188,19 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   return (
     <div className="mb-3">
       <Container>
+        {multisigBotType !== '' ? (
+          <Badge className="mb-1" bg="info">
+            {`${multisigBotType}`}
+          </Badge>
+        ) : (
+          ''
+        )}
         <Row>
+          <div className="text-danger">{warningText}</div>
+
           <Col>
-            <div className="text-danger">{warningText}</div>
             <InputGroup>
-              <InputGroup.Text className={outlineColor}>
+              <InputGroup.Text className={outlineColor}  >
                 {type === 'Accounts' ? '@' : <i className="fa fa-lock"></i>}
               </InputGroup.Text>
               <Form.Control
@@ -172,6 +210,10 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 value={accountKeyAuth[0]}
                 readOnly={readOnly}
               />
+            </InputGroup>
+          </Col>
+          <Col>
+            <InputGroup>
               <InputGroup.Text className={outlineColor}>Weight</InputGroup.Text>
               <Form.Control
                 type={'number'}
@@ -184,21 +226,23 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 value={weight}
                 readOnly={readOnly}
               />
-
-              {disableDelete ? (
-                ''
-              ) : (
-                <Button
-                  className="col-md-3 mx-auto"
-                  variant="outline-danger"
-                  onClick={() => {
-                    handleDelete();
-                  }}
-                  disabled={disableDelete}>
-                  Delete
-                </Button>
-              )}
             </InputGroup>
+          </Col>
+
+          <Col>
+            {disableDelete ? (
+              ''
+            ) : (
+              <Button
+                className="col-md-3 mx-auto"
+                variant="outline-danger"
+                onClick={() => {
+                  handleDelete();
+                }}
+                disabled={disableDelete}>
+                Delete
+              </Button>
+            )}
           </Col>
         </Row>
       </Container>

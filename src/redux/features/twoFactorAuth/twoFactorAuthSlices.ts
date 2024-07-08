@@ -4,9 +4,11 @@ import {
   checkDefaultBot,
   createQRCode,
   createSecret,
+  isManageTwoFA,
   proceedIntro,
   proceedMultisig,
   setTokenValidation,
+  setTwoFABots,
 } from './twoFactorAuthThunks';
 
 const initialState: State = {
@@ -17,7 +19,9 @@ const initialState: State = {
   isValid: false,
   proceedIntro: false,
   proceedMultisig: false,
-  hasDefaultBot: false,
+  hasDefaultBot: undefined,
+  bots: undefined,
+  isManageTwoFA: false,
 };
 
 const twoFactorAuthSlice = createSlice({
@@ -46,6 +50,13 @@ const twoFactorAuthSlice = createSlice({
 
     builder.addCase(checkDefaultBot.fulfilled, (state, action) => {
       state.hasDefaultBot = action.payload;
+    });
+    builder.addCase(setTwoFABots.fulfilled, (state, action) => {
+      state.bots = action.payload;
+    });
+
+    builder.addCase(isManageTwoFA.fulfilled, (state, action) => {
+      state.isManageTwoFA = action.payload;
     });
   },
 });

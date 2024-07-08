@@ -3,10 +3,15 @@ import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import {
+  checkDefaultBot,
+  setTwoFABots,
+} from '../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   allowAddAccount,
   allowAddKey,
+  allowDeleteOnlyBot,
   allowEdit,
   disableDeleteBtn,
   setActiveAuthUpdate,
@@ -17,8 +22,10 @@ import {
   setPostingKeyDelete,
   setThresholdWarning,
 } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+import { MultisigUtils } from '../../utils/multisig.utils';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
+const defaultBot = process.env.BOT;
 
 interface IAccountPageProp {
   authorities: Authorities;
@@ -31,6 +38,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [display, setDisplay] = useState(false);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
@@ -45,6 +53,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
     dispatch(allowAddKey(true));
     dispatch(disableDeleteBtn(false));
     dispatch(setThresholdWarning(''));
+    dispatch(allowDeleteOnlyBot(true));
   }, []);
   useEffect(() => {
     setLoginState(isLoggedIn);
@@ -68,9 +77,23 @@ function AccountPage({ authorities }: IAccountPageProp) {
         <AuthorityCard authorityName={'Posting'} key="postingcard" />,
       ];
       setAuthorityCards([...newCards]);
+      scanBots();
     }
   }, [accountAuthorities]);
 
+  const scanBots = async () => {
+    const bots = await MultisigUtils.getMultisigBots(
+      signedAccountObj.data.username,
+    );
+
+    if (bots) {
+      dispatch(setTwoFABots(bots));
+      const hasDefaultBot = bots.findIndex((acc) => {
+        return acc[0] === defaultBot;
+      });
+      dispatch(checkDefaultBot(hasDefaultBot >= 0));
+    }
+  };
   const validOwnerThreshold = (): boolean => {
     let totalWeight = 0;
     newAuthorities.owner.account_auths.forEach((account) => {

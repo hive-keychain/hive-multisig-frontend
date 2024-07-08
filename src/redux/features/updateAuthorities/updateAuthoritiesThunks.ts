@@ -153,3 +153,10 @@ export const allowEdit = createAsyncThunk(
     return allow;
   },
 );
+
+export const allowDeleteOnlyBot = createAsyncThunk(
+  'updateAuthority/allowDeleteOnlyBot',
+  async (allow: boolean) => {
+    return allow;
+  },
+);

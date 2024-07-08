@@ -78,6 +78,7 @@ export function AddAccountKeyRow({
                     <i className="fa fa-lock"></i>
                   )}
                 </InputGroup.Text>
+
                 <Form.Control
                   type="text"
                   placeholder={`Add ${
@@ -88,6 +89,23 @@ export function AddAccountKeyRow({
                   }}
                   value={accountName}
                 />
+                {authAccountType === 'Keys' ? (
+                  <Button
+                    className="col-md-3 mx-auto"
+                    variant="outline-secondary"
+                    onClick={() => {
+                      handleNewKeyOnClick();
+                    }}>
+                    Generate
+                  </Button>
+                ) : (
+                  <div></div>
+                )}
+              </InputGroup>
+            </Col>
+
+            <Col>
+              <InputGroup>
                 <InputGroup.Text>Weight</InputGroup.Text>
                 <Form.Control
                   type="number"
@@ -100,27 +118,18 @@ export function AddAccountKeyRow({
                   }}
                   value={weight}
                 />
-                {authAccountType === 'Keys' ? (
-                  <Button
-                    className="col-md-3 mx-auto"
-                    variant="outline-secondary"
-                    onClick={() => {
-                      handleNewKeyOnClick();
-                    }}>
-                    Get New Key
-                  </Button>
-                ) : (
-                  <div></div>
-                )}
-                <Button
-                  className="col-md-3 mx-auto"
-                  variant="outline-primary"
-                  onClick={() => {
-                    handleAddOnClick();
-                  }}>
-                  Add
-                </Button>
               </InputGroup>
+            </Col>
+
+            <Col>
+              <Button
+                className="col-md-3 mx-auto"
+                variant="outline-primary"
+                onClick={() => {
+                  handleAddOnClick();
+                }}>
+                Add
+              </Button>
             </Col>
           </Row>
         </Container>

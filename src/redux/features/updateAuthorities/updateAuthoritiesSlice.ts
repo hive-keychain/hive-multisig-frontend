@@ -7,6 +7,7 @@ import {
   addKeyWarning,
   allowAddAccount,
   allowAddKey,
+  allowDeleteOnlyBot,
   allowEdit,
   deleteAccount,
   deleteKey,
@@ -45,6 +46,7 @@ export type AuthorityUpdateStateType = {
   allowAddKey: boolean;
   disableDetele: boolean;
   allowEdit: boolean;
+  allowDeleteOnlyBot: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -68,6 +70,7 @@ const initialState: AuthorityUpdateStateType = {
   allowAddKey: true,
   disableDetele: false,
   allowEdit: true,
+  allowDeleteOnlyBot: false,
 };
 
 const updateAuthoritySlice = createSlice({
@@ -340,6 +343,10 @@ const updateAuthoritySlice = createSlice({
     });
     builder.addCase(allowEdit.fulfilled, (state, action) => {
       state.allowEdit = action.payload;
+    });
+
+    builder.addCase(allowDeleteOnlyBot.fulfilled, (state, action) => {
+      state.allowDeleteOnlyBot = action.payload;
     });
   },
 });

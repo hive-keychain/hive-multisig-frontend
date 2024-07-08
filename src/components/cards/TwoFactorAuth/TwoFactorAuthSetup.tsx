@@ -1,4 +1,3 @@
-import * as Hive from '@hiveio/dhive';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { useEffect, useState } from 'react';
 import {
@@ -19,7 +18,6 @@ import {
   disableDeleteBtn,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
-import AccountUtils from '../../../utils/hive.utils';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
@@ -42,28 +40,22 @@ export const TwoFactorAuthSetup = () => {
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
+  const originalAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.Authorities,
+  );
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
-  const [activeAuth, setActiveAuth] = useState<Hive.Authority>(undefined);
+  const [accountEdited] = MultisigTwoFAHooks.useAccountEditedFlag();
   const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
     useState<boolean>(false);
   const [twoFaDisableCheckBoxChecked, setTwoFaDisableCheckBox] =
     useState<boolean>(false);
-  const getActiveAuth = async () => {
-    const auth = await AccountUtils.getActiveAuthorities(
-      signedAccountObj.data.username,
-    );
-    if (auth) {
-      setActiveAuth(auth.active);
-    }
-  };
 
   useEffect(() => {
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
-    getActiveAuth();
   }, []);
 
   const handleUpdateAccount = () => {
@@ -83,7 +75,7 @@ export const TwoFactorAuthSetup = () => {
       )
         .then(async (res) => {
           if (confirm('Multisig 2FA Setup Success!')) {
-            navigate('/');
+            window.location.reload();
           }
         })
         .catch((reason) => {
@@ -94,32 +86,24 @@ export const TwoFactorAuthSetup = () => {
   };
 
   const updateUseBot = async (use: boolean) => {
-    console.log({ activeAuth });
-    if (activeAuth) {
-      let auth = structuredClone(activeAuth);
+    if (originalAuthorities) {
+      let newActive = structuredClone(originalAuthorities.active);
+      console.log({ newActive });
+
       if (use) {
-        auth.account_auths.push([defaultBot, 1]);
-        auth.weight_threshold += 1;
-      } else {
-        auth.account_auths = activeAuth.account_auths.filter(
-          (acc) => acc[0] !== defaultBot,
-        );
+        newActive.account_auths.push([defaultBot, 1]);
+        newActive.weight_threshold += 1;
       }
-      await dispatch(updateActive(auth));
+      await dispatch(updateActive(newActive));
+
+      console.log({ newActive });
     }
   };
-  useEffect(() => {
-    if (activeAuth) {
-      if (!hasDefaultBot) {
-        updateUseBot(true);
-      }
-    }
-  }, [activeAuth]);
 
   useEffect(() => {
     switch (key) {
       case 'default':
-        if (activeAuth) {
+        if (originalAuthorities) {
           if (!hasDefaultBot) {
             updateUseBot(true);
           }
@@ -130,7 +114,7 @@ export const TwoFactorAuthSetup = () => {
 
         break;
       case 'custom':
-        if (activeAuth) {
+        if (originalAuthorities) {
           if (!hasDefaultBot) {
             updateUseBot(false);
           }
@@ -202,7 +186,9 @@ export const TwoFactorAuthSetup = () => {
                       className=""
                       variant="success"
                       disabled={
-                        !ownerKeyCheckBoxChecked || !twoFaDisableCheckBoxChecked
+                        (!ownerKeyCheckBoxChecked ||
+                          !twoFaDisableCheckBoxChecked) &&
+                        accountEdited
                       }>
                       Submit
                     </Button>

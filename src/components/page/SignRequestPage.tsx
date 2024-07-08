@@ -292,17 +292,19 @@ const PendingRequestCard = ({
       signatureRequestId: decodedTransaction.signatureRequestId,
       username: user.data.username,
       method: decodedTransaction.method,
-    };
+    }; // console.log({ data });
 
     multisig.wss
       .signTransaction(data)
       .then(async (signatures) => {
+        console.log({ signatures });
         if (signatures?.length > 0) {
           let txToBroadcast = structuredClone(decodedTransaction);
           txToBroadcast.transaction.signatures = [...signatures];
           let broadcastResult = await multisig.wss.broadcastTransaction(
             txToBroadcast,
           );
+          console.log({ broadcastResult });
           setIsBroadcasted(broadcastResult !== undefined);
           setAlerts({
             variant: 'success',
@@ -715,7 +717,7 @@ const initiatedByMe = (
   account: LoginResponseType,
 ) => {
   if (account) {
-    return signRequest.initiator === account.data.username;
+    return false; // signRequest.initiator === account.data.username;
   }
   return false;
 };

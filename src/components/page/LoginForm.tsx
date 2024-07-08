@@ -52,7 +52,6 @@ const LoginForm = () => {
     'loginTimestap',
     null,
   );
-
   const [isFocused, setIsFocused] = useState<boolean>(false);
 
   const inputRef = useRef(null);
@@ -94,9 +93,9 @@ const LoginForm = () => {
   });
 
   const loginInitAsync = async () => {
-    setStorageIsLoggedIn(isLoginSucceed);
-    setStorageAccountDetails(signedAccountObj);
-    setLoginTimestamp(getTimestampInSeconds());
+    await setStorageIsLoggedIn(isLoginSucceed);
+    await setStorageAccountDetails(signedAccountObj);
+    await setLoginTimestamp(getTimestampInSeconds());
   };
 
   const connectActive = async () => {
