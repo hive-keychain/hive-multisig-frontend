@@ -11,10 +11,12 @@ import {
   Tabs,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
   allowAddAccount,
   allowEdit,
+  deleteAccount,
   disableDeleteBtn,
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
@@ -29,6 +31,8 @@ export const TwoFactorAuthSetup = () => {
   const [key, setKey] = useState('default');
   const dispatch = useAppDispatch();
   const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
+  const [addedActiveAuthorities, latestAddedActiveAuthority] =
+    MultisigTwoFAHooks.useAddedActiveAuthority();
   const [thresholdWarning] = MultisigTwoFAHooks.useWeightRestriction();
   const [multisigInitiator] = MultisigTwoFAHooks.useMultisigInitiatorHandler();
   const hasDefaultBot = useAppSelector(
@@ -48,6 +52,11 @@ export const TwoFactorAuthSetup = () => {
   );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+  const [botToBeAdded, setBotTobeAdded] = useState<[string, number]>([
+    defaultBot,
+    1,
+  ]);
+  const [disableSubmitBtn, setDisableSubmitBtn] = useState(false);
   const [accountEdited] = MultisigTwoFAHooks.useAccountEditedFlag();
   const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
     useState<boolean>(false);
@@ -57,46 +66,87 @@ export const TwoFactorAuthSetup = () => {
   useEffect(() => {
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
   }, []);
+  useEffect(() => {
+    checkAddedCustomBot();
+  }, [latestAddedActiveAuthority]);
+
+  useEffect(() => {
+    dispatch(allowAddAccount(addedActiveAuthorities.length === 0));
+  }, [addedActiveAuthorities]);
+
+  useEffect(() => {
+    setDisableSubmitBtn(
+      !(
+        accountEdited &&
+        ownerKeyCheckBoxChecked &&
+        twoFaDisableCheckBoxChecked
+      ),
+    );
+  }, [accountEdited, ownerKeyCheckBoxChecked, twoFaDisableCheckBoxChecked]);
+
+  const handleAddBot = () => {
+    MultisigUtils.twoFAConfigBroadcast(
+      signedAccountObj.data.username,
+      botToBeAdded as [string, number],
+      secret,
+      transactionState.initiator,
+      newAuthorities,
+    )
+      .then(async (res) => {
+        if (confirm('Multisig 2FA Setup Success!')) {
+          window.location.reload();
+        }
+      })
+      .catch((reason) => {
+        alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
+      });
+  };
+
+  const checkAddedCustomBot = async () => {
+    const latest = latestAddedActiveAuthority
+      ? latestAddedActiveAuthority
+      : undefined;
+    if (latest) {
+      const username = latest[0];
+      const weight = latest[1];
+      const isMultisigBot = latest[2] === 'bot';
+      if (key === 'custom' && username !== defaultBot) {
+        if (!isMultisigBot) {
+          alert(
+            `You are adding ${latest[0]} that is not configured as a 2FA Bot`,
+          );
+          const accountToDelete: IDeleteAccount = {
+            type: 'active',
+            username: username as string,
+            authorities: newAuthorities,
+          };
+          dispatch(deleteAccount(accountToDelete));
+          setBotTobeAdded(undefined);
+        } else {
+          setBotTobeAdded([username, weight] as [string, number]);
+        }
+      }
+    }
+  };
 
   const handleUpdateAccount = () => {
     if (thresholdWarning !== '') {
       alert(`Invalid Threshold: ${thresholdWarning}`);
-    } else if (
-      !newAuthorities.active.account_auths.find((e) => e[0] === defaultBot)
-    ) {
-      alert(`Please add bot ${defaultBot} to your active authority`);
     } else {
-      MultisigUtils.twoFAConfigBroadcast(
-        signedAccountObj.data.username,
-        [defaultBot, 1] as [string, number],
-        secret,
-        transactionState.initiator,
-        newAuthorities,
-      )
-        .then(async (res) => {
-          if (confirm('Multisig 2FA Setup Success!')) {
-            window.location.reload();
-          }
-        })
-        .catch((reason) => {
-          alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
-          navigate('/twoFactor');
-        });
+      handleAddBot();
     }
   };
 
   const updateUseBot = async (use: boolean) => {
     if (originalAuthorities) {
       let newActive = structuredClone(originalAuthorities.active);
-      console.log({ newActive });
-
       if (use) {
         newActive.account_auths.push([defaultBot, 1]);
         newActive.weight_threshold += 1;
       }
-      await dispatch(updateActive(newActive));
+      setBotTobeAdded([defaultBot, 1]);
 
-      console.log({ newActive });
+      await dispatch(updateActive(newActive));
     }
   };
 
@@ -136,7 +186,7 @@ export const TwoFactorAuthSetup = () => {
   return (
     <Container>
       <Row className="justify-content-md-center">
-        <Col md="auto" lg="7">
+        <Col>
           <Card border="secondary">
             <Container>
               <Card.Body>
@@ -178,18 +228,14 @@ export const TwoFactorAuthSetup = () => {
                         label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
                     </Form>
                   </div>
-                  <div className="d-flex justify-content-end mb-3 me-3">
+                  <div className="d-flex justify-content-end mb-3 me-3 rem-10">
                     <Button
                       onClick={() => {
                         handleUpdateAccount();
                       }}
                       className=""
                       variant="success"
-                      disabled={
-                        (!ownerKeyCheckBoxChecked ||
-                          !twoFaDisableCheckBoxChecked) &&
-                        accountEdited
-                      }>
+                      disabled={disableSubmitBtn}>
                       Submit
                     </Button>
                   </div>

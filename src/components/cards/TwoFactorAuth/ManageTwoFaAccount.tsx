@@ -137,7 +137,7 @@ export const ManageTwoFaAccount = () => {
           }}
           className=""
           variant="success"
-          disabled={accountEdited}>
+          disabled={!accountEdited}>
           Submit
         </Button>
       </div>

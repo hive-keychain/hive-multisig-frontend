@@ -4,9 +4,50 @@ import { Initiator } from '../../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setInitiator } from '../../../redux/features/transaction/transactionThunks';
 import { setThresholdWarning } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+import { MultisigUtils } from '../../../utils/multisig.utils';
 var deepequal = require('deep-equal');
 const defaultBot = process.env.BOT;
 
+const useAddedActiveAuthority = () => {
+  const [originalActiveAuthorities, newActiveAuthorities] =
+    useActiveAuthority();
+  const [addedActiveAuthorities, setAddedAuthorities] = useState<
+    [string, number, string][]
+  >([]);
+
+  const [latestAddedActiveAuthority, setLatestAddedActiveAuthority] =
+    useState<[string, number, string]>(undefined);
+
+  useEffect(() => {
+    if (addedActiveAuthorities?.length > 0) {
+      const latest = addedActiveAuthorities.slice(-1)[0];
+      const latestAdded = latestAddedActiveAuthority
+        ? latestAddedActiveAuthority[0]
+        : '';
+      setLatestAddedActiveAuthority(latest);
+    }
+  }, [addedActiveAuthorities]);
+  useEffect(() => {
+    if (newActiveAuthorities) {
+      const addedAuths: [string, number, string][] = [];
+      const promises = newActiveAuthorities.account_auths.map(async (auth) => {
+        const index = originalActiveAuthorities.account_auths.findIndex(
+          (acc) => acc[0] === auth[0],
+        );
+        if (index === -1) {
+          const res = await MultisigUtils.checkMultisigBot(auth[0] as string);
+          addedAuths.push([auth[0], auth[1], res ? 'bot' : 'nonBot']);
+        }
+      });
+
+      Promise.all(promises).then(() => {
+        setAddedAuthorities(addedAuths);
+      });
+    }
+  }, [newActiveAuthorities, originalActiveAuthorities]);
+
+  return [addedActiveAuthorities, latestAddedActiveAuthority];
+};
 const useActiveAuthority = () => {
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
@@ -14,6 +55,7 @@ const useActiveAuthority = () => {
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
   );
+
   const [newActiveAuthorities, setNewActiveAuthorities] =
     useState<Hive.Authority>();
   const [originalActiveAuthorities, setOriginalActiveAuthorities] =
@@ -176,11 +218,12 @@ const useAccountEditedFlag = () => {
       }
     }
   }, [newActive]);
-  return [!edited];
+  return [edited];
 };
 export const MultisigTwoFAHooks = {
   useActiveAuthority,
   useWeightRestriction,
   useMultisigInitiatorHandler,
   useAccountEditedFlag,
+  useAddedActiveAuthority,
 };

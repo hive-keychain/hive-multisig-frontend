@@ -298,6 +298,7 @@ const getCustomJsonOp = async (
           resolve(op);
         }
       }
+      reject(`${username} is not configured as a 2FA bot`);
     } catch (e) {
       reject(e);
     }
