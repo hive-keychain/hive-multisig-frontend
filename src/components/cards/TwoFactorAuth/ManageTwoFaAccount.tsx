@@ -1,16 +1,26 @@
 import * as Hive from '@hiveio/dhive';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { useEffect, useState } from 'react';
-import { Button } from 'react-bootstrap';
 import {
-  IExpiration,
-  TxStatus,
-} from '../../../interfaces/transaction.interface';
+  Button,
+  Card,
+  Col,
+  Container,
+  Form,
+  Row,
+  Tab,
+  Tabs,
+} from 'react-bootstrap';
+import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
+import { IExpiration } from '../../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setTwoFASigners } from '../../../redux/features/multisig/multisigThunks';
-import { setTxStatus } from '../../../redux/features/transaction/transactionThunks';
 import { isManageTwoFA } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
+import {
+  initializeAuthorities,
+  updateAccount,
+} from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   allowAddAccount,
   allowAddKey,
@@ -22,7 +32,8 @@ import {
 import HiveTxUtils from '../../../utils/hivetx.utils';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 import { OtpModal } from '../../modals/OtpModal';
-import { AuthorityCard } from '../Account/AuthorityCard';
+import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
+import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
 var deepequal = require('deep-equal');
 const defaultBot = process.env.BOT;
@@ -32,7 +43,9 @@ export const ManageTwoFaAccount = () => {
 
   const [suggestedThreshold] = useSuggestNewThreshold();
   const [askOtp, setAskOtp] = useState<boolean>(false);
-
+  const [key, setKey] = useState('default');
+  const [deletedActiveAuthority] =
+    MultisigTwoFAHooks.useDeletedActiveAuthority();
   const twoFASigners = useAppSelector(
     (state) => state.multisig.multisig.twoFASigners,
   );
@@ -45,17 +58,31 @@ export const ManageTwoFaAccount = () => {
   const bots = useAppSelector(
     (state) => state.twoFactorAuth.twoFactorAuth.bots,
   );
-
+  const originalAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.Authorities,
+  );
   const [accountEdited] = MultisigTwoFAHooks.useAccountEditedFlag();
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
+  const hasDefaultBot = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.hasDefaultBot,
+  );
+  const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
+    useState<boolean>(false);
+  const [twoFaDisableCheckBoxChecked, setTwoFaDisableCheckBox] =
+    useState<boolean>(false);
   useEffect(() => {
     allowRemoveBot();
     dispatch(isManageTwoFA(true));
     initi2FASigners();
   }, []);
+  const [disableSubmitBtn, setDisableSubmitBtn] = useState(false);
+
+  useEffect(() => {
+    handleOnTabChanged();
+  }, [key]);
   useEffect(() => {
     if (suggestedThreshold) {
       console.log({ suggestedThreshold });
@@ -70,6 +97,20 @@ export const ManageTwoFaAccount = () => {
     }
   }, [suggestedThreshold]);
 
+  useEffect(() => {
+    console.log({ deletedActiveAuthority });
+    handleDefaultBotReduceThresh();
+  }, [deletedActiveAuthority]);
+
+  useEffect(() => {
+    setDisableSubmitBtn(
+      !(
+        accountEdited &&
+        ownerKeyCheckBoxChecked &&
+        twoFaDisableCheckBoxChecked
+      ),
+    );
+  }, [accountEdited, ownerKeyCheckBoxChecked, twoFaDisableCheckBoxChecked]);
   const initi2FASigners = async () => {
     if (bots) {
       let botSigners: TwoFACodes = {};
@@ -81,10 +122,10 @@ export const ManageTwoFaAccount = () => {
   };
   const allowRemoveBot = async () => {
     dispatch(allowAddKey(false));
-    dispatch(allowEdit(true));
     dispatch(allowAddAccount(false));
     dispatch(disableDeleteBtn(true));
     dispatch(allowDeleteOnlyBot(true));
+    dispatch(allowEdit(key !== 'default'));
   };
   const handleOtpSubmit = async () => {
     try {
@@ -102,46 +143,142 @@ export const ManageTwoFaAccount = () => {
         transactionState.initiator,
         twoFASigners,
       )
-        .then(() => {
-          dispatch(setTxStatus(TxStatus.success));
+        .then((res) => {
+          confirm(res.toString());
+          window.location.reload();
         })
         .catch((e) => {
-          dispatch(setTxStatus(TxStatus.failed));
+          alert(e);
+          window.location.reload();
         });
     } catch (error) {
-      dispatch(setTxStatus(TxStatus.failed));
+      alert(error);
+      window.location.reload();
     }
   };
 
+  const handleDefaultBotReduceThresh = () => {
+    if (deletedActiveAuthority && deletedActiveAuthority[0] === defaultBot) {
+      const payload: IAccountKeyRowProps = {
+        type: 'threshold',
+        authorityName: 'active',
+        threshold:
+          originalAuthorities.active.weight_threshold -
+          deletedActiveAuthority[1],
+      };
+      console.log({ payload });
+      dispatch(updateAccount(payload));
+    }
+  };
   const handleUpdateAccount = async () => {
     if (thresholdWarning !== '') {
       alert(`Invalid Threshold: ${thresholdWarning}`);
     }
     setAskOtp(true);
   };
+  const handleReset = async () => {
+    dispatch(initializeAuthorities(originalAuthorities));
+    setOwnerKeyCheckBox(false);
+    setTwoFaDisableCheckBox(false);
+  };
+
+  const handleOwnerKeyAgreement = (value: any) => {
+    setOwnerKeyCheckBox(value);
+  };
+  const handle2faDisablingAgreement = (value: any) => {
+    setTwoFaDisableCheckBox(value);
+  };
+
+  const handleOnTabChanged = () => {
+    handleReset();
+    switch (key) {
+      case 'default':
+        dispatch(allowEdit(false));
+
+        break;
+      case 'custom':
+        dispatch(allowEdit(true));
+        break;
+    }
+  };
 
   return (
-    <div>
-      <OtpModal handleSubmit={handleOtpSubmit} show={askOtp} />
-      <div className="mb-2">
-        <h1 className="justify-content-md-center">Manage Bot</h1>
-      </div>
+    <Container>
       <div>
-        <AuthorityCard authorityName="Active" />
+        <OtpModal handleSubmit={handleOtpSubmit} show={askOtp} />
       </div>
+      <Row className="justify-content-md-center">
+        <Col>
+          <Card border="secondary">
+            <Container>
+              <Card.Body>
+                <h3 className="card-title text-center">
+                  Manage Multisig 2FA Bot
+                </h3>
+                <Tabs
+                  mountOnEnter={true}
+                  id="controlled-tab"
+                  activeKey={key}
+                  onSelect={(k) => setKey(k)}
+                  className="mb-3">
+                  <Tab eventKey="default" title="Default">
+                    <DefaultTwoFactorAuthSetup isManageTwoFA={true} />
+                  </Tab>
 
-      <div className="d-flex justify-content-end mb-3 me-3 mt-3">
-        <Button
-          onClick={() => {
-            handleUpdateAccount();
-          }}
-          className=""
-          variant="success"
-          disabled={!accountEdited}>
-          Submit
-        </Button>
-      </div>
-    </div>
+                  <Tab eventKey="custom" title="Custom">
+                    <CustomTwoFactorAuthSetup isManageTwoFA={true} />
+                  </Tab>
+                </Tabs>
+              </Card.Body>
+              <div>
+                <div className="ms-3 me-3">
+                  <Form>
+                    <Form.Check
+                      onChange={(e) => {
+                        handleOwnerKeyAgreement(e.target.checked);
+                      }}
+                      type={'checkbox'}
+                      id={`owner-key-agreement`}
+                      label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}
+                      checked={ownerKeyCheckBoxChecked}></Form.Check>
+                    <Form.Check
+                      onChange={(e) => {
+                        handle2faDisablingAgreement(e.target.checked);
+                      }}
+                      checked={twoFaDisableCheckBoxChecked}
+                      type={'checkbox'}
+                      id={`2fa-disabling-agreement`}
+                      label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
+                  </Form>
+                </div>
+                <div className="d-flex justify-content-end mb-3 me-3 rem-10">
+                  {accountEdited ? (
+                    <Button
+                      onClick={() => {
+                        handleReset();
+                      }}
+                      variant="danger">
+                      Reset
+                    </Button>
+                  ) : (
+                    ''
+                  )}
+                  <Button
+                    onClick={() => {
+                      handleUpdateAccount();
+                    }}
+                    className="ms-2"
+                    variant="success"
+                    disabled={disableSubmitBtn}>
+                    Submit
+                  </Button>
+                </div>
+              </div>
+            </Container>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 

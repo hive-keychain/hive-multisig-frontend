@@ -17,7 +17,16 @@ a.nounderline {
     width: 50% !important;
   }
 }
-
+.account-key-row-button {
+  width: 100%;
+  max-width: 300px;
+  min-width: fit-content;
+}
+.generate-key-button {
+  width: 70%;
+  max-width: 100px;
+  min-width: fit-content;
+}
 .otpInputStyle {
   width: '30px';
   height: '30px';

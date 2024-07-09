@@ -21,12 +21,10 @@ const useAddedActiveAuthority = () => {
   useEffect(() => {
     if (addedActiveAuthorities?.length > 0) {
       const latest = addedActiveAuthorities.slice(-1)[0];
-      const latestAdded = latestAddedActiveAuthority
-        ? latestAddedActiveAuthority[0]
-        : '';
       setLatestAddedActiveAuthority(latest);
     }
   }, [addedActiveAuthorities]);
+
   useEffect(() => {
     if (newActiveAuthorities) {
       const addedAuths: [string, number, string][] = [];
@@ -48,6 +46,35 @@ const useAddedActiveAuthority = () => {
 
   return [addedActiveAuthorities, latestAddedActiveAuthority];
 };
+
+const useDeletedActiveAuthority = () => {
+  const [originalActiveAuthorities, newActiveAuthorities] =
+    useActiveAuthority();
+  const [deletedActiveAuthority, setDeletedActiveAuthorities] = useState([]);
+
+  useEffect(() => {
+    if (newActiveAuthorities) {
+      const removedAuths: [string, number][] = [];
+      const promises = originalActiveAuthorities.account_auths.map(
+        async (auth) => {
+          const index = newActiveAuthorities.account_auths.findIndex(
+            (acc) => acc[0] === auth[0],
+          );
+          if (index === -1) {
+            removedAuths.push(auth);
+          }
+        },
+      );
+
+      Promise.all(promises).then(() => {
+        setDeletedActiveAuthorities(removedAuths[0]);
+      });
+    }
+  }, [newActiveAuthorities, originalActiveAuthorities]);
+
+  return [deletedActiveAuthority];
+};
+
 const useActiveAuthority = () => {
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
@@ -226,4 +253,5 @@ export const MultisigTwoFAHooks = {
   useMultisigInitiatorHandler,
   useAccountEditedFlag,
   useAddedActiveAuthority,
+  useDeletedActiveAuthority,
 };

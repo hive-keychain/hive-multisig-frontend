@@ -91,7 +91,7 @@ export function AddAccountKeyRow({
                 />
                 {authAccountType === 'Keys' ? (
                   <Button
-                    className="col-md-3 mx-auto"
+                    className="generate-key-button"
                     variant="outline-secondary"
                     onClick={() => {
                       handleNewKeyOnClick();
@@ -123,7 +123,7 @@ export function AddAccountKeyRow({
 
             <Col>
               <Button
-                className="col-md-3 mx-auto"
+                className="account-key-row-button"
                 variant="outline-primary"
                 onClick={() => {
                   handleAddOnClick();

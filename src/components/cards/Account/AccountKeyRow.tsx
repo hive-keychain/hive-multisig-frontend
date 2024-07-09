@@ -199,11 +199,11 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
 
           <Col>
             <InputGroup>
-              <InputGroup.Text className={outlineColor}  >
+              <InputGroup.Text className={outlineColor}>
                 {type === 'Accounts' ? '@' : <i className="fa fa-lock"></i>}
               </InputGroup.Text>
               <Form.Control
-                className={`${outlineColor} `}
+                className={`${outlineColor} account-key-row-button`}
                 type="text"
                 placeholder={accountKeyAuth[0].toString()}
                 value={accountKeyAuth[0]}
@@ -233,7 +233,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
               ''
             ) : (
               <Button
-                className="col-md-3 mx-auto"
+                className="account-key-row-button"
                 variant="outline-danger"
                 onClick={() => {
                   handleDelete();

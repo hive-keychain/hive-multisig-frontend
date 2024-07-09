@@ -51,26 +51,6 @@ export function AccountKeysCard({
   const [newAccount, setNewAccount] = useState<[string, number]>(['', 1]);
   const [accountComponentList, setAccountComponentList] =
     useState<[string, ReactNode][]>();
-  // accountKeyAuths.map((accountKeyAuth): [string, ReactNode] => {
-  //   const isBot =
-  //     bots?.findIndex((bot) => bot[0] === accountKeyAuth[0].toString()) >= 0;
-  //   const disableDlt = isBot ? allowDeleteOnlyBot : disableDeleteBtn;
-
-  //   return [
-  //     accountKeyAuth[0],
-  //     <AccountKeyRow
-  //       key={accountKeyAuth[0].toString()}
-  //       authorityName={authorityName}
-  //       type={authAccountType}
-  //       accountKeyAuth={accountKeyAuth}
-  //       isLoggedIn={loginState}
-  //       componentColor={'gray'}
-  //       disableDelete={disableDlt}
-  //       enableEdit={allowEdit}
-  //     />,
-  //   ];
-  // }),
-
   useEffect(() => {
     if (authAccountType.toLowerCase() === 'accounts') {
       setAllowAdd(allowAddAccount);

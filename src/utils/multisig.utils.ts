@@ -158,14 +158,15 @@ const accountUpdateWithActiveAuthority = async (
     } as IExpiration);
     // determine if the transaction could be done with or without multisig
     const signer_weight = activeAuthority.key_auths[0][1];
+    const opName = 'Account Update';
 
     //non multisig transaction
     if (signer_weight >= activeAuthority.weight_threshold) {
       nonMultisigTxBroadcast(transaction, username).then(async (res) => {
         if (res) {
-          resolve(res);
+          resolve(`${opName} transaction has been broadcasted!`);
         } else {
-          reject('Failed to broadcast non-multisig account_update');
+          reject(`Failed to broadcast non-multisig ${opName}`);
         }
       });
     } //multisig transaction
@@ -173,9 +174,11 @@ const accountUpdateWithActiveAuthority = async (
       multisigTxBroadcast(transaction, initiator, twoFACodes).then(
         async (res) => {
           if (res) {
-            resolve(res);
+            resolve(
+              `${opName} transaction has been submitted to multisig signers! You may check the status of the transaction in the Sign Requests page.`,
+            );
           } else {
-            reject('Failed to broadcast multisig account_update');
+            reject(`Failed to broadcast multisig ${opName}`);
           }
         },
       );
@@ -224,7 +227,20 @@ const broadcastTransaction = async (
         //non multisig transaction
         nonMultisigTxBroadcast(transaction, username)
           .then(async (res) => {
-            resolve(res);
+            const operationNames = transaction.operations.map((op) => {
+              return op[0]
+                .split('_')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            });
+
+            resolve(
+              `${
+                operationNames.length > 1
+                  ? operationNames.join(', ')
+                  : operationNames[0]
+              } transaction has been broadcasted!`,
+            );
           })
           .catch((e) => {
             reject(e);
@@ -233,7 +249,19 @@ const broadcastTransaction = async (
         //multisig transaction
         multisigTxBroadcast(transaction, initiator, twoFACodes)
           .then(async (res) => {
-            resolve(res);
+            const operationNames = transaction.operations.map((op) => {
+              return op[0]
+                .split('_')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            });
+            resolve(
+              `${
+                operationNames.length > 1
+                  ? operationNames.join(', ')
+                  : operationNames[0]
+              } transaction has been submitted to multisig signers! You may check the status of the transaction in the Sign Requests page.`,
+            );
           })
           .catch((e) => {
             reject(e);
@@ -259,8 +287,6 @@ const getCustomJsonOp = async (
           bot[0].toString(),
         );
         const signer_weight = auth.active.key_auths[0][1];
-        console.log({ signer_weight });
-        console.log({ botMemoKey });
         let encodingResult = undefined;
         const isNonMultisig = signer_weight >= auth.active.weight_threshold;
         if (isNonMultisig) {

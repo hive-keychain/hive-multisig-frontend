@@ -22,6 +22,7 @@ export function AuthorityWeightThreshold({
   const thresholdWarningRedux = useAppSelector(
     (state) => state.updateAuthorities.thresholdWarning,
   );
+  
 
   useEffect(() => {
     setReadOnly(!enableEdit);

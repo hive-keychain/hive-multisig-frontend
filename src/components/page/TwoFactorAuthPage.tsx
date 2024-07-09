@@ -64,7 +64,6 @@ export const TwoFactorAuthPage = () => {
     }
   };
   useEffect(() => {
-    console.log('load');
     dispatch(twoFactorAuthActions.resetState());
     getAuthorities();
     dispatch(allowAddKey(false));

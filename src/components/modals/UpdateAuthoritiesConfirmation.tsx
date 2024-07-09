@@ -4,12 +4,10 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Authorities } from '../../interfaces';
-import { TxStatus } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import {
   resetOperation,
   setInitiator,
-  setTxStatus,
 } from '../../redux/features/transaction/transactionThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { useDidMountEffect } from '../../utils/utils';
@@ -83,14 +81,13 @@ export const UpdateAuthoritiesConfirmation = ({
       )
         .then(async (res) => {
           if (res) {
+            confirm(res.toString());
             await dispatch(resetOperation());
-            dispatch(setTxStatus(TxStatus.success));
             window.location.reload();
           }
         })
         .catch((reason) => {
           alert(reason);
-          dispatch(setTxStatus(TxStatus.failed));
         });
     } else {
       setReloadWindow(false);

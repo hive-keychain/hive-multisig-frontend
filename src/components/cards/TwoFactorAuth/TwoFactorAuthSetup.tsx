@@ -13,8 +13,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { setTwoFABots } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
+import { initializeAuthorities } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   allowAddAccount,
+  allowDeleteOnlyBot,
   allowEdit,
   deleteAccount,
   disableDeleteBtn,
@@ -30,7 +33,6 @@ export const TwoFactorAuthSetup = () => {
   const navigate = useNavigate();
   const [key, setKey] = useState('default');
   const dispatch = useAppDispatch();
-  const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
   const [addedActiveAuthorities, latestAddedActiveAuthority] =
     MultisigTwoFAHooks.useAddedActiveAuthority();
   const [thresholdWarning] = MultisigTwoFAHooks.useWeightRestriction();
@@ -93,12 +95,13 @@ export const TwoFactorAuthSetup = () => {
       newAuthorities,
     )
       .then(async (res) => {
-        if (confirm('Multisig 2FA Setup Success!')) {
+        if (confirm(` ${res} \n Multisig 2FA Setup Success!`)) {
           window.location.reload();
         }
       })
       .catch((reason) => {
         alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
+        window.location.reload();
       });
   };
 
@@ -124,7 +127,10 @@ export const TwoFactorAuthSetup = () => {
           setBotTobeAdded(undefined);
         } else {
           setBotTobeAdded([username, weight] as [string, number]);
+          dispatch(setTwoFABots([[username as string, key]]));
         }
+      } else if (username === defaultBot) {
+        dispatch(setTwoFABots([[username as string, key]]));
       }
     }
   };
@@ -151,6 +157,9 @@ export const TwoFactorAuthSetup = () => {
   };
 
   useEffect(() => {
+    dispatch(initializeAuthorities(originalAuthorities));
+    setOwnerKeyCheckBox(false);
+    setTwoFaDisableCheckBox(false);
     switch (key) {
       case 'default':
         if (originalAuthorities) {
@@ -161,6 +170,7 @@ export const TwoFactorAuthSetup = () => {
         dispatch(allowEdit(false));
         dispatch(disableDeleteBtn(true));
         dispatch(allowAddAccount(false));
+        dispatch(allowDeleteOnlyBot(false));
 
         break;
       case 'custom':
@@ -170,8 +180,9 @@ export const TwoFactorAuthSetup = () => {
           }
         }
         dispatch(allowEdit(true));
-        dispatch(disableDeleteBtn(false));
+        dispatch(disableDeleteBtn(true));
         dispatch(allowAddAccount(true));
+        dispatch(allowDeleteOnlyBot(true));
         console.log('custom');
         break;
     }
@@ -198,49 +209,47 @@ export const TwoFactorAuthSetup = () => {
                   onSelect={(k) => setKey(k)}
                   className="mb-3">
                   <Tab eventKey="default" title="Default">
-                    <DefaultTwoFactorAuthSetup />
+                    <DefaultTwoFactorAuthSetup isManageTwoFA={false} />
                   </Tab>
 
                   <Tab eventKey="custom" title="Custom">
-                    <CustomTwoFactorAuthSetup />
+                    <CustomTwoFactorAuthSetup isManageTwoFA={false} />
                   </Tab>
                 </Tabs>
               </Card.Body>
-              {hasDefaultBot && key === 'default' ? (
-                ''
-              ) : (
-                <div>
-                  <div className="ms-3 me-3">
-                    <Form>
-                      <Form.Check
-                        onChange={(e) => {
-                          handleOwnerKeyAgreement(e.target.checked);
-                        }}
-                        type={'checkbox'}
-                        id={`owner-key-agreement`}
-                        label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}></Form.Check>
-                      <Form.Check
-                        onChange={(e) => {
-                          handle2faDisablingAgreement(e.target.checked);
-                        }}
-                        type={'checkbox'}
-                        id={`2fa-disabling-agreement`}
-                        label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
-                    </Form>
-                  </div>
-                  <div className="d-flex justify-content-end mb-3 me-3 rem-10">
-                    <Button
-                      onClick={() => {
-                        handleUpdateAccount();
+              <div>
+                <div className="ms-3 me-3">
+                  <Form>
+                    <Form.Check
+                      onChange={(e) => {
+                        handleOwnerKeyAgreement(e.target.checked);
                       }}
-                      className=""
-                      variant="success"
-                      disabled={disableSubmitBtn}>
-                      Submit
-                    </Button>
-                  </div>
+                      checked={ownerKeyCheckBoxChecked}
+                      type={'checkbox'}
+                      id={`owner-key-agreement`}
+                      label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}></Form.Check>
+                    <Form.Check
+                      onChange={(e) => {
+                        handle2faDisablingAgreement(e.target.checked);
+                      }}
+                      checked={twoFaDisableCheckBoxChecked}
+                      type={'checkbox'}
+                      id={`2fa-disabling-agreement`}
+                      label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
+                  </Form>
                 </div>
-              )}
+                <div className="d-flex justify-content-end mb-3 me-3 rem-10">
+                  <Button
+                    onClick={() => {
+                      handleUpdateAccount();
+                    }}
+                    className=""
+                    variant="success"
+                    disabled={disableSubmitBtn}>
+                    Submit
+                  </Button>
+                </div>
+              </div>
             </Container>
           </Card>
         </Col>
