@@ -149,10 +149,15 @@ export const TransactionPage = () => {
           signedAccountObj.data.username,
           transactionState.initiator,
         )
-          .then(() => {
+          .then((res: string) => {
+            if (confirm(res)) {
+              //wait for confirmation
+            }
             dispatch(setTxStatus(TxStatus.success));
           })
           .catch((e) => {
+            if (confirm(e)) {
+            }
             dispatch(setTxStatus(TxStatus.failed));
           });
       } catch (error) {
@@ -177,11 +182,16 @@ export const TransactionPage = () => {
         transactionState.initiator,
         twoFASigners,
       )
-        .then(() => {
+        .then((res: string) => {
+          if (confirm(res)) {
+            //wait for confirmation
+          }
           dispatch(setTxStatus(TxStatus.success));
         })
         .catch((e) => {
-          dispatch(setTxStatus(TxStatus.failed));
+          if (confirm(e)) {
+            dispatch(setTxStatus(TxStatus.failed));
+          }
         });
     } catch (error) {
       dispatch(setTxStatus(TxStatus.failed));
