@@ -16,6 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 
+import ReactJson from '@microlink/react-json-view';
 import { Config } from '../../config';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
@@ -25,7 +26,6 @@ import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
 } from '../../utils/utils';
-
 type AlertType = {
   variant?: string;
   text?: string;
@@ -377,9 +377,13 @@ const PendingRequestCard = ({
                 <Card>
                   <Card.Body>
                     <div id="example-collapse-text">
-                      {decodedTransaction
+                      {decodedTransaction ? (
+                        <ReactJson src={decodedTransaction.transaction} />
+                      ) : null}
+
+                      {/* {decodedTransaction
                         ? JSON.stringify(decodedTransaction.transaction)
-                        : null}
+                        : null} */}
                     </div>
                   </Card.Body>
                 </Card>
@@ -512,9 +516,9 @@ const BroadCastedTransactionCard = ({
                 <Card>
                   <Card.Body>
                     <div id="example-collapse-text">
-                      {decodedTransaction
-                        ? JSON.stringify(decodedTransaction.transaction)
-                        : null}
+                      {decodedTransaction ? (
+                        <ReactJson src={decodedTransaction.transaction} />
+                      ) : null}
                     </div>
                   </Card.Body>
                 </Card>
@@ -622,9 +626,9 @@ const ExpiredTransactionCard = ({
                 <Card>
                   <Card.Body>
                     <div id="example-collapse-text">
-                      {decodedTransaction
-                        ? JSON.stringify(decodedTransaction.transaction)
-                        : null}
+                      {decodedTransaction ? (
+                        <ReactJson src={decodedTransaction.transaction} />
+                      ) : null}
                     </div>
                   </Card.Body>
                 </Card>

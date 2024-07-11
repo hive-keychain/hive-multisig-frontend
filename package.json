@@ -6,6 +6,7 @@
   "homepage": ".",
   "dependencies": {
     "@babel/core": "^7.16.0",
+    "@microlink/react-json-view": "^1.23.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@reduxjs/toolkit": "^1.9.1",
     "@svgr/webpack": "^6.5.1",
