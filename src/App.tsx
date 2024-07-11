@@ -86,16 +86,24 @@ function App() {
 
   useEffect(() => {
     if (signRequestNotif && loginState !== LoginState.LOGGED_OUT) {
-      alert('Received new sign request');
-      navigate('/signRequest');
+      if (
+        confirm('Received new sign request.\nClick OK to view the request.')
+      ) {
+        navigate('/signRequest');
+      }
       dispatch(notifySignRequest(false));
     }
   }, [signRequestNotif]);
 
   useEffect(() => {
     if (broadcastNotif && loginState !== LoginState.LOGGED_OUT) {
-      alert('A transaction has been broadcasted');
-      navigate('/signRequest');
+      if (
+        confirm(
+          'A transaction has been broadcasted.\nClick OK to view the transactions.',
+        )
+      ) {
+        navigate('/signRequest');
+      }
       dispatch(notifyBroadcastedTransaction(false));
     }
   }, [broadcastNotif]);
@@ -103,16 +111,19 @@ function App() {
   useEffect(() => {
     if (onLoginBroadcastNotif && loginState !== LoginState.LOGGED_OUT) {
       if (onLoginBroadcastNotif.length > 0) {
-        alert(
-          `${
-            onLoginBroadcastNotif.length > 1
-              ? onLoginBroadcastNotif.length
-              : 'A'
-          } transaction${
-            onLoginBroadcastNotif.length > 1 ? 's' : ''
-          } has been broadcasted`,
-        );
-        navigate('/signRequest');
+        if (
+          confirm(
+            `${
+              onLoginBroadcastNotif.length > 1
+                ? onLoginBroadcastNotif.length
+                : 'A'
+            } transaction${
+              onLoginBroadcastNotif.length > 1 ? 's' : ''
+            } has been broadcasted.\nClick OK to view the transactions.`,
+          )
+        ) {
+          navigate('/signRequest');
+        }
         dispatch(resetBroadcastNotifications());
       }
     }
@@ -121,16 +132,19 @@ function App() {
   useEffect(() => {
     if (onLoginPendingReqsNotif && loginState !== LoginState.LOGGED_OUT) {
       if (onLoginPendingReqsNotif.length > 0) {
-        alert(
-          `You have ${
-            onLoginPendingReqsNotif.length > 1
-              ? onLoginPendingReqsNotif.length
-              : 'a'
-          } pending sign request${
-            onLoginPendingReqsNotif.length > 1 ? 's' : ''
-          }`,
-        );
-        navigate('/signRequest');
+        if (
+          confirm(
+            `You have ${
+              onLoginPendingReqsNotif.length > 1
+                ? onLoginPendingReqsNotif.length
+                : 'a'
+            } pending sign request${
+              onLoginPendingReqsNotif.length > 1 ? 's' : ''
+            }.\nClick OK to view the requests.`,
+          )
+        ) {
+          navigate('/signRequest');
+        }
         dispatch(resetPendingSignRequest());
       }
     }
