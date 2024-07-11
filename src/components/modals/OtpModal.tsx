@@ -41,6 +41,7 @@ export const OtpModal = ({ handleSubmit, show }: IOtpModal) => {
   };
   const handleSubmitOnclick = () => {
     handleSubmit();
+    setIsShow(false);
   };
   return (
     <Modal
