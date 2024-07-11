@@ -235,18 +235,30 @@ const useMultisigInitiatorHandler = () => {
 
 const useAccountEditedFlag = () => {
   const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
-  const [edited, setEdited] = useState(false);
+  const [accountRemoved, setAccountRemoved] = useState(false);
+  const [threshEdited, setThreshEdited] = useState(false);
+  const [weightUpdated, setWeightUpdated] = useState(false);
   useEffect(() => {
     if (newActive) {
-      if (!deepequal(originalActive, newActive, { strict: true })) {
-        setEdited(true);
-      } else {
-        setEdited(false);
-      }
+      setAccountRemoved(
+        originalActive.account_auths.length !== newActive.account_auths.length,
+      );
+      setWeightUpdated(
+        !deepequal(originalActive.account_auths, newActive.account_auths, {
+          strict: true,
+        }) &&
+          originalActive.account_auths.length ===
+            newActive.account_auths.length,
+      );
+      setThreshEdited(
+        originalActive.weight_threshold !== newActive.weight_threshold,
+      );
     }
   }, [newActive]);
-  return [edited];
+
+  return [accountRemoved, threshEdited, weightUpdated];
 };
+
 export const MultisigTwoFAHooks = {
   useActiveAuthority,
   useWeightRestriction,

@@ -93,3 +93,58 @@ export const isManageTwoFA = createAsyncThunk(
     return manage;
   },
 );
+
+export const setAddedBot = createAsyncThunk(
+  'twoFactorAuth/setAddedBot',
+  (bot: [string, number]) => {
+    return bot;
+  },
+);
+export const setRemovedBot = createAsyncThunk(
+  'twoFactorAuth/setRemovedBot',
+  (bot: [string, number]) => {
+    return bot;
+  },
+);
+
+export const botSetupSuccess = createAsyncThunk(
+  'twoFactorAuth/botSetupSuccess',
+  (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const removeBotSuccess = createAsyncThunk(
+  'twoFactorAuth/removeBotSuccess',
+  (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const updateThreshSuccess = createAsyncThunk(
+  'twoFactorAuth/updateThreshSuccess',
+  (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const transactionSubmitted = createAsyncThunk(
+  'twoFactorAuth/transactionSubmitted',
+  (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const updateWeightSuccess = createAsyncThunk(
+  'twoFactorAuth/updateWeightSuccess',
+  (flag: boolean) => {
+    return flag;
+  },
+);
+
+export const setIsMultisigTransaction = createAsyncThunk(
+  'twoFactorAuth/isMultisigTransaction',
+  (flag: boolean) => {
+    return flag;
+  },
+);

@@ -25,7 +25,9 @@ export const TwoFactorAuthPage = () => {
   const proceedMultisig = useAppSelector(
     (state) => state.twoFactorAuth.twoFactorAuth.proceedMultisig,
   );
-
+  const botSetupSuccess = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.botSetupSuccess,
+  );
   const hasDefaultBot = useAppSelector(
     (state) => state.twoFactorAuth.twoFactorAuth.hasDefaultBot,
   );
@@ -35,6 +37,9 @@ export const TwoFactorAuthPage = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   const [authorities, setAuthorities] = useState(undefined);
+  const transactionSubmittedFlag = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.transactionSubmitted,
+  );
 
   const getAuthorities = async () => {
     if (signedAccountObj) {
@@ -70,6 +75,9 @@ export const TwoFactorAuthPage = () => {
   }, []);
 
   useEffect(() => {
+    console.log({ transactionSubmittedFlag });
+  }, [transactionSubmittedFlag]);
+  useEffect(() => {
     if (authorities) {
       dispatch(initializeAuthorities(authorities));
     }
@@ -87,6 +95,7 @@ export const TwoFactorAuthPage = () => {
           </div>
         );
       }
+
       if (proceedMultisig) {
         return <TwoFactorAuthSetup />;
       } else if (proceedIntro) {

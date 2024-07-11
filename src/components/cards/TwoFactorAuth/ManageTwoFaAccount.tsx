@@ -16,7 +16,15 @@ import { IExpiration } from '../../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { setTwoFASigners } from '../../../redux/features/multisig/multisigThunks';
-import { isManageTwoFA } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
+import {
+  isManageTwoFA,
+  removeBotSuccess,
+  setIsMultisigTransaction,
+  setRemovedBot,
+  transactionSubmitted,
+  updateThreshSuccess,
+  updateWeightSuccess,
+} from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import {
   initializeAuthorities,
   updateAccount,
@@ -35,6 +43,7 @@ import { OtpModal } from '../../modals/OtpModal';
 import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
+import { TwoFAConfirmation } from './TwoFAConfirmation';
 var deepequal = require('deep-equal');
 const defaultBot = process.env.BOT;
 export const ManageTwoFaAccount = () => {
@@ -61,7 +70,11 @@ export const ManageTwoFaAccount = () => {
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
   );
-  const [accountEdited] = MultisigTwoFAHooks.useAccountEditedFlag();
+  const transactionSubmittedFlag = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.transactionSubmitted,
+  );
+  const [accountRemoved, threshEdited, weightUpdated] =
+    MultisigTwoFAHooks.useAccountEditedFlag();
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
@@ -105,12 +118,25 @@ export const ManageTwoFaAccount = () => {
   useEffect(() => {
     setDisableSubmitBtn(
       !(
-        accountEdited &&
+        (accountRemoved || threshEdited || weightUpdated) &&
         ownerKeyCheckBoxChecked &&
         twoFaDisableCheckBoxChecked
       ),
     );
-  }, [accountEdited, ownerKeyCheckBoxChecked, twoFaDisableCheckBoxChecked]);
+  }, [
+    accountRemoved,
+    threshEdited,
+    weightUpdated,
+    ownerKeyCheckBoxChecked,
+    twoFaDisableCheckBoxChecked,
+  ]);
+
+  useEffect(() => {
+    dispatch(removeBotSuccess(accountRemoved));
+    dispatch(updateThreshSuccess(threshEdited));
+    dispatch(updateWeightSuccess(weightUpdated));
+  }, [accountRemoved, threshEdited, weightUpdated]);
+
   const initi2FASigners = async () => {
     if (bots) {
       let botSigners: TwoFACodes = {};
@@ -143,12 +169,15 @@ export const ManageTwoFaAccount = () => {
         transactionState.initiator,
         twoFASigners,
       )
-        .then((res) => {
+        .then((res: string) => {
           confirm(res.toString());
-          window.location.reload();
+          dispatch(setIsMultisigTransaction(res.includes('multisig')));
+          dispatch(transactionSubmitted(true));
+          dispatch(setRemovedBot(deletedActiveAuthority as [string, number]));
         })
         .catch((e) => {
           alert(e);
+          dispatch(transactionSubmitted(false));
           window.location.reload();
         });
     } catch (error) {
@@ -166,10 +195,10 @@ export const ManageTwoFaAccount = () => {
           originalAuthorities.active.weight_threshold -
           deletedActiveAuthority[1],
       };
-      console.log({ payload });
       dispatch(updateAccount(payload));
     }
   };
+
   const handleUpdateAccount = async () => {
     if (thresholdWarning !== '') {
       alert(`Invalid Threshold: ${thresholdWarning}`);
@@ -202,7 +231,9 @@ export const ManageTwoFaAccount = () => {
     }
   };
 
-  return (
+  return transactionSubmittedFlag ? (
+    <TwoFAConfirmation />
+  ) : (
     <Container>
       <div>
         <OtpModal handleSubmit={handleOtpSubmit} show={askOtp} />
@@ -252,7 +283,7 @@ export const ManageTwoFaAccount = () => {
                   </Form>
                 </div>
                 <div className="d-flex justify-content-end mb-3 me-3 rem-10">
-                  {accountEdited ? (
+                  {accountRemoved ? (
                     <Button
                       onClick={() => {
                         handleReset();

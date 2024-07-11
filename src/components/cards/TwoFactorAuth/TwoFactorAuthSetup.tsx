@@ -13,7 +13,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { setTwoFABots } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
+import {
+  botSetupSuccess,
+  setAddedBot,
+  setIsMultisigTransaction,
+  setTwoFABots,
+  transactionSubmitted,
+} from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { initializeAuthorities } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   allowAddAccount,
@@ -27,6 +33,7 @@ import { MultisigUtils } from '../../../utils/multisig.utils';
 import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
+import { TwoFAConfirmation } from './TwoFAConfirmation';
 const defaultBot = process.env.BOT;
 
 export const TwoFactorAuthSetup = () => {
@@ -64,7 +71,9 @@ export const TwoFactorAuthSetup = () => {
     useState<boolean>(false);
   const [twoFaDisableCheckBoxChecked, setTwoFaDisableCheckBox] =
     useState<boolean>(false);
-
+  const transactionSubmittedFlag = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.transactionSubmitted,
+  );
   useEffect(() => {
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
   }, []);
@@ -94,13 +103,18 @@ export const TwoFactorAuthSetup = () => {
       transactionState.initiator,
       newAuthorities,
     )
-      .then(async (res) => {
+      .then(async (res: string) => {
         if (confirm(` ${res} \n Multisig 2FA Setup Success!`)) {
-          window.location.reload();
+          dispatch(setIsMultisigTransaction(res.includes('multisig')));
+          dispatch(setAddedBot(botToBeAdded));
+          dispatch(transactionSubmitted(true));
+          dispatch(botSetupSuccess(true));
         }
       })
       .catch((reason) => {
         alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
+        dispatch(transactionSubmitted(false));
+        dispatch(botSetupSuccess(false));
         window.location.reload();
       });
   };
@@ -194,7 +208,9 @@ export const TwoFactorAuthSetup = () => {
   const handle2faDisablingAgreement = (value: any) => {
     setTwoFaDisableCheckBox(value);
   };
-  return (
+  return transactionSubmittedFlag ? (
+    <TwoFAConfirmation />
+  ) : (
     <Container>
       <Row className="justify-content-md-center">
         <Col>
