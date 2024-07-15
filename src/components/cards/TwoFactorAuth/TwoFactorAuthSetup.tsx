@@ -104,12 +104,10 @@ export const TwoFactorAuthSetup = () => {
       newAuthorities,
     )
       .then(async (res: string) => {
-        if (confirm(` ${res} \n Multisig 2FA Setup Success!`)) {
-          dispatch(setIsMultisigTransaction(res.includes('multisig')));
-          dispatch(setAddedBot(botToBeAdded));
-          dispatch(transactionSubmitted(true));
-          dispatch(botSetupSuccess(true));
-        }
+        dispatch(setIsMultisigTransaction(res.includes('multisig')));
+        dispatch(setAddedBot(botToBeAdded));
+        dispatch(transactionSubmitted(true));
+        dispatch(botSetupSuccess(true));
       })
       .catch((reason) => {
         alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);

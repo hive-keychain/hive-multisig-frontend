@@ -170,7 +170,6 @@ export const ManageTwoFaAccount = () => {
         twoFASigners,
       )
         .then((res: string) => {
-          confirm(res.toString());
           dispatch(setIsMultisigTransaction(res.includes('multisig')));
           dispatch(transactionSubmitted(true));
           dispatch(setRemovedBot(deletedActiveAuthority as [string, number]));
