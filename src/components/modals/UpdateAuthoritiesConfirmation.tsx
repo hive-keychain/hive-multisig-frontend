@@ -32,7 +32,7 @@ export const UpdateAuthoritiesConfirmation = ({
     isPostingKeyDeleted,
   ] = useAuthoritiesUpdateState();
   const [askOtp, setAskOtp] = useState<boolean>(false);
-
+  
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
   );
