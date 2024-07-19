@@ -12,6 +12,7 @@ import {
   resetBroadcastNotifications,
   resetPendingSignRequest,
   setBotOtp,
+  setReceiveBroadcastNotificationsOn,
   setSignRequestCount,
   setTwoFASigners,
   signerConnectActive,
@@ -40,6 +41,7 @@ const initialState: State = {
   newSignRequestCount: 0,
   success: false,
   error: undefined,
+  receiveBroadcastNotificationsOn: true,
 };
 
 const multisigSlice = createSlice({
@@ -247,6 +249,12 @@ const multisigSlice = createSlice({
       console.log(twoFASigners);
       state.twoFASigners = { ...twoFASigners };
     });
+    builder.addCase(
+      setReceiveBroadcastNotificationsOn.fulfilled,
+      (state, action) => {
+        state.receiveBroadcastNotificationsOn = action.payload;
+      },
+    );
     builder.addCase(multisigSlice.actions.resetState, () => initialState);
   },
 });

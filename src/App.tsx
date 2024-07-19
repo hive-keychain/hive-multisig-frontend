@@ -84,6 +84,10 @@ function App() {
     (state) => state.multisig.multisig.signerConnectMessageActive,
   );
 
+  const receiveBroadcastNotificationOn = useAppSelector(
+    (state) => state.multisig.multisig.receiveBroadcastNotificationsOn,
+  );
+
   useEffect(() => {
     if (signRequestNotif && loginState !== LoginState.LOGGED_OUT) {
       if (
@@ -96,7 +100,11 @@ function App() {
   }, [signRequestNotif]);
 
   useEffect(() => {
-    if (broadcastNotif && loginState !== LoginState.LOGGED_OUT) {
+    if (
+      receiveBroadcastNotificationOn &&
+      broadcastNotif &&
+      loginState !== LoginState.LOGGED_OUT
+    ) {
       if (
         confirm(
           'A transaction has been broadcasted.\nClick OK to view the transactions.',

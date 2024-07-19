@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { setReceiveBroadcastNotificationsOn } from '../../../redux/features/multisig/multisigThunks';
 import {
   botSetupSuccess,
   removeBotSuccess,
@@ -65,9 +66,16 @@ export const TwoFAConfirmation = () => {
     dispatch(disableDeleteBtn(true));
     dispatch(allowDeleteOnlyBot(false));
     dispatch(allowEdit(false));
+    dispatch(setReceiveBroadcastNotificationsOn(false));
     window.addEventListener('beforeunload', handleCleanUp);
     return () => {
       window.removeEventListener('beforeunload', handleCleanUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      handleCleanUp();
     };
   }, []);
   const handleCleanUp = () => {
@@ -76,6 +84,7 @@ export const TwoFAConfirmation = () => {
     dispatch(updateThreshSuccess(false));
     dispatch(transactionSubmitted(false));
     dispatch(updateWeightSuccess(false));
+    dispatch(setReceiveBroadcastNotificationsOn(true));
   };
 
   useEffect(() => {

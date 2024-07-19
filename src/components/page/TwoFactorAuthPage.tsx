@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Spinner } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { setReceiveBroadcastNotificationsOn } from '../../redux/features/multisig/multisigThunks';
 import { twoFactorAuthActions } from '../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import {
   checkDefaultBot,
@@ -72,8 +73,14 @@ export const TwoFactorAuthPage = () => {
     dispatch(twoFactorAuthActions.resetState());
     getAuthorities();
     dispatch(allowAddKey(false));
+    dispatch(setReceiveBroadcastNotificationsOn(true));
+    return () => {
+      handleCleanUp();
+    };
   }, []);
-
+  const handleCleanUp = () => {
+    dispatch(setReceiveBroadcastNotificationsOn(true));
+  };
   useEffect(() => {
     console.log({ transactionSubmittedFlag });
   }, [transactionSubmittedFlag]);
