@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Card, Col, Container, Row, Spinner } from 'react-bootstrap';
+import { Button, Card, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
   botSetupSuccess,
@@ -81,7 +81,7 @@ export const TwoFAConfirmation = () => {
   useEffect(() => {
     if (transactionSubmittedFlag) {
       if (botSetupSuccessFlag) {
-        setHeading(`2FA setup success`);
+        setHeading(`2FA Enabled`);
       } else if (removeBotSuccessFlag) {
         setHeading(`2FA successfuly removed`);
       } else if (updateThreshSuccessFlag || updateWeightSuccessFlag) {
@@ -93,11 +93,11 @@ export const TwoFAConfirmation = () => {
   useEffect(() => {
     if (botSetupSuccessFlag) {
       setDetails(
-        `${addedBot[0]} has been added as 2FA bot in your active authority with weight ${addedBot[1]}.`,
+        `You have enabled 2FA on this account through the bot @${addedBot[0]} .`,
       );
     } else if (removeBotSuccessFlag) {
       setDetails(
-        `${removedBot[0]} has been removed as 2FA bot in your active authority with weight ${removedBot[1]}.`,
+        `@${removedBot[0]} has been removed as 2FA bot in your active authority with weight ${removedBot[1]}.`,
       );
     } else if (updateThreshSuccessFlag || updateWeightSuccessFlag) {
       setDetails(`The weights and/or threshold has been updated.`);
@@ -114,10 +114,10 @@ export const TwoFAConfirmation = () => {
       }
       const auth = await HiveUtils.getActiveAuthorities(username);
       if (auth && auth.active && bot && bot.length > 0) {
-        // adding or removing
         const index = auth.active.account_auths.findIndex(
           (acc) => acc[0] === bot[0],
         );
+
         if (removeBotSuccessFlag) {
           setIsChangesConfirmed(index < 0); // index must be -1 when bot has been removed;
         } else {
@@ -169,6 +169,9 @@ export const TwoFAConfirmation = () => {
     }
   }, [verificationRetryCount]);
 
+  const handleEditBtn = () => {
+    window.location.reload();
+  };
   return isChangesConfirmed ? (
     <Container>
       <Row className="justify-content-md-center">
@@ -180,21 +183,26 @@ export const TwoFAConfirmation = () => {
                 <br />
 
                 <p>{details}</p>
-                {isMultisigTransaction ? (
-                  <p>
+                {!botSetupSuccessFlag ? (
+                  <div>
                     {' '}
-                    The account update has been requested for multisig
-                    transaction. You may have to wait for the signatures of
-                    other authorities before the changes take effect.
-                  </p>
+                    <div>
+                      <AuthorityCard authorityName="Active" />
+                    </div>
+                  </div>
                 ) : (
                   ''
                 )}
-                <div>
-                  {' '}
-                  <div>
-                    <AuthorityCard authorityName="Active" />
-                  </div>
+
+                <div className="d-flex justify-content-end mt-3 mb-3 me-3 rem-10">
+                  <Button
+                    onClick={() => {
+                      handleEditBtn();
+                    }}
+                    className=""
+                    variant="success">
+                    {botSetupSuccessFlag ? 'Edit 2FA' : 'Setup 2FA'}
+                  </Button>
                 </div>
               </Card.Body>
             </Container>
