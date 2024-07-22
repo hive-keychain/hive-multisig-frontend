@@ -171,9 +171,9 @@ export const setBotOtp = createAsyncThunk(
   },
 );
 
-export const clearMultisigState = createAsyncThunk(
-  'multisig/clearMultisigState',
-  async () => {
-    return {} as State;
+export const setReceiveBroadcastNotificationsOn = createAsyncThunk(
+  'receiveBroadcastNotificationsOn',
+  async (flag: boolean) => {
+    return flag;
   },
 );

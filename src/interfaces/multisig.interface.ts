@@ -19,6 +19,7 @@ export interface IMultisig {
 }
 
 export interface State extends IMultisig {
+  receiveBroadcastNotificationsOn: boolean;
   signRequestNotification?: boolean;
   broadcastNotification?: boolean;
   signRequestCount?: number;
@@ -28,9 +29,8 @@ export interface State extends IMultisig {
   error: string;
 }
 
-export enum MiltisigAuthorityTypes{
-  AUTHORITY = "authority",
-  MULTISIG_BOT = "default bot",
-  CUSTOM_BOT = "custom bot"
-
+export enum MiltisigAuthorityTypes {
+  AUTHORITY = 'authority',
+  MULTISIG_BOT = 'default bot',
+  CUSTOM_BOT = 'custom bot',
 }
