@@ -93,14 +93,14 @@ export const TwoFAConfirmation = () => {
   useEffect(() => {
     if (botSetupSuccessFlag) {
       setDetails(
-        `${addedBot[0]} has been added as 2FA bot in your active authority with weight ${addedBot[1]}.`,
+        `@${addedBot[0]} has been added as 2FA bot in your active authority with weight ${addedBot[1]}.`,
       );
     } else if (removeBotSuccessFlag) {
       setDetails(
-        `${removedBot[0]} has been removed as 2FA bot in your active authority with weight ${removedBot[1]}.`,
+        `@${removedBot[0]} has been removed as 2FA bot from your active authority.`,
       );
     } else if (updateThreshSuccessFlag || updateWeightSuccessFlag) {
-      setDetails(`The weights and/or threshold has been updated.`);
+      setDetails(`The weights and/or threshold have been updated.`);
     }
   }, [heading]);
 
@@ -180,16 +180,7 @@ export const TwoFAConfirmation = () => {
                 <br />
 
                 <p>{details}</p>
-                {isMultisigTransaction ? (
-                  <p>
-                    {' '}
-                    The account update has been requested for multisig
-                    transaction. You may have to wait for the signatures of
-                    other authorities before the changes take effect.
-                  </p>
-                ) : (
-                  ''
-                )}
+
                 <div>
                   {' '}
                   <div>
