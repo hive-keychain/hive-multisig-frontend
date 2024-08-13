@@ -288,13 +288,23 @@ const getActiveSignWeight = async (
       signBuffer(username, KeychainKeyTypes.active)
         .then((data) => {
           if (data) {
-            const signer_key = data.publicKey;
-            const signer_auth = activeAuthorities.key_auths.filter(
-              (key_auth) => key_auth[0] === signer_key,
-            )[0];
-            const signer_weight = signer_auth[1];
+            console.log('data', data);
+            let signerWeight;
+            const signerKey = data.publicKey;
+            if (signerKey.startsWith('@')) {
+              const authorityUsername = signerKey.slice(1);
+              const signerAuth = activeAuthorities.account_auths.filter(
+                (accAuth) => accAuth[0] === authorityUsername,
+              )[0];
+              signerWeight = signerAuth[1];
+            } else {
+              const signerAuth = activeAuthorities.key_auths.filter(
+                (keyAuth) => keyAuth[0] === signerKey,
+              )[0];
+              signerWeight = signerAuth[1];
+            }
 
-            resolve(signer_weight);
+            resolve(signerWeight);
           } else {
             reject(data);
           }
