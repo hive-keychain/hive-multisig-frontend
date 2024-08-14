@@ -136,7 +136,7 @@ function AccountPage({ authorities }: IAccountPageProp) {
       <Stack gap={3}>
         {
           <span>
-            &#9888; {'Authorities can only be updated every two hours'}
+            &#9888; {'The owner authority can only be updated twice per hour'}
           </span>
         }
         {authorityCards

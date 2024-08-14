@@ -288,7 +288,6 @@ const getActiveSignWeight = async (
       signBuffer(username, KeychainKeyTypes.active)
         .then((data) => {
           if (data) {
-            console.log('data', data);
             let signerWeight;
             const signerKey = data.publicKey;
             if (signerKey.startsWith('@')) {
