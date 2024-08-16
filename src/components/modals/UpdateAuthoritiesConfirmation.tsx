@@ -30,6 +30,7 @@ export const UpdateAuthoritiesConfirmation = ({
   const dispatch = useAppDispatch();
 
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
+
   const [
     updateAuthorityState,
     activeState,
@@ -122,11 +123,13 @@ export const UpdateAuthoritiesConfirmation = ({
         date: undefined,
         minutes: 60,
       } as IExpiration);
+      console.log('transaction: ', JSON.stringify(transaction));
       HiveUtils.getActiveSignWeight(
         signedAccountObj.data.username,
         originalAuthorities.active,
       )
         .then((signer_weight) => {
+          console.log('signer_weight: ', signer_weight);
           if (signer_weight >= originalAuthorities.active.weight_threshold) {
             HiveUtils.requestSignTx(
               transaction,
@@ -158,6 +161,7 @@ export const UpdateAuthoritiesConfirmation = ({
               expirationDate: moment().add(60, 'm').toDate(),
               initiator: { ...transactionState.initiator },
             };
+            console.log('txToEncode: ', JSON.stringify(txToEncode.initiator));
             try {
               multisig.utils
                 .encodeTransaction(txToEncode)
@@ -169,7 +173,7 @@ export const UpdateAuthoritiesConfirmation = ({
                       setReloadWindow(true);
                     });
                 })
-                .catch((e) => {
+                .catch((e: any) => {
                   console.log('[UpdateAuthConf] encodeTransaction error: ', e);
                   alert(e.message);
                 });
