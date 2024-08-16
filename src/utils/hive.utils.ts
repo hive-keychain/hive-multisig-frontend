@@ -5,6 +5,7 @@ import {
   SignedTransaction,
   Transaction,
 } from '@hiveio/dhive';
+const dHive = require('@hiveio/dhive');
 
 import { IDHiveAccountUpdateBroadcast } from '../interfaces/dhive.interface';
 import {
@@ -19,6 +20,7 @@ import {
   BroadCastResponseType,
   IHiveAccountUpdateBroadcast,
 } from '../interfaces';
+import { Initiator } from '../interfaces/transaction.interface';
 import { getTimestampInSeconds } from './utils';
 
 let client: Client;
@@ -279,31 +281,53 @@ const fromHP = (
   return math.format(res, { notation: 'fixed', precision: 6 });
 };
 
-const getActiveSignWeight = async (
+const getInitiator = async (
   username: string,
   activeAuthorities: Hive.AuthorityType,
 ) => {
-  return new Promise<number>((resolve, reject) => {
+  return new Promise<Initiator>((resolve, reject) => {
     try {
       signBuffer(username, KeychainKeyTypes.active)
-        .then((data) => {
+        .then(async (data) => {
+          console.log(data);
           if (data) {
-            let signerWeight;
+            let signerWeight: number,
+              authorityUsername: string,
+              publicKey: string;
             const signerKey = data.publicKey;
             if (signerKey.startsWith('@')) {
-              const authorityUsername = signerKey.slice(1);
+              authorityUsername = signerKey.slice(1);
               const signerAuth = activeAuthorities.account_auths.filter(
                 (accAuth) => accAuth[0] === authorityUsername,
               )[0];
               signerWeight = signerAuth[1];
+              const authAcc = (await getAccount(authorityUsername))[0];
+              publicKey = authAcc.active.key_auths
+                .find((e) => {
+                  const signature = dHive.Signature.fromString(data.result);
+                  const key = dHive.PublicKey.fromString(e[0].toString());
+                  console.log(data.result, signature, e[0], key);
+                  return key.verify(
+                    dHive.cryptoUtils.sha256(data.data.message),
+                    signature,
+                  );
+                })?.[0]
+                .toString();
             } else {
+              authorityUsername = username;
               const signerAuth = activeAuthorities.key_auths.filter(
                 (keyAuth) => keyAuth[0] === signerKey,
               )[0];
               signerWeight = signerAuth[1];
+              publicKey = data.publicKey;
             }
-
-            resolve(signerWeight);
+            const initiator = {
+              username: authorityUsername,
+              publicKey,
+              weight: signerWeight,
+            };
+            console.log('initiator', initiator);
+            resolve(initiator);
           } else {
             reject(data);
           }
@@ -333,7 +357,7 @@ const HiveUtils = {
   getPublicKey,
   requestSignTx,
   broadcastTx,
-  getActiveSignWeight,
+  getInitiator,
 };
 
 export default HiveUtils;

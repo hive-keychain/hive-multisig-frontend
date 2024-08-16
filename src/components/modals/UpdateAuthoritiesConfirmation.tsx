@@ -8,12 +8,9 @@ import { Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Authorities } from '../../interfaces';
-import { IExpiration, Initiator } from '../../interfaces/transaction.interface';
+import { IExpiration } from '../../interfaces/transaction.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
-import {
-  resetOperation,
-  setInitiator,
-} from '../../redux/features/transaction/transactionThunks';
+import { resetOperation } from '../../redux/features/transaction/transactionThunks';
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
@@ -56,16 +53,13 @@ export const UpdateAuthoritiesConfirmation = ({
 
   useEffect(() => {
     setShowModal(show);
-    handleSetInitiator();
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
   }, [show]);
 
   useEffect(() => {
     setNewAuths({ ...newAuthorities });
   }, [newAuthorities]);
-  useEffect(() => {
-    handleSetInitiator();
-  }, [updateAuthorityState]);
+
   useDidMountEffect(() => {
     if (isReloadWindow) {
       setShowModal(false);
@@ -89,10 +83,8 @@ export const UpdateAuthoritiesConfirmation = ({
     return sortedArr;
   };
 
-  const getKeyWithHighestWeight = () => {
-    const threshold = originalAuthorities.active.weight_threshold;
-  };
   const handleUpdate = async () => {
+    console.log('========== Starting Account Update ==========');
     if (updateAuthorityState) {
       const activeAccounts = orderAlphabetically(newAuths.active.account_auths);
       const activeKeys = orderAlphabetically(newAuths.active.key_auths);
@@ -124,13 +116,12 @@ export const UpdateAuthoritiesConfirmation = ({
         minutes: 60,
       } as IExpiration);
       console.log('transaction: ', JSON.stringify(transaction));
-      HiveUtils.getActiveSignWeight(
+      HiveUtils.getInitiator(
         signedAccountObj.data.username,
         originalAuthorities.active,
       )
-        .then((signer_weight) => {
-          console.log('signer_weight: ', signer_weight);
-          if (signer_weight >= originalAuthorities.active.weight_threshold) {
+        .then((initiator) => {
+          if (initiator.weight >= originalAuthorities.active.weight_threshold) {
             HiveUtils.requestSignTx(
               transaction,
               signedAccountObj.data.username,
@@ -159,9 +150,8 @@ export const UpdateAuthoritiesConfirmation = ({
               transaction: { ...transaction },
               method: keyType,
               expirationDate: moment().add(60, 'm').toDate(),
-              initiator: { ...transactionState.initiator },
+              initiator,
             };
-            console.log('txToEncode: ', JSON.stringify(txToEncode.initiator));
             try {
               multisig.utils
                 .encodeTransaction(txToEncode)
@@ -192,22 +182,6 @@ export const UpdateAuthoritiesConfirmation = ({
     }
   };
 
-  const handleSetInitiator = async () => {
-    let initiator: Initiator;
-    const active_auth =
-      JSON.stringify(newAuthorities.active) ===
-        JSON.stringify(originalAuthorities.active) && !isActiveKeyDeleted
-        ? originalAuthorities.active.key_auths[0]
-        : !isActiveKeyDeleted
-        ? originalAuthorities.active.key_auths[0]
-        : newAuthorities.active.key_auths[0];
-    initiator = {
-      username: signedAccountObj.data.username,
-      publicKey: active_auth[0].toString(),
-      weight: active_auth[1],
-    };
-    await dispatch(setInitiator(initiator));
-  };
   const handleModalClose = () => {
     window.location.reload();
     handleClose();
