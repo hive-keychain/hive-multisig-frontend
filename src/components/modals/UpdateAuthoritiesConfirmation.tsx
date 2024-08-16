@@ -148,6 +148,7 @@ export const UpdateAuthoritiesConfirmation = ({
                 }
               })
               .catch((e) => {
+                console.log('[UpdateAuthConf] Sign Error: ', e);
                 alert(e);
               });
           } else {
@@ -169,15 +170,17 @@ export const UpdateAuthoritiesConfirmation = ({
                     });
                 })
                 .catch((e) => {
+                  console.log('[UpdateAuthConf] encodeTransaction error: ', e);
                   alert(e.message);
                 });
             } catch (error) {
+              console.log('[UpdateAuthConf] encode catch error: ', error);
               alert(`${error}`);
-              setReloadWindow(true);
             }
           }
         })
         .catch((e) => {
+          console.log('[UpdateAuthConf] Global catch Error: ', e);
           alert(e);
         });
     } else {
