@@ -195,7 +195,7 @@ const twoFAConfigBroadcast = async (
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const customJsonOp = await getCustomJsonOp(username, bot, twoFASecret);
+      const customJsonOp = await get2FACustomJsonOp(username, bot, twoFASecret);
       const updateAccountOp = await getUpdateAccountOp(newAuthorities);
       const transaction = await HiveTxUtils.createTx(
         [customJsonOp, updateAccountOp],
@@ -272,7 +272,7 @@ const broadcastTransaction = async (
     }
   });
 };
-const getCustomJsonOp = async (
+const get2FACustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
   twoFASecret: string,
