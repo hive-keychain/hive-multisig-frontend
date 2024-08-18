@@ -27,13 +27,14 @@ export const GranularityPage = () => {
     (state) => state.granularity.granularity.proceedMultisig,
   );
 
+  const hasDefaultGranularityBot = useAppSelector(
+    (state) => state.granularity.granularity.hasDefaultBot,
+  );
+
   const proceedIntro = useAppSelector(
     (state) => state.granularity.granularity.proceedIntro,
   );
 
-  const hasDefaultGranularityBot = useAppSelector(
-    (state) => state.granularity.granularity.hasDefaultBot,
-  );
   const getAuthorities = async () => {
     if (signedAccountObj) {
       const auth = await AccountUtils.getAccountAuthorities(
@@ -51,7 +52,6 @@ export const GranularityPage = () => {
     const bots = await MultisigUtils.getMultisigBots(
       signedAccountObj.data.username,
     );
-
     if (bots) {
       dispatch(setGranularityBots(bots));
       const defaultBotIndex = bots.findIndex((acc) => {

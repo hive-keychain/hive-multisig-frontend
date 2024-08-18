@@ -10,7 +10,6 @@ import {
   Tab,
   Tabs,
 } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
@@ -37,7 +36,6 @@ import { TwoFAConfirmation } from './TwoFAConfirmation';
 const defaultBot = process.env.BOT;
 
 export const TwoFactorAuthSetup = () => {
-  const navigate = useNavigate();
   const [key, setKey] = useState('default');
   const dispatch = useAppDispatch();
   const [addedActiveAuthorities, latestAddedActiveAuthority] =
@@ -206,6 +204,8 @@ export const TwoFactorAuthSetup = () => {
   const handle2faDisablingAgreement = (value: any) => {
     setTwoFaDisableCheckBox(value);
   };
+
+  
   return transactionSubmittedFlag ? (
     <TwoFAConfirmation />
   ) : (

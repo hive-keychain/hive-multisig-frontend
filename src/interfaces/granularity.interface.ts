@@ -13,3 +13,7 @@ export interface State {
   transactionSubmitted: boolean;
   isMultisigTransaction: boolean;
 }
+
+export interface GBotTabProp {
+  isManageGranularity: boolean;
+}

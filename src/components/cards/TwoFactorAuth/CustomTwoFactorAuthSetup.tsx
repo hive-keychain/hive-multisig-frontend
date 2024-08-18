@@ -1,28 +1,21 @@
-import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../../redux/app/hooks';
 import { AuthorityCard } from '../Account/AuthorityCard';
-import { MultisigTwoFAHooks } from './Multisig2FAHooks';
 const defaultBot = process.env.BOT;
 export interface TwoFATabProp {
   isManageTwoFA: boolean;
 }
 export const CustomTwoFactorAuthSetup = ({ isManageTwoFA }: TwoFATabProp) => {
-  const [originalActive, newActive] = MultisigTwoFAHooks.useActiveAuthority();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-
   return (
     <div>
       {isManageTwoFA ? (
         <div>
           <p className="justify-content-md-center">
-            Removing the default bot <strong>@{`${defaultBot}`}</strong> will automatically
-            reduce the threshold by its weight.
+            Removing the default bot <strong>@{`${defaultBot}`}</strong> will
+            automatically reduce the threshold by its weight.
           </p>
 
           <p className="justify-content-md-center">
-
-          You may customize the weight and remove the bots as you want. Make sure you know what you are doing before submitting the changes.
+            You may customize the weight and remove the bots as you want. Make
+            sure you know what you are doing before submitting the changes.
           </p>
         </div>
       ) : (
