@@ -16,7 +16,11 @@ import { ManageTwoFaAccount } from '../cards/TwoFactorAuth/ManageTwoFaAccount';
 import { TwoFactorAuthSetup } from '../cards/TwoFactorAuth/TwoFactorAuthSetup';
 import { TwoFactorIntro } from '../cards/TwoFactorAuth/TwoFactorIntro';
 const defaultBot = process.env.BOT;
-
+if (defaultBot === undefined) {
+  console.error(
+    'Default Bot is not defined in environment variables, this will cause error in 2FA setup.',
+  );
+}
 export const TwoFactorAuthPage = () => {
   const dispatch = useAppDispatch();
 
@@ -47,6 +51,7 @@ export const TwoFactorAuthPage = () => {
       const auth = await AccountUtils.getAccountAuthorities(
         signedAccountObj.data.username,
       );
+
       if (auth) {
         setAuthorities(auth);
       }
@@ -104,13 +109,13 @@ export const TwoFactorAuthPage = () => {
       }
 
       if (proceedMultisig) {
-        return <TwoFactorAuthSetup />;
+        return <TwoFactorAuthSetup />; // STEP 3
       } else if (proceedIntro) {
-        return <AuthenticatorSetup />;
+        return <AuthenticatorSetup />; // STEP 2
       } else if (hasDefaultBot || twoFaBots?.length > 0) {
-        return <ManageTwoFaAccount />;
+        return <ManageTwoFaAccount />; //STEP 4
       } else {
-        return <TwoFactorIntro />;
+        return <TwoFactorIntro />; //STEP 1
       }
     }
   }, [authorities, proceedMultisig, proceedIntro, hasDefaultBot]);
