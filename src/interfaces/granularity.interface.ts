@@ -17,3 +17,19 @@ export interface State {
 export interface GBotTabProp {
   isManageGranularity: boolean;
 }
+
+export interface Operation {
+  operationName: string;
+}
+
+export interface Configuration {
+  authority?: string;
+  operations: Operation[];
+}
+
+export interface MultisigGbotConfig {
+  id: string;
+  json: {
+    configurations: Configuration[];
+  };
+}

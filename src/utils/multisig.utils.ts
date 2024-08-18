@@ -4,6 +4,7 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import moment from 'moment';
 import { Authorities } from '../interfaces';
+import { Configuration } from '../interfaces/granularity.interface';
 import { IExpiration, Initiator } from '../interfaces/transaction.interface';
 import { TwoFACodes } from '../interfaces/twoFactorAuth.interface';
 import AccountUtils from '../utils/hive.utils';
@@ -213,6 +214,22 @@ const twoFAConfigBroadcast = async (
   });
 };
 
+const granularityConfigBroadcast = async (
+  username: string,
+  bot: [string | Hive.PublicKey, number],
+  gbotConfig: Configuration,
+  initiator: Initiator,
+  newAuthorities: Authorities,
+) => {
+  return new Promise(async (resolve, reject) =>{
+    try{
+      const customJsonOp = await getGBotCustomJsonOp(username, bot, gbotConfig);
+
+    }catch(error){
+      reject(error)
+    }
+  })
+};
 const broadcastTransaction = async (
   transaction: Hive.Transaction,
   username: string,
@@ -272,6 +289,33 @@ const broadcastTransaction = async (
     }
   });
 };
+
+
+const getGBotCustomJsonOp = async (
+  username: string,
+  bot: [string | Hive.PublicKey, number],
+  gBotConfig: Configuration,
+) => {
+  return new Promise<any>(async (resolve, reject) => {
+    try {
+      const isValid = await MultisigUtils.checkMultisigBot(bot[0].toString());
+      const auth = await AccountUtils.getActiveAuthorities(username);
+      if(isValid){
+        const botMemoKey = await AccountUtils.getAccountMemoKey(
+          bot[0].toString(),
+        );
+      }
+    
+    
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+
+
+
 const get2FACustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
