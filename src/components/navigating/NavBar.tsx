@@ -119,11 +119,9 @@ const NavBar = () => {
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onClick={() => {
-            isLoggedIn && accountDetails
-              ? setDestination('/transaction')
-              : setDestination('/');
-          }}>
+          onClick={() =>
+            setDestination(isLoggedIn && accountDetails ? '/transaction' : '/')
+          }>
           <img
             alt=""
             src="img/multisig.png"
@@ -131,100 +129,62 @@ const NavBar = () => {
             className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
-          {`Hive Multisig`}
+          Hive Multisig
         </Navbar.Brand>
         <Navbar.Toggle
-          onClick={() => setExpanded(expanded ? false : true)}
+          onClick={() => setExpanded(!expanded)}
           aria-controls="responsive-navbar-nav"
         />
         <Navbar.Collapse
           className="mt-2 mt-sm-2 mt-md-3 mt-lg-0 pe-auto"
-          id="responsive-navbar-nav ">
-          {/*Search bar when not collapsed and logged out*/}
-          {/* {!accountDetails ? (
-            <div className="text-secondary ms-2">{'Search'}</div>
-          ) : (
-            ''
-          )} */}
-          {/* <NavSearchBar
-            classNames="w-auto ms-1 me-auto"
-            isLoggedIn={!accountDetails}
-            setDestination={setDestination}
-          /> */}
-          {isLoggedIn && accountDetails ? (
-            <NavUserAvatar
-              classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
-              username={accountDetails.data.username}
-            />
-          ) : null}
-          {/*Navs*/}
-          <Nav className="me-2">
-            {isLoggedIn && accountDetails ? (
-              <Nav.Link onClick={() => setDestination('/transaction')}>
-                Transactions
-              </Nav.Link>
-            ) : null}
-            {isLoggedIn && accountDetails ? (
-              <Nav.Link
-                onClick={() =>
-                  setDestination(`@${accountDetails.data.username}`)
-                }>
-                Update Account
-              </Nav.Link>
-            ) : null}
-            {isLoggedIn && accountDetails ? (
-              <Nav.Link onClick={() => setDestination('/signRequest')}>
-                Sign Requests{' '}
-                {signRequest ? (
-                  <Badge bg="danger">
-                    {setSignRequestCount > 0 ? setSignRequestCount : ''}
-                  </Badge>
-                ) : null}
-              </Nav.Link>
-            ) : (
-              <></>
-            )}
+          id="responsive-navbar-nav">
+          {/* Show Avatar if logged in */}
+          {isLoggedIn && accountDetails && (
+            <>
+              <NavUserAvatar
+                classNames="mt-1 d-md d-lg-none d-xl-none d-xxl-none"
+                username={accountDetails.data.username}
+              />
+              {/* Nav Links */}
+              <Nav className="me-2">
+                <Nav.Link onClick={() => setDestination('/transaction')}>
+                  Transactions
+                </Nav.Link>
+                <Nav.Link
+                  onClick={() =>
+                    setDestination(`@${accountDetails.data.username}`)
+                  }>
+                  Update Account
+                </Nav.Link>
+                <Nav.Link onClick={() => setDestination('/signRequest')}>
+                  Sign Requests{' '}
+                  {signRequest && setSignRequestCount > 0 && (
+                    <Badge bg="danger">{setSignRequestCount}</Badge>
+                  )}
+                </Nav.Link>
+                <Nav.Link onClick={() => setDestination('/twoFactor')}>
+                  2FA
+                </Nav.Link>
+                <Nav.Link onClick={() => setDestination('/granularity')}>
+                  Granularity
+                </Nav.Link>
+              </Nav>
 
-            {isLoggedIn && accountDetails ? (
-              <Nav.Link onClick={() => setDestination('/twoFactor')}>
-                2FA
-              </Nav.Link>
-            ) : (
-              <></>
-            )}
-          </Nav>
-          {/* Search bar when collapsed and logged in
-          <NavSearchBar
-            classNames="w-auto mt-2 me-auto d-md d-lg-none d-xl-none d-xxl-none"
-            isLoggedIn={isLoggedIn}
-            setDestination={setDestination}
-          />
-          {Search bar when not collapsed and logged in}
-          <NavSearchBar
-            classNames="w-auto  d-xs-none d-none d-sm-none d-md-none d-lg-flex"
-            isLoggedIn={isLoggedIn}
-            setDestination={setDestination}
-          /> 
-          */}
-          {isLoggedIn && accountDetails ? (
-            <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
-              <Nav.Link
-                className="nav-text-color"
-                onClick={() => {
-                  handleLogout();
-                }}>
-                Logout
-              </Nav.Link>
-            </div>
-          ) : null}
-          {/* Login button when logged out */}
-          {isLoggedIn && accountDetails ? (
-            <NavUserAvatarDropdown
-              classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
-              username={accountDetails.data.username}
-              handleLogout={handleLogout}
-            />
-          ) : null}
+              {/* Logout Button for small screens */}
+              <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
+                <Nav.Link className="nav-text-color" onClick={handleLogout}>
+                  Logout
+                </Nav.Link>
+              </div>
+
+              {/* Avatar Dropdown for larger screens */}
+              <NavUserAvatarDropdown
+                classNames="ms-auto mt-1 d-xs-none d-none d-sm-none d-md-none d-lg-flex"
+                username={accountDetails.data.username}
+                handleLogout={handleLogout}
+              />
+            </>
+          )}
         </Navbar.Collapse>
       </Container>
     </Navbar>
