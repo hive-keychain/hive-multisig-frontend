@@ -9,6 +9,7 @@ import NavBar from './components/navigating/NavBar';
 import Routing from './components/navigating/Routing';
 import { Config } from './config';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
+import { granularityActions } from './redux/features/granularity/granularitySlices';
 import { LoginState, loginActions } from './redux/features/login/loginSlice';
 import { multisigActions } from './redux/features/multisig/multisigSlices';
 import {
@@ -318,6 +319,7 @@ function App() {
     await dispatch(transactionActions.resetState());
     await dispatch(updateAuthorityActions.resetState());
     await dispatch(twoFactorAuthActions.resetState());
+    await dispatch(granularityActions.resetState());
     setMultisig(undefined);
   };
 

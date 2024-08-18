@@ -1,6 +1,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import granularityReducers from '../features/granularity/granularityReducers';
 import keychainReducers from '../features/keyChain/keyChainReducers';
 import loginReducer from '../features/login/loginSlice';
 import multisigReducers from '../features/multisig/multisigReducers';
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
   transaction: transactionReducers,
   multisig: multisigReducers,
   twoFactorAuth: twoFactorAuthReducers,
+  granularity: granularityReducers,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({

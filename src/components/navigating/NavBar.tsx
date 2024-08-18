@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { granularityActions } from '../../redux/features/granularity/granularitySlices';
 import { loginActions } from '../../redux/features/login/loginSlice';
 import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { transactionActions } from '../../redux/features/transaction/transactionSlices';
@@ -99,6 +100,7 @@ const NavBar = () => {
       dispatch(transactionActions.resetState());
       dispatch(updateAuthorityActions.resetState());
       dispatch(twoFactorAuthActions.resetState());
+      dispatch(granularityActions.resetState());
       setDestination('/login');
     }
   };

@@ -1,10 +1,11 @@
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { useAppDispatch } from '../../../redux/app/hooks';
+import { proceedIntro } from '../../../redux/features/granularity/granularityThunks';
 
 export const GranularityIntro = () => {
   const dispatch = useAppDispatch();
   const handleProceedIntro = () => {
-    //  dispatch(proceedIntro(true));
+    dispatch(proceedIntro(true));
   };
 
   return (
