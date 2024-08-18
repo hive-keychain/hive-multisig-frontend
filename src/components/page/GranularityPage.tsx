@@ -1,3 +1,9 @@
+import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
+
 export const GranularityPage = () => {
-  return <div>Granularity</div>;
+  return (
+    <div>
+      <GranularityIntro />
+    </div>
+  );
 };
