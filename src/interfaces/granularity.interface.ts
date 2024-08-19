@@ -1,5 +1,6 @@
 export interface State {
   proceedIntro: boolean;
+  proceedConfiguration: boolean;
   hasDefaultBot: boolean;
   proceedMultisig: boolean;
   isManageGranularity: boolean;

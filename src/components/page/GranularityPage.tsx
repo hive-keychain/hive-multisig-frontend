@@ -7,11 +7,13 @@ import {
   setGranularityBots,
 } from '../../redux/features/granularity/granularityThunks';
 import { setReceiveBroadcastNotificationsOn } from '../../redux/features/multisig/multisigThunks';
+import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { allowAddKey } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import AccountUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
+import { GranularityConfigurationSetup } from './../cards/Granularity/GranularityConfigurationSetup';
 
 const defaultBot = process.env.BOT;
 if (defaultBot === undefined) {
@@ -25,6 +27,9 @@ export const GranularityPage = () => {
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const proceedMultisig = useAppSelector(
     (state) => state.granularity.granularity.proceedMultisig,
+  );
+  const proceedConfiguration = useAppSelector(
+    (state) => state.granularity.granularity.proceedConfiguration,
   );
 
   const hasDefaultGranularityBot = useAppSelector(
@@ -74,29 +79,47 @@ export const GranularityPage = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (authorities) {
+      dispatch(initializeAuthorities(authorities));
+    }
+  }, [authorities]);
+
   const handleCleanUp = () => {
     dispatch(setReceiveBroadcastNotificationsOn(true));
   };
   return useMemo(() => {
-    if (authorities) {
-      console.log({ authorities });
-      console.log({ hasDefaultGranularityBot });
-
-      if (hasDefaultGranularityBot === undefined) {
-        return (
-          <div className="d-flex justify-content-center align-items-center vh-100">
-            <div className="text-center">
-              <Spinner animation="grow" />
-              <p>Retrieving 2FA Data</p>
-            </div>
-          </div>
-        );
-      }
-      if (proceedIntro) {
-        return <GranularityBotSetup />;
-      } else {
-        return <GranularityIntro />;
-      }
+    if (!authorities) {
+      return null; // or a placeholder if you need to return something
     }
-  }, [authorities, proceedMultisig, proceedIntro, hasDefaultGranularityBot]);
+
+    if (hasDefaultGranularityBot === undefined) {
+      return (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+          <div className="text-center">
+            <Spinner animation="grow" />
+            <p>Retrieving 2FA Data</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Show GranularityConfigurationSetup only if both proceedIntro and proceedConfiguration are true
+    if (proceedConfiguration) {
+      return <GranularityConfigurationSetup />;
+    }
+
+    // Show GranularityBotSetup if proceedIntro is true, but proceedConfiguration is not yet true
+    if (proceedIntro) {
+      return <GranularityBotSetup />;
+    }
+
+    // Default to GranularityIntro if none of the other conditions are met
+    return <GranularityIntro />;
+  }, [
+    authorities,
+    proceedConfiguration,
+    proceedIntro,
+    hasDefaultGranularityBot,
+  ]);
 };

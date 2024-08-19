@@ -87,3 +87,10 @@ export const setIsMultisigTransaction = createAsyncThunk(
     return flag;
   },
 );
+
+export const proceedConfiguration = createAsyncThunk(
+  'granularity/proceedConfiguration',
+  (flag: boolean) => {
+    return flag;
+  },
+);

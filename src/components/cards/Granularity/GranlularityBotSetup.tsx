@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Container, Form, Row, Tab, Tabs } from 'react-bootstrap';
 import { IDeleteAccount } from '../../../interfaces/cardInterfaces';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
-import { setGranularityBots } from '../../../redux/features/granularity/granularityThunks';
+import {
+  proceedConfiguration,
+  setGranularityBots,
+} from '../../../redux/features/granularity/granularityThunks';
 import { initializeAuthorities } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   allowAddAccount,
@@ -155,6 +158,10 @@ export const GranularityBotSetup = () => {
     setBotDisableCheckBox(value);
   };
 
+  const handleProceedConfiguration = () => {
+    dispatch(proceedConfiguration(true));
+  };
+
   return (
     <Container>
       <Row className="justify-content-md-center">
@@ -162,7 +169,7 @@ export const GranularityBotSetup = () => {
           <Container>
             <Card.Body>
               <h3 className="card-title text-center">
-                Multisig Granularity Setup
+                Multisig Granularity Bot Setup
               </h3>
               <Tabs
                 mountOnEnter={true}
@@ -203,12 +210,12 @@ export const GranularityBotSetup = () => {
               <div className="d-flex justify-content-end mb-3 me-3 rem-10">
                 <Button
                   onClick={() => {
-                    // handleUpdateAccount();
+                    handleProceedConfiguration();
                   }}
                   className=""
                   variant="success"
                   disabled={disableSubmitBtn}>
-                  Submit
+                  Next
                 </Button>
               </div>
             </div>

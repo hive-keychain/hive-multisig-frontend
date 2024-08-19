@@ -4,6 +4,7 @@ import {
   botSetupSuccess,
   hasDefaultBot,
   isManageGranularity,
+  proceedConfiguration,
   proceedIntro,
   proceedMultisig,
   removeBotSuccess,
@@ -17,6 +18,7 @@ import {
 
 const initialState: State = {
   proceedIntro: false,
+  proceedConfiguration: false,
   hasDefaultBot: false,
   proceedMultisig: false,
   isManageGranularity: false,
@@ -77,6 +79,10 @@ const granularitySlice = createSlice({
     });
     builder.addCase(updateWeightSuccess.fulfilled, (state, action) => {
       state.updateWeightSuccess = action.payload;
+    });
+
+    builder.addCase(proceedConfiguration.fulfilled, (state, action) => {
+      state.proceedConfiguration = action.payload;
     });
   },
 });
