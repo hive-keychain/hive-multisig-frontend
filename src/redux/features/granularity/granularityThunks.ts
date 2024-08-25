@@ -1,4 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { MultisigGbotConfig } from '../../../interfaces/granularity.interface';
 
 export const proceedIntro = createAsyncThunk(
   'granularity/proceedIntro',
@@ -92,5 +93,24 @@ export const proceedConfiguration = createAsyncThunk(
   'granularity/proceedConfiguration',
   (flag: boolean) => {
     return flag;
+  },
+);
+
+export const updateConfiguration = createAsyncThunk(
+  'granularity/updateConfiguration',
+  (configuration: MultisigGbotConfig) => {
+    return configuration;
+  },
+);
+
+export const initializeConfiguration = createAsyncThunk(
+  'granularity/InitializeConfiguration',
+  () => {
+    return {
+      id: 'multisig-granularity-config-id', // You can replace this with your own logic to generate a unique ID
+      json: {
+        configurations: [],
+      },
+    } as MultisigGbotConfig;
   },
 );

@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { granularityActions } from '../../redux/features/granularity/granularitySlices';
 import {
   hasDefaultBot as checkGranularityBot,
+  initializeConfiguration,
   setGranularityBots,
 } from '../../redux/features/granularity/granularityThunks';
 import { setReceiveBroadcastNotificationsOn } from '../../redux/features/multisig/multisigThunks';
@@ -12,8 +13,8 @@ import { allowAddKey } from '../../redux/features/updateAuthorities/updateAuthor
 import AccountUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
+import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
-import { GranularityConfigurationSetup } from './../cards/Granularity/GranularityConfigurationSetup';
 
 const defaultBot = process.env.BOT;
 if (defaultBot === undefined) {
@@ -74,6 +75,8 @@ export const GranularityPage = () => {
     getAuthorities();
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
+    dispatch(initializeConfiguration());
+
     return () => {
       handleCleanUp();
     };

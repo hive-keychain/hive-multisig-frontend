@@ -13,6 +13,7 @@ export interface State {
   updateWeightSuccess: boolean;
   transactionSubmitted: boolean;
   isMultisigTransaction: boolean;
+  configuration: MultisigGbotConfig;
 }
 
 export interface GBotTabProp {
