@@ -11,7 +11,7 @@ import AccountUtils from '../utils/hive.utils';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 
 const getOptions = () => {
   return {

@@ -6,7 +6,6 @@ import { setInitiator } from '../../../redux/features/transaction/transactionThu
 import { setThresholdWarning } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 var deepequal = require('deep-equal');
-const defaultBot = process.env.BOT;
 
 const useAddedActiveAuthority = () => {
   const [originalActiveAuthorities, newActiveAuthorities] =

@@ -1,7 +1,7 @@
 import { GBotTabProp } from '../../../interfaces/granularity.interface';
 import { useAppSelector } from '../../../redux/app/hooks';
 import { AuthorityCard } from '../Account/AuthorityCard';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.GRANULARITY_BOT;
 
 
 export const DefaultGranularityBotSetup = ({

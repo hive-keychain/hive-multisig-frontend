@@ -31,6 +31,6 @@ export interface State extends IMultisig {
 
 export enum MiltisigAuthorityTypes {
   AUTHORITY = 'authority',
-  MULTISIG_BOT = 'default bot',
+  TWOFA_BOT = 'default bot',
   CUSTOM_BOT = 'custom bot',
 }

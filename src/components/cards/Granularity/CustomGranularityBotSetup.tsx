@@ -1,6 +1,6 @@
 import { GBotTabProp } from '../../../interfaces/granularity.interface';
 import { AuthorityCard } from '../Account/AuthorityCard';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.GRANULARITY_BOT;
 export const CustomGranularityBotSetup = ({
   isManageGranularity,
 }: GBotTabProp) => {

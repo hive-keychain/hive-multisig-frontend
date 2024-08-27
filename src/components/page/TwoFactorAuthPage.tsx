@@ -15,7 +15,7 @@ import { AuthenticatorSetup } from '../cards/TwoFactorAuth/AuthenticatorSetup';
 import { ManageTwoFaAccount } from '../cards/TwoFactorAuth/ManageTwoFaAccount';
 import { TwoFactorAuthSetup } from '../cards/TwoFactorAuth/TwoFactorAuthSetup';
 import { TwoFactorIntro } from '../cards/TwoFactorAuth/TwoFactorIntro';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 if (defaultBot === undefined) {
   console.error(
     'Default Two FA Bot is not defined in environment variables, this will cause error in 2FA setup.',

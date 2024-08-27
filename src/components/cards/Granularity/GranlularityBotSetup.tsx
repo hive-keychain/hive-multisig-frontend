@@ -20,7 +20,7 @@ import { MultisigUtils } from '../../../utils/multisig.utils';
 import { CustomGranularityBotSetup } from './CustomGranularityBotSetup';
 import { DefaultGranularityBotSetup } from './DefaultGranularityBotSetup';
 import { MultisigGranularityHooks } from './GranularitySetupHooks';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.GRANULARITY_BOT;
 
 export const GranularityBotSetup = () => {
   const [key, setKey] = useState<string>('default');

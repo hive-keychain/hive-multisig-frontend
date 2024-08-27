@@ -94,7 +94,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
       const bot = bots[index];
       if (bot)
         if (bot[1] === 'default') {
-          setMultisigBotType(MiltisigAuthorityTypes.MULTISIG_BOT);
+          setMultisigBotType(MiltisigAuthorityTypes.TWOFA_BOT);
         } else if (bot[1] === 'custom') {
           setMultisigBotType(MiltisigAuthorityTypes.CUSTOM_BOT);
         } else {

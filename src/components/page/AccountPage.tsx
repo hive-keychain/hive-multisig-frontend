@@ -27,7 +27,7 @@ import {
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 
 interface IAccountPageProp {
   authorities: Authorities;

@@ -16,7 +16,7 @@ import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
 
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.GRANULARITY_BOT;
 if (defaultBot === undefined) {
   console.error(
     'Default Granularity Bot is not defined in environment variables, this will cause error in 2FA setup.',
