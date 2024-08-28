@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Accordion, Button, Card } from 'react-bootstrap';
 import { OperationRow } from './OperationRow';
+import { OperationSelection } from './OperationSelection';
 
 export interface ICustomUserConfigProps {
   authority: [string, number];
@@ -39,6 +40,9 @@ export const CustomUserConfig = ({ authority }: ICustomUserConfigProps) => {
 
           <Accordion.Collapse eventKey="0" in={open}>
             <Card.Body id="card-body">
+              <div>
+                <OperationSelection />
+              </div>
               <OperationRow operation={'Transfer'} key={'1'} />
               <OperationRow operation={'Transfer'} key={'2'} />
               <OperationRow operation={'Transfer'} key={'3'} />

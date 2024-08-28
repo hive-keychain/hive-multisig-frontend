@@ -1,7 +1,7 @@
 import { Card, Container, Row } from 'react-bootstrap';
-import { AllUsersConfig } from './AllUsersConfig';
-import { AuthoritySelection } from './AuthoritySelection';
-import { CustomUserConfig } from './CustomUserConfig';
+import { AllUsersConfig } from './Components/AllUsersConfig';
+import { AuthoritySelection } from './Components/AuthoritySelection';
+import { CustomUserConfig } from './Components/CustomUserConfig';
 
 export const GranularityConfigurationSetup = () => {
   return (
@@ -15,13 +15,13 @@ export const GranularityConfigurationSetup = () => {
               </h3>
             </Card.Body>
 
-            <div>
-              <Card className="my-2" border="secondary">
+            <div className="d-flex flex-row justify-content-between">
+              <Card className="my-2 me-2" border="secondary">
                 <h4 className="text-center"> All Users</h4>
                 <AllUsersConfig />
               </Card>
 
-              <Card className="my-2" border="secondary">
+              <Card className="my-2  ms-2" border="secondary">
                 <div className="d-flex justify-content-md-center"></div>
                 <h4 className="text-center mt-2"> Custom</h4>
                 <div className="mx-4 mb-3">

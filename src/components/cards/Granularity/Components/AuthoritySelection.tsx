@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
-import { useAppSelector } from '../../../redux/app/hooks';
-import { MultisigGranularityHooks } from './GranularitySetupHooks';
+import { useAppSelector } from '../../../../redux/app/hooks';
+import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 
 export const AuthoritySelection = () => {
   const [originalAuthorities, newAuthorities] =
