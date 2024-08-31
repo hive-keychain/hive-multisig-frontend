@@ -212,3 +212,22 @@ body,
   text-align: center;
   padding-bottom: 10px;
 }
+
+.card-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Media query for medium screens (md and up) */
+@media (min-width: 768px) {
+  .card-scroll {
+    max-height: 500px;
+  }
+}
+
+/* Media query for small screens (sm and up) */
+@media (max-width: 767.98px) {
+  .card-scroll {
+    max-height: 200px;
+  }
+}

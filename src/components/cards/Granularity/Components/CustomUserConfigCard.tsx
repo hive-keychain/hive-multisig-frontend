@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import { OperationRow } from './OperationRow';
 import { OperationSelection } from './OperationSelection';
 
 export interface ICustomUserConfigProps {
-  authority: [string, number];
+  authority: string;
 }
-export const CustomUserConfig = ({ authority }: ICustomUserConfigProps) => {
-  const [open, setOpen] = useState(true);
+export const CustomUserConfigCard = ({ authority }: ICustomUserConfigProps) => {
+  const [open, setOpen] = useState(false);
 
   const handleToggle = () => setOpen(!open);
   const handleDelete = () => alert('Delete Item #1');
@@ -17,7 +16,7 @@ export const CustomUserConfig = ({ authority }: ICustomUserConfigProps) => {
       <Accordion className="flex-grow-1" defaultActiveKey="0">
         <Card>
           <Card.Header className="d-flex justify-content-between align-items-center">
-            <div>{authority[0]}</div>
+            <div>{authority}</div>
 
             <div>
               <Button variant="outline-danger" onClick={handleDelete}>
@@ -41,11 +40,11 @@ export const CustomUserConfig = ({ authority }: ICustomUserConfigProps) => {
           <Accordion.Collapse eventKey="0" in={open}>
             <Card.Body id="card-body">
               <div>
-                <OperationSelection />
+                <OperationSelection authority={authority} />
               </div>
-              <OperationRow operation={'Transfer'} key={'1'} />
+              {/* <OperationRow operation={'Transfer'} key={'1'} />
               <OperationRow operation={'Transfer'} key={'2'} />
-              <OperationRow operation={'Transfer'} key={'3'} />
+              <OperationRow operation={'Transfer'} key={'3'} /> */}
             </Card.Body>
           </Accordion.Collapse>
         </Card>

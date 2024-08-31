@@ -72,6 +72,16 @@ export const capitalizeFirstLetter = (string: String) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
+export const capitalizeOpFirstLetter = (str: string): string => {
+  if (!str) return str;
+  const formattedStr = str.replace(/_/g, ' ');
+
+  return formattedStr
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 export const getPublicKeys = (
   keyType: KeychainKeyTypes,
   authorities: Authorities,

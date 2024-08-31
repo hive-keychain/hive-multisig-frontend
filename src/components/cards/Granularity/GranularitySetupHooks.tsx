@@ -109,9 +109,20 @@ const useAccountEditedFlag = () => {
   return [accountRemoved, threshEdited, weightUpdated];
 };
 
+const useGranularityConfiguration = () => {
+  const configuration = useAppSelector(
+    (state) => state.granularity.granularity.configuration,
+  );
+  const newConfiguration = useAppSelector(
+    (state) => state.granularity.granularity.newConfiguration,
+  );
+
+  return [configuration, newConfiguration];
+};
 export const MultisigGranularityHooks = {
   useActiveAuthority,
   useAddedActiveAuthority,
   useAuthorities,
   useAccountEditedFlag,
+  useGranularityConfiguration,
 };

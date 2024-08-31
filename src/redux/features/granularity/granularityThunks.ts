@@ -96,8 +96,8 @@ export const proceedConfiguration = createAsyncThunk(
   },
 );
 
-export const updateConfiguration = createAsyncThunk(
-  'granularity/updateConfiguration',
+export const updateGranularityConfiguration = createAsyncThunk(
+  'granularity/updateGranularityConfiguration',
   (configuration: MultisigGbotConfig) => {
     return configuration;
   },
@@ -105,7 +105,8 @@ export const updateConfiguration = createAsyncThunk(
 
 export const initializeConfiguration = createAsyncThunk(
   'granularity/InitializeConfiguration',
-  () => {
+  (configuration?: MultisigGbotConfig) => {
+    if (configuration) return configuration;
     return {
       id: 'multisig-granularity-config-id', // You can replace this with your own logic to generate a unique ID
       json: {

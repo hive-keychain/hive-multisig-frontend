@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Spinner } from 'react-bootstrap';
+import { MultisigGbotConfig } from '../../interfaces/granularity.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { granularityActions } from '../../redux/features/granularity/granularitySlices';
 import {
@@ -12,9 +12,7 @@ import { initializeAuthorities } from '../../redux/features/updateAuthorities/up
 import { allowAddKey } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import AccountUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
-import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
-import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
 
 const defaultBot = process.env.GRANULARITY_BOT;
 if (defaultBot === undefined) {
@@ -75,7 +73,21 @@ export const GranularityPage = () => {
     getAuthorities();
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
-    dispatch(initializeConfiguration());
+
+    const testConfig = {
+      id: 'multisig-gbot-config', // You can replace this with your own logic to generate a unique ID
+      json: {
+        configurations: [
+          {
+            operations: [
+              { operationName: 'vote' },
+              { operationName: 'comment' },
+            ],
+          },
+        ],
+      },
+    } as MultisigGbotConfig;
+    dispatch(initializeConfiguration(testConfig));
 
     return () => {
       handleCleanUp();
@@ -96,29 +108,29 @@ export const GranularityPage = () => {
       return null; // or a placeholder if you need to return something
     }
 
-    if (hasDefaultGranularityBot === undefined) {
-      return (
-        <div className="d-flex justify-content-center align-items-center vh-100">
-          <div className="text-center">
-            <Spinner animation="grow" />
-            <p>Retrieving 2FA Data</p>
-          </div>
-        </div>
-      );
-    }
+    // if (hasDefaultGranularityBot === undefined) {
+    //   return (
+    //     <div className="d-flex justify-content-center align-items-center vh-100">
+    //       <div className="text-center">
+    //         <Spinner animation="grow" />
+    //         <p>Retrieving 2FA Data</p>
+    //       </div>
+    //     </div>
+    //   );
+    // }
 
     // Show GranularityConfigurationSetup only if both proceedIntro and proceedConfiguration are true
-    if (proceedConfiguration) {
-      return <GranularityConfigurationSetup />;
-    }
+    // if (proceedConfiguration) {
+    return <GranularityConfigurationSetup />;
+    // }
 
     // Show GranularityBotSetup if proceedIntro is true, but proceedConfiguration is not yet true
-    if (proceedIntro) {
-      return <GranularityBotSetup />;
-    }
+    // if (proceedIntro) {
+    //   return <GranularityBotSetup />;
+    // }
 
     // Default to GranularityIntro if none of the other conditions are met
-    return <GranularityIntro />;
+    // return <GranularityIntro />;
   }, [
     authorities,
     proceedConfiguration,

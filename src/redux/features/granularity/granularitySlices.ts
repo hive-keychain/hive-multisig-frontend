@@ -13,7 +13,7 @@ import {
   setGranularityBots,
   setRemovedBot,
   transactionSubmitted,
-  updateConfiguration,
+  updateGranularityConfiguration,
   updateThreshSuccess,
   updateWeightSuccess,
 } from './granularityThunks';
@@ -34,6 +34,7 @@ const initialState: State = {
   transactionSubmitted: false,
   isMultisigTransaction: false,
   configuration: undefined,
+  newConfiguration: undefined,
 };
 
 const granularitySlice = createSlice({
@@ -88,12 +89,16 @@ const granularitySlice = createSlice({
       state.proceedConfiguration = action.payload;
     });
 
-    builder.addCase(updateConfiguration.fulfilled, (state, action) => {
-      state.configuration = structuredClone(action.payload);
-    });
+    builder.addCase(
+      updateGranularityConfiguration.fulfilled,
+      (state, action) => {
+        state.newConfiguration = structuredClone(action.payload);
+      },
+    );
 
     builder.addCase(initializeConfiguration.fulfilled, (state, action) => {
       state.configuration = structuredClone(action.payload);
+      state.newConfiguration = structuredClone(action.payload);
     });
   },
 });

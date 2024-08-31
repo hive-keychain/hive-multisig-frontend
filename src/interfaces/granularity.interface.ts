@@ -14,6 +14,7 @@ export interface State {
   transactionSubmitted: boolean;
   isMultisigTransaction: boolean;
   configuration: MultisigGbotConfig;
+  newConfiguration: MultisigGbotConfig;
 }
 
 export interface GBotTabProp {
@@ -37,7 +38,8 @@ export interface MultisigGbotConfig {
 }
 
 export enum OperationName {
-  ALL = 'all_operations',
+  ALL = 'all',
+  CHANGE_CONFIG = 'custom_json',
   VOTE = 'vote',
   COMMENT = 'comment',
   TRANSFER = 'transfer',
