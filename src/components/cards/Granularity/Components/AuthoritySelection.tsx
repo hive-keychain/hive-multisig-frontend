@@ -16,7 +16,8 @@ export const AuthoritySelection = () => {
   useEffect(() => {
     if (groupedAuthorities) {
       let firstOptionKey: string = null; // Variable to store the first option's key
-      const addedAuths = GranularityUtils.getAuthorityList(newConfiguration);
+      const addedAuths =
+        GranularityUtils.getAuthorityNameList(newConfiguration);
       const opts = Object.keys(groupedAuthorities).map((group) => {
         const options = groupedAuthorities[group].map((authority, index) => {
           const isAdded = addedAuths.includes(authority);

@@ -1,7 +1,29 @@
-import { Card, Col, Container, Row } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
+import { Button, Card, Col, Container, Row } from 'react-bootstrap';
+import { useAppDispatch } from '../../../redux/app/hooks';
+import { updateGranularityConfiguration } from '../../../redux/features/granularity/granularityThunks';
 import { AllUsersConfigCard } from './Components/AllUsersConfigCard';
 import { CustomUsersConfigCard } from './Components/CustomUsersConfigCard';
+import { MultisigGranularityHooks } from './GranularitySetupHooks';
+var deepequal = require('deep-equal');
 export const GranularityConfigurationSetup = () => {
+  const dispatch = useAppDispatch();
+  const [disableButton, setDisableButtons] = useState(true);
+
+  const [configuration, newConfiguration] =
+    MultisigGranularityHooks.useGranularityConfiguration();
+
+  useEffect(() => {
+    const disable = deepequal(configuration, newConfiguration, {
+      strict: true,
+    });
+    setDisableButtons(disable);
+  }, [newConfiguration, configuration]);
+
+  const handleDiscard = () => {
+    dispatch(updateGranularityConfiguration(configuration));
+  };
+
   return (
     <Container className="d-flex flex-fill justify-content-md-center">
       <Card border="secondary" className="w-100">
@@ -26,6 +48,27 @@ export const GranularityConfigurationSetup = () => {
             </Col>
           </Row>
         </Container>
+
+        <div className="d-flex justify-content-end mb-3 me-3 rem-10">
+          <Button
+            onClick={() => {
+              handleDiscard();
+            }}
+            disabled={disableButton}
+            variant="danger">
+            Discard
+          </Button>
+
+          <Button
+            disabled={disableButton}
+            onClick={() => {
+              // handleUpdateAccount();
+            }}
+            className="ms-2"
+            variant="success">
+            Submit
+          </Button>
+        </div>
       </Card>
     </Container>
   );

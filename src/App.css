@@ -217,7 +217,10 @@ body,
   max-height: 400px;
   overflow-y: auto;
 }
-
+.card-scroll-sm {
+  max-height: 200px;
+  overflow-y: auto;
+}
 /* Media query for medium screens (md and up) */
 @media (min-width: 768px) {
   .card-scroll {

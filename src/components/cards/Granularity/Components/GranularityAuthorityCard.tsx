@@ -1,27 +1,55 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Accordion, Button, Card } from 'react-bootstrap';
+import { Operation } from '../../../../interfaces/granularity.interface';
+import { useAppDispatch } from '../../../../redux/app/hooks';
+import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
+import { GranularityUtils } from '../../../../utils/granularity-utils';
+import { MultisigGranularityHooks } from '../GranularitySetupHooks';
+import { OperationRow } from './OperationRow';
 import { OperationSelection } from './OperationSelection';
 
-export interface ICustomUserConfigProps {
+export interface IGranularityAuthorityCard {
   authority: string;
 }
 export const GranularityAuthorityCard = ({
   authority,
-}: ICustomUserConfigProps) => {
+}: IGranularityAuthorityCard) => {
+  const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
+  const [operations, setOperations] = useState<Operation[]>([]);
+  const [configuration, newConfiguration] =
+    MultisigGranularityHooks.useGranularityConfiguration();
 
-  const handleToggle = () => setOpen(!open);
-  const handleDelete = () => alert('Delete Item #1');
-
+  useEffect(() => {
+    if (newConfiguration) {
+      const addedOps = GranularityUtils.getOps(newConfiguration, authority);
+      if (addedOps && addedOps.length > 0) {
+        const ops = addedOps.map((op) => {
+          return { operationName: op } as Operation;
+        });
+        setOperations(ops);
+      }
+    }
+  }, [newConfiguration]);
+  const handleToggle = () => {
+    setOpen(!open);
+  };
+  const handleDeleteAuthority = () => {
+    const updatedConfiguration = GranularityUtils.removeAuthority(
+      authority,
+      newConfiguration,
+    );
+    dispatch(updateGranularityConfiguration(updatedConfiguration));
+  };
   return (
     <div className="d-flex align-items-center my-1 mx-2">
-      <Accordion className="flex-grow-1" defaultActiveKey="0">
+      <div className="flex-grow-1">
         <Card>
           <Card.Header className="d-flex justify-content-between align-items-center">
             <div>{authority}</div>
 
             <div>
-              <Button variant="outline-danger" onClick={handleDelete}>
+              <Button variant="outline-danger" onClick={handleDeleteAuthority}>
                 <i className="fa fa-trash"></i>
               </Button>
               <Button
@@ -38,19 +66,40 @@ export const GranularityAuthorityCard = ({
               </Button>
             </div>
           </Card.Header>
-
-          <Accordion.Collapse eventKey="0" in={open}>
-            <Card.Body id="card-body">
-              <div>
+          <Accordion.Collapse eventKey={authority} in={open}>
+            <div className="my-1 mx-2">
+              <div className="mx-2">
                 <OperationSelection authority={authority} />
               </div>
-              {/* <OperationRow operation={'Transfer'} key={'1'} />
-              <OperationRow operation={'Transfer'} key={'2'} />
-              <OperationRow operation={'Transfer'} key={'3'} /> */}
-            </Card.Body>
+              <div>
+                <div className="d-flex align-items-center my-2 mx-2">
+                  <Card className="flex-grow-1 ">
+                    <Card.Header className="d-flex justify-content-between align-items-center">
+                      <div>Operations</div>
+                    </Card.Header>
+                    <Card.Body className="card-scroll" id="card-body">
+                      {operations && operations.length > 0 ? (
+                        operations.map((op, index) => {
+                          return (
+                            <OperationRow
+                              operation={op.operationName}
+                              key={index.toString()}
+                            />
+                          );
+                        })
+                      ) : (
+                        <div className="text-center text-muted">
+                          Add Operation
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </div>
+              </div>
+            </div>
           </Accordion.Collapse>
         </Card>
-      </Accordion>
+      </div>
     </div>
   );
 };

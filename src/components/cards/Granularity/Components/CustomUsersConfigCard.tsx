@@ -1,7 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Card } from 'react-bootstrap';
+import { GranularityUtils } from '../../../../utils/granularity-utils';
+import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 import { AuthoritySelection } from './AuthoritySelection';
+import { GranularityAuthorityCard } from './GranularityAuthorityCard';
 
 export const CustomUsersConfigCard = () => {
+  const [configuration, newConfiguration] =
+    MultisigGranularityHooks.useGranularityConfiguration();
+  const [authorityCards, setAuthorityCards] = useState([]);
+
+  useEffect(() => {
+    if (newConfiguration) {
+      const authorities =
+        GranularityUtils.getAuthorityNameList(newConfiguration);
+      const cards = authorities.map((authority, index) => {
+        return (
+          <GranularityAuthorityCard authority={authority} key={authority} />
+        );
+      });
+
+      setAuthorityCards(cards);
+    }
+  }, [newConfiguration]);
   return (
     <div className="mx-3 mb-3">
       <AuthoritySelection />
@@ -10,7 +31,7 @@ export const CustomUsersConfigCard = () => {
           <div>Authorities</div>
         </Card.Header>
         <Card.Body className="card-scroll" id="card-body">
-          {/* GranularityAuthorityCard components go here */}
+          {authorityCards}
         </Card.Body>
       </Card>
     </div>
