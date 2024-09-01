@@ -52,6 +52,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
     }
   }, [newConfiguration]);
 
+  // create the options
   useEffect(() => {
     const selectOptions = operations.map((operation) => {
       const key = OperationName[operation.key as keyof typeof OperationName];

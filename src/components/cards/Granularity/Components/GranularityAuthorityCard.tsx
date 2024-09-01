@@ -5,7 +5,9 @@ import { OperationSelection } from './OperationSelection';
 export interface ICustomUserConfigProps {
   authority: string;
 }
-export const CustomUserConfigCard = ({ authority }: ICustomUserConfigProps) => {
+export const GranularityAuthorityCard = ({
+  authority,
+}: ICustomUserConfigProps) => {
   const [open, setOpen] = useState(false);
 
   const handleToggle = () => setOpen(!open);

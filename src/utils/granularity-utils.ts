@@ -18,6 +18,13 @@ const getOps = (config: MultisigGbotConfig, authority?: string): string[] => {
       configuration.operations.map((op) => op.operationName),
     );
 };
+
+const getAuthorityList = (config: MultisigGbotConfig): string[] => {
+  return config.json.configurations
+    .filter((configuration) => configuration.authority)
+    .map((configuration) => configuration.authority);
+};
+
 const addAllUserOp = (operation: Operation, config: MultisigGbotConfig) => {
   const newConfigurations = config.json.configurations.map((configuration) => {
     if (!configuration.authority) {
@@ -161,6 +168,7 @@ const deleteOpFromAuthority = (
 
 export const GranularityUtils = {
   getOps,
+  getAuthorityList,
   addAuthority,
   removeAuthority,
   addOpToAuthority,

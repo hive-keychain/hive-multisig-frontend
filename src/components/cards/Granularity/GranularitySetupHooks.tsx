@@ -119,10 +119,46 @@ const useGranularityConfiguration = () => {
 
   return [configuration, newConfiguration];
 };
+
+const useGroupedAuthorities = () => {
+  const [groupedAuthorities, setGroupedAuthorities] =
+    useState<Record<string, string[]>>();
+  const [originalAuthorities, newAuthorities] = useAuthorities();
+
+  useEffect(() => {
+    if (newAuthorities) {
+      const postingGroup = newAuthorities.posting.account_auths.map(
+        ([a, w]) => {
+          return { authority: a, group: 'Posting' };
+        },
+      );
+      const activeGroup = newAuthorities.active.account_auths.map(([a, w]) => {
+        return { authority: a, group: 'Active' };
+      });
+      const authorities = [...postingGroup, ...activeGroup].reduce<
+        Record<string, string[]>
+      >((groups, authority) => {
+        const { group } = authority;
+        if (!groups[group]) {
+          groups[group] = [];
+        }
+        groups[group].push(authority.authority);
+        return groups;
+      }, {});
+
+      setGroupedAuthorities(authorities);
+    }
+  }, [newAuthorities]);
+
+  return [groupedAuthorities];
+};
+
+
 export const MultisigGranularityHooks = {
   useActiveAuthority,
   useAddedActiveAuthority,
   useAuthorities,
   useAccountEditedFlag,
   useGranularityConfiguration,
+  useGroupedAuthorities,
 };

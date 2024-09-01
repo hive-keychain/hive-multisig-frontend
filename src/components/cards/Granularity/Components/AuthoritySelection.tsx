@@ -1,46 +1,89 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
-import { useAppSelector } from '../../../../redux/app/hooks';
+import { useAppDispatch } from '../../../../redux/app/hooks';
+import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
+import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 
 export const AuthoritySelection = () => {
-  const [originalAuthorities, newAuthorities] =
-    MultisigGranularityHooks.useAuthorities();
-  const [selection, setSelection] = useState<string[]>([]);
-
-  const configuration = useAppSelector(
-    (state) => state.granularity.granularity.configuration,
-  );
-
+  const dispatch = useAppDispatch();
+  const [configuration, newConfiguration] =
+    MultisigGranularityHooks.useGranularityConfiguration();
+  const [options, setOptions] = useState([]);
+  const [addedAuthorities, setAddedAuthorities] = useState([]);
+  const [groupedAuthorities] = MultisigGranularityHooks.useGroupedAuthorities();
+  const [selectedAuthority, setSelectedAuthority] = useState<string>();
   useEffect(() => {
-    if (newAuthorities) {
-      const authorities = newAuthorities.active.account_auths
-        .map((auth) => auth[0]) // Return the auth[0] value
-        .filter(
-          (auth: string) => auth !== undefined && !isAuthorityInConfig(auth),
-        );
-      setSelection(authorities);
-    }
-  }, [configuration, newAuthorities]);
+    if (groupedAuthorities) {
+      let firstOptionKey: string = null; // Variable to store the first option's key
+      const addedAuths = GranularityUtils.getAuthorityList(newConfiguration);
+      const opts = Object.keys(groupedAuthorities).map((group) => {
+        const options = groupedAuthorities[group].map((authority, index) => {
+          const isAdded = addedAuths.includes(authority);
+          const optionElement = (
+            <option
+              key={authority}
+              value={authority}
+              style={{
+                backgroundColor: isAdded ? '#d3d3d3' : 'white',
+              }}>
+              {authority}
+            </option>
+          );
+          if (firstOptionKey === null && index === 0) {
+            firstOptionKey = authority;
+          }
+          return optionElement;
+        });
 
-  const isAuthorityInConfig = (authority: string) => {
-    return configuration.json.configurations.some(
-      (config) => config.authority === authority,
-    );
+        return (
+          <optgroup key={group} label={`${group} Authorities`}>
+            {options}
+          </optgroup>
+        );
+      });
+
+      setAddedAuthorities(addedAuths);
+      setOptions(opts);
+      setSelectedAuthority(firstOptionKey);
+    }
+  }, [groupedAuthorities, newConfiguration]);
+
+  const handleAdd = () => {
+    if (!addedAuthorities.includes(selectedAuthority)) {
+      const updatedConfiguration = structuredClone(newConfiguration);
+      const newConfig = GranularityUtils.addAuthority(
+        selectedAuthority,
+        updatedConfiguration,
+      );
+      if (newConfig) {
+        dispatch(updateGranularityConfiguration(newConfig));
+      }
+    } else {
+      alert(`@${selectedAuthority} is already added.`);
+    }
+  };
+  const handleSelectionChange = (authority: string) => {
+    setSelectedAuthority(authority);
   };
 
   return (
     <>
       <Form.Label>Select Authority</Form.Label>
       <InputGroup>
-        <Form.Select>
-          {selection.map((authority, index) => (
-            <option key={index} value={authority}>
-              @{authority}
-            </option>
-          ))}
+        <Form.Select
+          value={selectedAuthority}
+          onChange={(e) => handleSelectionChange(e.target.value)}>
+          {options}
         </Form.Select>
-        <Button variant="outline-primary"> Add</Button>
+        <Button
+          variant="outline-primary"
+          onClick={() => {
+            handleAdd();
+          }}>
+          {' '}
+          Add
+        </Button>
       </InputGroup>
     </>
   );

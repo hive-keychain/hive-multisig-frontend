@@ -22,7 +22,7 @@ export const AllUsersConfigCard = () => {
     }
   }, [newConfiguration]);
   return (
-    <div className=" my-1 mx-2">
+    <div className="my-1 mx-2">
       <div className="mx-2">
         <OperationSelection />
       </div>

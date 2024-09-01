@@ -78,6 +78,13 @@ export const GranularityPage = () => {
       id: 'multisig-gbot-config', // You can replace this with your own logic to generate a unique ID
       json: {
         configurations: [
+          // {
+          //   authority: 'choibounge',
+          //   operations: [
+          //     { operationName: 'transfer' },
+          //     { operationName: 'delegate_vesting_shares' },
+          //   ],
+          // },
           {
             operations: [
               { operationName: 'vote' },
