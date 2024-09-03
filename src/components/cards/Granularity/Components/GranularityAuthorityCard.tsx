@@ -22,12 +22,17 @@ export const GranularityAuthorityCard = ({
 
   useEffect(() => {
     if (newConfiguration) {
-      const addedOps = GranularityUtils.getOps(newConfiguration, authority);
+      const addedOps = GranularityUtils.getOperationNames(
+        newConfiguration,
+        authority,
+      );
       if (addedOps && addedOps.length > 0) {
         const ops = addedOps.map((op) => {
           return { operationName: op } as Operation;
         });
         setOperations(ops);
+      }else{
+        setOperations([])
       }
     }
   }, [newConfiguration]);
@@ -82,7 +87,8 @@ export const GranularityAuthorityCard = ({
                         operations.map((op, index) => {
                           return (
                             <OperationRow
-                              operation={op.operationName}
+                              operation={op}
+                              authority={authority}
                               key={index.toString()}
                             />
                           );

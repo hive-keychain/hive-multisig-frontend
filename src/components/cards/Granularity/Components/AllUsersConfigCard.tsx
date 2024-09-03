@@ -35,12 +35,7 @@ export const AllUsersConfigCard = () => {
             <Card.Body className="card-scroll" id="card-body">
               {operations && operations.length > 0 ? (
                 operations.map((op, index) => {
-                  return (
-                    <OperationRow
-                      operation={op.operationName}
-                      key={index.toString()}
-                    />
-                  );
+                  return <OperationRow operation={op} key={index.toString()} />;
                 })
               ) : (
                 <div className="text-center text-muted">Add Operation</div>

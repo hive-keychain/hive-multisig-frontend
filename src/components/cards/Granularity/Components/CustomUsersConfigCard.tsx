@@ -31,7 +31,11 @@ export const CustomUsersConfigCard = () => {
           <div>Authorities</div>
         </Card.Header>
         <Card.Body className="card-scroll" id="card-body">
-          {authorityCards}
+          {authorityCards && authorityCards.length > 0 ? (
+            authorityCards
+          ) : (
+            <div className="text-center text-muted">Add Authority</div>
+          )}
         </Card.Body>
       </Card>
     </div>

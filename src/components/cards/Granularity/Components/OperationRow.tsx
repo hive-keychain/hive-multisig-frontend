@@ -4,29 +4,30 @@ import { useAppDispatch } from '../../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
 import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
+import { CustomJsonIdInput } from './CustomJsonIdInput';
 
 interface IOperationRowProps {
-  operation: string;
+  operation: Operation;
   authority?: string;
 }
 export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
   const disptach = useAppDispatch();
+  const isCustomJson = operation.operationName === 'custom_json';
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
 
-  const didplayName =
-    operation === 'custom_json'
-      ? 'Change Config'
-      : operation
-          .split('_')
-          .map(
-            (word) =>
-              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-          )
-          .join(' ');
+  const didplayName = isCustomJson
+    ? 'Change Config'
+    : operation.operationName
+        .split('_')
+        .map(
+          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+        )
+        .join(' ');
+
   const handleDelete = () => {
     const updatedConfiguration = structuredClone(newConfiguration);
-    const opToBeDeleted = { operationName: operation } as Operation;
+    const opToBeDeleted = operation;
     let newConfig = undefined;
     if (authority && authority !== '') {
       newConfig = GranularityUtils.deleteOpFromAuthority(
@@ -37,7 +38,7 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
     } else {
       newConfig = GranularityUtils.deleteAllUserOp(
         opToBeDeleted,
-        newConfiguration,
+        updatedConfiguration,
       );
     }
     if (newConfig) {
@@ -45,6 +46,7 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
       console.log(`Delete ${operation}`);
     }
   };
+
   return (
     <Container className="my-2 d-flex justify-content-center align-items-center">
       <Row>
@@ -66,6 +68,8 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
               <i className="fa fa-trash"></i>
             </Button>
           </InputGroup>
+
+          {isCustomJson ? <CustomJsonIdInput authority={authority} /> : ''}
         </Col>
       </Row>
     </Container>

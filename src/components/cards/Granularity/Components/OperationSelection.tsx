@@ -47,7 +47,10 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
   // update the local list of added operations
   useEffect(() => {
     if (newConfiguration) {
-      const ops = GranularityUtils.getOps(newConfiguration, authority);
+      const ops = GranularityUtils.getOperationNames(
+        newConfiguration,
+        authority,
+      );
       setAddedOps([...ops]);
     }
   }, [newConfiguration]);

@@ -3,7 +3,10 @@ import {
   Operation,
 } from '../interfaces/granularity.interface';
 
-const getOps = (config: MultisigGbotConfig, authority?: string): string[] => {
+const getOperationNames = (
+  config: MultisigGbotConfig,
+  authority?: string,
+): string[] => {
   if (authority) {
     const targetConfiguration = config.json.configurations.find(
       (configuration) => configuration.authority === authority,
@@ -19,16 +22,81 @@ const getOps = (config: MultisigGbotConfig, authority?: string): string[] => {
     );
 };
 
+const getOperations = (
+  config: MultisigGbotConfig,
+  authority?: string,
+): Operation[] => {
+  if (authority) {
+    const targetConfiguration = config.json.configurations.find(
+      (configuration) => configuration.authority === authority,
+    );
+    return targetConfiguration
+      ? targetConfiguration.operations.map((op) => op)
+      : [];
+  }
+  return config.json.configurations
+    .filter((configuration) => !configuration.authority)
+    .flatMap((configuration) => configuration.operations.map((op) => op));
+};
+
+const getCustomJsonIds = (
+  config: MultisigGbotConfig,
+  authority?: string,
+): string[] => {
+  const operations = getOperations(config, authority);
+
+  const customJsonOp = operations.find(
+    (op) => op.operationName === 'custom_json',
+  );
+
+  return customJsonOp?.id || [];
+};
+
+const updateCustomJsonIds = (
+  ids: string[],
+  config: MultisigGbotConfig,
+  authority?: string,
+) => {
+  const newConfigurations = config.json.configurations.map((configuration) => {
+    const shouldUpdate =
+      authority !== undefined
+        ? configuration.authority === authority
+        : !configuration.authority;
+
+    if (shouldUpdate) {
+      const updatedOperations = configuration.operations.map((operation) => {
+        if (operation.operationName === 'custom_json') {
+          // Update the IDs for the custom_json operation
+          return {
+            ...operation,
+            id: ids,
+          };
+        }
+        return operation;
+      });
+
+      return {
+        ...configuration,
+        operations: updatedOperations,
+      };
+    }
+
+    return configuration;
+  });
+
+  return {
+    ...config,
+    json: {
+      ...config.json,
+      configurations: newConfigurations,
+    },
+  };
+};
+
 const getAuthorityNameList = (config: MultisigGbotConfig): string[] => {
   return config.json.configurations
     .filter((configuration) => configuration.authority)
     .map((configuration) => configuration.authority);
-};
-
-const getAuthorityConfigs = (config: MultisigGbotConfig) => {
-  return config.json.configurations.filter(
-    (configuration) => configuration.authority,
-  );
 };
 
 const addAllUserOp = (operation: Operation, config: MultisigGbotConfig) => {
@@ -59,9 +127,7 @@ const addAllUserOp = (operation: Operation, config: MultisigGbotConfig) => {
 };
 
 const deleteAllUserOp = (operation: Operation, config: MultisigGbotConfig) => {
-  const newConfigurations = config.json.configurations.map(function (
-    configuration,
-  ) {
+  const newConfigurations = config.json.configurations.map((configuration) => {
     if (!configuration.authority) {
       return {
         ...configuration,
@@ -173,9 +239,11 @@ const deleteOpFromAuthority = (
 };
 
 export const GranularityUtils = {
-  getOps,
+  getOperationNames,
+  getOperations,
   getAuthorityNameList,
-  getAuthorityConfigs,
+  getCustomJsonIds,
+  updateCustomJsonIds,
   addAuthority,
   removeAuthority,
   addOpToAuthority,

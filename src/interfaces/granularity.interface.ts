@@ -23,6 +23,7 @@ export interface GBotTabProp {
 
 export interface Operation {
   operationName: string;
+  id?: string[];
 }
 
 export interface Configuration {
