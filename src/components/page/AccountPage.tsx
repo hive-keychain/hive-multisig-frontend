@@ -2,18 +2,32 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Button, Stack } from 'react-bootstrap';
 import { useReadLocalStorage } from 'usehooks-ts';
 import { Authorities } from '../../interfaces';
+import { TwoFACodes } from '../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { setTwoFASigners } from '../../redux/features/multisig/multisigThunks';
 import {
-  initializeAuthorities,
+  checkDefaultBot,
+  setTwoFABots,
+} from '../../redux/features/twoFactorAuth/twoFactorAuthThunks';
+import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+import {
+  allowAddAccount,
+  allowAddKey,
+  allowDeleteOnlyBot,
+  allowEdit,
+  disableDeleteBtn,
   setActiveAuthUpdate,
   setActiveKeyDelete,
   setOwnerAuthUpdate,
   setOwnerKeyDelete,
   setPostingAuthUpdate,
   setPostingKeyDelete,
-} from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
+  setThresholdWarning,
+} from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
+import { MultisigUtils } from '../../utils/multisig.utils';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
+const defaultBot = process.env.BOT;
 
 interface IAccountPageProp {
   authorities: Authorities;
@@ -26,13 +40,26 @@ function AccountPage({ authorities }: IAccountPageProp) {
   const [display, setDisplay] = useState(false);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [authorityCards, setAuthorityCards] = useState<ReactNode[]>([]);
-
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const bots = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.bots,
+  );
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
   const [updateAuthorityState, ownerState, activeState, postingState] =
     useAuthoritiesUpdateState();
   useResetUpdateStates();
+
+  useEffect(() => {
+    dispatch(allowEdit(true));
+    dispatch(allowAddAccount(true));
+    dispatch(allowAddKey(true));
+    dispatch(disableDeleteBtn(false));
+    dispatch(setThresholdWarning(''));
+    dispatch(allowDeleteOnlyBot(true));
+    scanBots();
+  }, []);
   useEffect(() => {
     setLoginState(isLoggedIn);
   }, [isLoggedIn]);
@@ -50,25 +77,44 @@ function AccountPage({ authorities }: IAccountPageProp) {
       dispatch(initializeAuthorities(accountAuthorities));
       setDisplay(true);
       const newCards = [
-        <AuthorityCard
-          key={'Owner'}
-          authorityName={'Owner'}
-          authority={accountAuthorities.owner}
-        />,
-        <AuthorityCard
-          key={'Active'}
-          authorityName={'Active'}
-          authority={accountAuthorities.active}
-        />,
-        <AuthorityCard
-          key={'Posting'}
-          authorityName={'Posting'}
-          authority={accountAuthorities.posting}
-        />,
+        <AuthorityCard authorityName={'Owner'} key="ownercard" />,
+        <AuthorityCard authorityName={'Active'} key="activecard" />,
+        <AuthorityCard authorityName={'Posting'} key="postingcard" />,
       ];
       setAuthorityCards([...newCards]);
     }
   }, [accountAuthorities]);
+
+  useEffect(() => {
+    initi2FASigners();
+  }, [bots]);
+
+  const initi2FASigners = async () => {
+    if (!bots) {
+      dispatch(setTwoFASigners(undefined));
+    } else {
+      let botSigners: TwoFACodes = {};
+      for (let i = 0; i < bots.length; i++) {
+        botSigners[bots[i][0]] = '';
+      }
+      dispatch(setTwoFASigners(botSigners));
+    }
+  };
+  const scanBots = async () => {
+    const bots = await MultisigUtils.getMultisigBots(
+      signedAccountObj.data.username,
+    );
+    if (bots) {
+      dispatch(setTwoFABots(bots));
+      const hasDefaultBot = bots.findIndex((acc) => {
+        return acc[0] === defaultBot;
+      });
+      dispatch(checkDefaultBot(hasDefaultBot >= 0));
+    } else {
+      dispatch(setTwoFABots(bots));
+      dispatch(checkDefaultBot(false));
+    }
+  };
 
   const validOwnerThreshold = (): boolean => {
     let totalWeight = 0;

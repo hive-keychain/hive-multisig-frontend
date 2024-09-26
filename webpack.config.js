@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 const dotenv = require('dotenv');
-
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 module.exports = {
   entry: './src/index.tsx',
   output: {
@@ -24,7 +24,7 @@ module.exports = {
       url: require.resolve('url'),
       stream: require.resolve('stream-browserify'),
       buffer: require.resolve('buffer/'),
-      crypto: false,
+      crypto: require.resolve('crypto-browserify'),
       os: false,
       path: false,
       // "stream": false,
@@ -65,5 +65,6 @@ module.exports = {
     new CopyPlugin({
       patterns: [{ from: 'public', to: '.' }],
     }),
+    new NodePolyfillPlugin(),
   ],
 };

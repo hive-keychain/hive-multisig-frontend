@@ -5,6 +5,7 @@ import keychainReducers from '../features/keyChain/keyChainReducers';
 import loginReducer from '../features/login/loginSlice';
 import multisigReducers from '../features/multisig/multisigReducers';
 import transactionReducers from '../features/transaction/transactionReducers';
+import twoFactorAuthReducers from '../features/twoFactorAuth/twoFactorAuthReducers';
 import updateAuthoritiesSlice from '../features/updateAuthorities/updateAuthoritiesSlice';
 const persistConfig = {
   key: 'root',
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
   updateAuthorities: updateAuthoritiesSlice,
   transaction: transactionReducers,
   multisig: multisigReducers,
+  twoFactorAuth: twoFactorAuthReducers,
 });
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 const store = configureStore({

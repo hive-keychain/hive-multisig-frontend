@@ -35,12 +35,34 @@ const getClient = () => {
     ]);
   return client;
 };
+
 const getAccount = async (username: string) => {
   client = getClient();
   return client.database.getAccounts([username]);
 };
+
+const getAccountMemoKey = async (username: string) => {
+  const account = await getAccount(username);
+  const memo = account[0]['memo_key'];
+  return memo;
+};
+
+const getAccountActiveKey = async (username: string) => {
+  const account = await getAccount(username);
+  const active = account[0].active.key_auths[0][0];
+  return active;
+};
+const getJSONMetadata = async (username: string) => {
+  try {
+    const account = await getAccount(username);
+    const jsonMetadata = JSON.parse(account[0]['json_metadata']);
+    return jsonMetadata;
+  } catch {
+    return undefined;
+  }
+};
 const getAuthority = async (username: string, keyType: KeychainKeyTypes) => {
-  const account = await HiveUtils.getAccount(username);
+  const account = await getAccount(username);
   if (account.length === 0) {
     return undefined;
   }
@@ -162,6 +184,18 @@ const getAccountAuthorities = async (username: string) => {
   return auths;
 };
 
+const getActiveAuthorities = async (username: string) => {
+  const account = await getAccount(username);
+
+  if (account.length === 0) {
+    return undefined;
+  }
+  const auths = {
+    active: account[0].active,
+  };
+  return auths;
+};
+
 const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
   client = getClient();
   const result = await client.broadcast.updateAccount(
@@ -202,7 +236,54 @@ const requestSignTx = async (
     },
   );
 };
+const encodeMessage = async (
+  from: string,
+  to: string,
+  message: string,
+  method: KeychainKeyTypes,
+) => {
+  return new Promise<any>((resolve, reject) => {
+    const callback = (response: any) => {
+      if (response.result) {
+        resolve(response);
+      } else {
+        console.log(`${JSON.stringify(response)}`);
+        reject(response);
+      }
+    };
+    const keychain = window.hive_keychain;
+    keychain.requestEncodeMessage(from, to, '#' + message, method, callback);
+  });
+};
 
+const encodeMessageWithKeys = async (
+  username: string,
+  publicKeys: string[],
+  message: string,
+  method: KeychainKeyTypes,
+) => {
+  return new Promise<any>(async (resolve, reject) => {
+    try {
+      const callback = (response: any) => {
+        if (response.result) {
+          resolve(response);
+        } else {
+          reject(response);
+        }
+      };
+      const keychain = window.hive_keychain;
+      keychain.requestEncodeWithKeys(
+        username,
+        publicKeys,
+        '#' + message,
+        method,
+        callback,
+      );
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
 const broadcastTx = async (transaction: SignedTransaction) => {
   client = getClient();
   var res = await client.broadcast.send(transaction);
@@ -340,12 +421,20 @@ const getInitiator = async (
     }
   });
 };
+const getKeyReferences = async (publicKey: string) => {
+  var client = getClient();
+  const accounts = await client.keys.getKeyReferences([publicKey]);
+  return accounts;
+};
 
 const HiveUtils = {
   getAccount,
   getAuthority,
+  getAccountMemoKey,
+  getAccountActiveKey,
   getAccountAuthorities,
   broadcastUpdateAccount,
+  getActiveAuthorities,
   getPrivateKeyFromSeed,
   fromHP,
   getDynamicGlobalProperties,
@@ -358,6 +447,10 @@ const HiveUtils = {
   requestSignTx,
   broadcastTx,
   getInitiator,
+  getJSONMetadata,
+  encodeMessage,
+  encodeMessageWithKeys,
+  getKeyReferences,
 };
 
 export default HiveUtils;

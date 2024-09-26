@@ -20,29 +20,71 @@ export function AccountKeysCard({
   const newAuthorities: Authorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
+  const allowAddAccount = useAppSelector(
+    (state) => state.updateAuthorities.allowAddAccount,
+  );
+  const allowAddKey = useAppSelector(
+    (state) => state.updateAuthorities.allowAddKey,
+  );
+
+  const disableDeleteBtn = useAppSelector(
+    (state) => state.updateAuthorities.disableDetele,
+  );
+  const allowDeleteOnlyBot = useAppSelector(
+    (state) => state.updateAuthorities.allowDeleteOnlyBot,
+  );
+
+  const bots = useAppSelector(
+    (state) => state.twoFactorAuth.twoFactorAuth.bots,
+  );
+
+  const allowEdit = useAppSelector(
+    (state) => state.updateAuthorities.allowEdit,
+  );
+
   let isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
+  const [allowAdd, setAllowAdd] = useState<boolean>(true);
   const [loginState, setLoginState] = useState<boolean>(isLoggedIn);
   const [cardBorder, setCardBorder] = useState<string>('secondary');
   const [newAccount, setNewAccount] = useState<[string, number]>(['', 1]);
-  const [accountComponentList, setAccountComponentList] = useState<
-    [string, ReactNode][]
-  >(
-    accountKeyAuths.map((accountKeyAuth): [string, ReactNode] => {
-      return [
-        accountKeyAuth[0],
-        <AccountKeyRow
-          key={accountKeyAuth[0].toString()}
-          authorityName={authorityName}
-          type={authAccountType}
-          accountKeyAuth={accountKeyAuth}
-          isLoggedIn={loginState}
-          componentColor={'gray'}
-        />,
-      ];
-    }),
-  );
+  const [accountComponentList, setAccountComponentList] =
+    useState<[string, ReactNode][]>();
+  useEffect(() => {
+    if (authAccountType.toLowerCase() === 'accounts') {
+      setAllowAdd(allowAddAccount);
+    } else {
+      setAllowAdd(allowAddKey);
+    }
+  }, [allowAddAccount, allowAddKey]);
+
+  useEffect(() => {
+    const newComponents = accountKeyAuths.map(
+      (accountKeyAuth): [string, ReactNode] => {
+        const isBot =
+          bots?.findIndex((bot) => bot[0] === accountKeyAuth[0].toString()) >=
+          0;
+        const disableDlt = isBot ? !allowDeleteOnlyBot : disableDeleteBtn;
+
+        return [
+          accountKeyAuth[0],
+          <AccountKeyRow
+            key={accountKeyAuth[0].toString()}
+            authorityName={authorityName}
+            type={authAccountType}
+            accountKeyAuth={accountKeyAuth}
+            isLoggedIn={loginState}
+            componentColor={'gray'}
+            enableEdit={allowEdit}
+            disableDelete={disableDlt}
+          />,
+        ];
+      },
+    );
+
+    setAccountComponentList(newComponents);
+  }, [accountKeyAuths, allowDeleteOnlyBot, disableDeleteBtn, bots]);
   useEffect(() => {
     if (isLoggedIn) {
       if (loggedInAccount.data.username == newAuthorities.account) {
@@ -63,6 +105,8 @@ export function AccountKeysCard({
         accountKeyAuth={newAccount}
         isLoggedIn={loginState}
         componentColor={'blue'}
+        enableEdit={allowEdit}
+        disableDelete={disableDeleteBtn}
       />,
     ];
 
@@ -166,13 +210,11 @@ export function AccountKeysCard({
           ) : (
             <div></div>
           )}
-          {loginState ? (
-            <Row>
-              <AddAccountKeyRow
-                authAccountType={authAccountType}
-                setNewAccount={setNewAccount}
-              />
-            </Row>
+          {loginState && allowAdd ? (
+            <AddAccountKeyRow
+              authAccountType={authAccountType}
+              setNewAccount={setNewAccount}
+            />
           ) : (
             <div></div>
           )}

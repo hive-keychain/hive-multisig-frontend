@@ -19,6 +19,7 @@ import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { loginActions } from '../../redux/features/login/loginSlice';
 import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { transactionActions } from '../../redux/features/transaction/transactionSlices';
+import { twoFactorAuthActions } from '../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
   getElapsedTimestampSeconds,
@@ -94,10 +95,11 @@ const NavBar = () => {
       setLoginTimestamp(0);
       setStorageAccountDetails(null);
       setStorageIsLoggedIn(false);
-      setDestination('/login');
       dispatch(multisigActions.resetState());
       dispatch(transactionActions.resetState());
       dispatch(updateAuthorityActions.resetState());
+      dispatch(twoFactorAuthActions.resetState());
+      setDestination('/login');
     }
   };
 
@@ -129,7 +131,7 @@ const NavBar = () => {
             className="d-inline-block align-top me-0"
             style={{ marginRight: 10 }}
           />{' '}
-          Hive Multisig
+          {`Hive Multisig`}
         </Navbar.Brand>
         <Navbar.Toggle
           onClick={() => setExpanded(expanded ? false : true)}
@@ -181,9 +183,14 @@ const NavBar = () => {
               </Nav.Link>
             ) : (
               <></>
-              // <Nav className="ml-auto">
-              //   <Nav.Link href="/login">Login</Nav.Link>
-              // </Nav>
+            )}
+
+            {isLoggedIn && accountDetails ? (
+              <Nav.Link onClick={() => setDestination('/twoFactor')}>
+                2FA
+              </Nav.Link>
+            ) : (
+              <></>
             )}
           </Nav>
           {/* Search bar when collapsed and logged in

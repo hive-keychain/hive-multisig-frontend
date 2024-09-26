@@ -1,4 +1,5 @@
 import * as Hive from '@hiveio/dhive';
+import crypto from 'crypto';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import * as moment from 'moment';
 import { useEffect, useRef } from 'react';
@@ -87,4 +88,34 @@ export const getPublicKeys = (
         });
     }
   }
+};
+
+export const base64ToImage = (base64string: string) => {
+  const img = new Image();
+  img.src = base64string;
+  return img;
+};
+
+export const generateRandomUint8Array = (length: number): Uint8Array => {
+  // Check if crypto.getRandomValues is available
+  if (crypto && crypto.getRandomValues) {
+    const array = new Uint8Array(length);
+    crypto.getRandomValues(array);
+    return array;
+  } else {
+    // Fallback to Math.random if crypto.getRandomValues is not available (less secure)
+    const array = new Uint8Array(length);
+    for (let i = 0; i < length; i++) {
+      array[i] = Math.floor(Math.random() * 256);
+    }
+    return array;
+  }
+};
+
+// Function to generate a random 32-character key
+export const generateRandomKey = () => {
+  const randomBytes = crypto.randomBytes(16);
+  const randomHex = randomBytes.toString('hex');
+  const key = randomHex.padEnd(32, '0').slice(0, 32);
+  return key;
 };

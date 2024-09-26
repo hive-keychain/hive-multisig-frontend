@@ -94,7 +94,7 @@ const PowerDownCard: React.FC<{}> = () => {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           account: '',

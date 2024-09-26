@@ -33,12 +33,24 @@ export interface ITransaction {
   method: KeychainKeyTypes;
 }
 
+export enum TxStatus {
+  none = 'none',
+  pending = 'pending',
+  cancel = 'cancel',
+  success = 'success',
+  failed = 'failed',
+}
+
 export interface State extends ITransaction {
   process: string;
   response: object | string | boolean;
   loading: boolean;
   success: boolean;
   error: string;
+  showOtpInput: boolean;
+  otpSecret: string;
+  otpValid: boolean;
+  transactionStatus?: TxStatus;
 }
 export interface IExpiration {
   minutes: number;

@@ -26,6 +26,7 @@ import {
   subscribeToSignRequests,
 } from './redux/features/multisig/multisigThunks';
 import { transactionActions } from './redux/features/transaction/transactionSlices';
+import { twoFactorAuthActions } from './redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from './redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { MultisigUtils } from './utils/multisig.utils';
 import {
@@ -83,18 +84,34 @@ function App() {
     (state) => state.multisig.multisig.signerConnectMessageActive,
   );
 
+  const receiveBroadcastNotificationOn = useAppSelector(
+    (state) => state.multisig.multisig.receiveBroadcastNotificationsOn,
+  );
+
   useEffect(() => {
     if (signRequestNotif && loginState !== LoginState.LOGGED_OUT) {
-      alert('Received new sign request');
-      navigate('/signRequest');
+      if (
+        confirm('Received new sign request.\nClick OK to view the request.')
+      ) {
+        navigate('/signRequest');
+      }
       dispatch(notifySignRequest(false));
     }
   }, [signRequestNotif]);
 
   useEffect(() => {
-    if (broadcastNotif && loginState !== LoginState.LOGGED_OUT) {
-      alert('A transaction has been broadcasted');
-      navigate('/signRequest');
+    if (
+      receiveBroadcastNotificationOn &&
+      broadcastNotif &&
+      loginState !== LoginState.LOGGED_OUT
+    ) {
+      if (
+        confirm(
+          'A transaction has been broadcasted.\nClick OK to view the transactions.',
+        )
+      ) {
+        navigate('/signRequest');
+      }
       dispatch(notifyBroadcastedTransaction(false));
     }
   }, [broadcastNotif]);
@@ -102,16 +119,19 @@ function App() {
   useEffect(() => {
     if (onLoginBroadcastNotif && loginState !== LoginState.LOGGED_OUT) {
       if (onLoginBroadcastNotif.length > 0) {
-        alert(
-          `${
-            onLoginBroadcastNotif.length > 1
-              ? onLoginBroadcastNotif.length
-              : 'A'
-          } transaction${
-            onLoginBroadcastNotif.length > 1 ? 's' : ''
-          } has been broadcasted`,
-        );
-        navigate('/signRequest');
+        if (
+          confirm(
+            `${
+              onLoginBroadcastNotif.length > 1
+                ? onLoginBroadcastNotif.length
+                : 'A'
+            } transaction${
+              onLoginBroadcastNotif.length > 1 ? 's' : ''
+            } has been broadcasted.\nClick OK to view the transactions.`,
+          )
+        ) {
+          navigate('/signRequest');
+        }
         dispatch(resetBroadcastNotifications());
       }
     }
@@ -120,16 +140,19 @@ function App() {
   useEffect(() => {
     if (onLoginPendingReqsNotif && loginState !== LoginState.LOGGED_OUT) {
       if (onLoginPendingReqsNotif.length > 0) {
-        alert(
-          `You have ${
-            onLoginPendingReqsNotif.length > 1
-              ? onLoginPendingReqsNotif.length
-              : 'a'
-          } pending sign request${
-            onLoginPendingReqsNotif.length > 1 ? 's' : ''
-          }`,
-        );
-        navigate('/signRequest');
+        if (
+          confirm(
+            `You have ${
+              onLoginPendingReqsNotif.length > 1
+                ? onLoginPendingReqsNotif.length
+                : 'a'
+            } pending sign request${
+              onLoginPendingReqsNotif.length > 1 ? 's' : ''
+            }.\nClick OK to view the requests.`,
+          )
+        ) {
+          navigate('/signRequest');
+        }
         dispatch(resetPendingSignRequest());
       }
     }
@@ -294,6 +317,7 @@ function App() {
     await dispatch(multisigActions.resetState());
     await dispatch(transactionActions.resetState());
     await dispatch(updateAuthorityActions.resetState());
+    await dispatch(twoFactorAuthActions.resetState());
     setMultisig(undefined);
   };
 

@@ -16,7 +16,6 @@ import { hiveDecimalFormat } from '../../../utils/utils';
 import ErrorModal from '../../modals/Error';
 import { Expiration } from './Expiration';
 import { InputRow } from './InputRow';
-
 function Transfer() {
   let loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
@@ -111,7 +110,6 @@ function Transfer() {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
         }}
         initialValues={{
           amount: 0,
@@ -179,7 +177,10 @@ function Transfer() {
                   />
 
                   <div className="d-flex justify-content-end">
-                    <Button type="submit" variant="success">
+                    <Button
+                      type="submit"
+                      variant="success"
+                      onClick={() => handleSubmit()}>
                       Submit
                     </Button>
                   </div>

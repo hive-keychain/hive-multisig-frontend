@@ -118,7 +118,7 @@ const RecurrentTransferCard: React.FC<{}> = () => {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           amount: 0,

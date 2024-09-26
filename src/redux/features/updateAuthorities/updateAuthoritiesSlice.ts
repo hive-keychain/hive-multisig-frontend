@@ -1,22 +1,30 @@
-import * as Hive from '@hiveio/dhive';
-import { PayloadAction, createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import * as _ from 'lodash';
+import { Authorities, BroadCastResponseType } from '../../../interfaces';
+import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import {
-  Authorities,
-  BroadCastResponseType,
-  IDHiveAccountUpdateBroadcast,
-  IHiveAccountUpdateBroadcast,
-} from '../../../interfaces';
-import {
-  IAccountKeyRowProps,
-  IDeleteAccount,
-  IDeleteKey,
-} from '../../../interfaces/cardInterfaces';
-import { removeAccount, removeKey } from '../../../utils/account-utils';
-import {
-  default as AccountUtils,
-  default as HiveUtils,
-} from '../../../utils/hive.utils';
+  addAccountWarning,
+  addKeyWarning,
+  allowAddAccount,
+  allowAddKey,
+  allowDeleteOnlyBot,
+  allowEdit,
+  deleteAccount,
+  deleteKey,
+  dhiveBroadcastUpdateAccount,
+  disableDeleteBtn,
+  hiveKeyChainRequestBroadCast,
+  removeAccountWarning,
+  removeKeyWarning,
+  setActiveAuthUpdate,
+  setActiveKeyDelete,
+  setOwnerAuthUpdate,
+  setOwnerKeyDelete,
+  setPostingAuthUpdate,
+  setPostingKeyDelete,
+  setThresholdWarning,
+  updateActive,
+} from './updateAuthoritiesThunks';
 export type AuthorityUpdateStateType = {
   Authorities: Authorities;
   NewAuthorities: Authorities;
@@ -31,6 +39,14 @@ export type AuthorityUpdateStateType = {
   ownerAuthUpdateCount: number;
   ownerKey?: string;
   error: string;
+  thresholdWarning?: string;
+  accountRowWarning?: [string, string][];
+  keyRowWarning?: [string, string][];
+  allowAddAccount: boolean;
+  allowAddKey: boolean;
+  disableDetele: boolean;
+  allowEdit: boolean;
+  allowDeleteOnlyBot: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -47,114 +63,16 @@ const initialState: AuthorityUpdateStateType = {
   ownerKey: '',
   ownerAuthUpdateCount: 0,
   error: '',
+  thresholdWarning: '',
+  accountRowWarning: [],
+  keyRowWarning: [],
+  allowAddAccount: true,
+  allowAddKey: true,
+  disableDetele: false,
+  allowEdit: true,
+  allowDeleteOnlyBot: false,
 };
 
-export const hiveKeyChainRequestBroadCast = createAsyncThunk(
-  'updateAuthority/hiveBroadcast',
-  async (props: IHiveAccountUpdateBroadcast) => {
-    const response = await HiveUtils.accountUpdateBroadcast(props);
-    return response;
-  },
-);
-
-export const dhiveBroadcastUpdateAccount = createAsyncThunk(
-  'updateAuthority/dhiveBroadcast',
-  async ({ newAuthorities, ownerKey }: IDHiveAccountUpdateBroadcast) => {
-    const response = await AccountUtils.broadcastUpdateAccount({
-      newAuthorities,
-      ownerKey,
-    });
-    return response;
-  },
-);
-
-export const deleteAccount = createAsyncThunk(
-  'updateAuthority/deleteAccount',
-  async ({ type, username, authorities }: IDeleteAccount) => {
-    const newAuth = await removeAccount(type, username, authorities);
-
-    return newAuth;
-  },
-);
-
-export const setOwnerKeyDelete = createAsyncThunk(
-  'updateAuthority/setOwnerKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setPostingKeyDelete = createAsyncThunk(
-  'updateAuthority/setPostingKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const setActiveKeyDelete = createAsyncThunk(
-  'updateAuthority/setActiveKeyDelete',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setOwnerAuthUpdate = createAsyncThunk(
-  'updateAuthority/setOwnerAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-
-export const setActiveAuthUpdate = createAsyncThunk(
-  'updateAuthority/setActiveAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const setPostingAuthUpdate = createAsyncThunk(
-  'updateAuthority/setPostingAuthUpdate',
-  async (flag: boolean) => {
-    return flag;
-  },
-);
-export const deleteKey = createAsyncThunk(
-  'updateAuthority/deleteKey',
-  async ({ type, key, authorities }: IDeleteKey) => {
-    const newAuth = await removeKey(type, key, authorities);
-    return newAuth;
-  },
-);
-
-export const getIndexOfStringFromTupleArray = (
-  array: [string | Hive.PublicKey, number][],
-  element: string | Hive.PublicKey,
-): number => {
-  let index = -1;
-  for (let i = 0; i < array.length; i++) {
-    if (array[i][0] === element) {
-      index = i;
-      break;
-    }
-  }
-  return index;
-};
-
-export const removeAuthorityKey = (
-  array: [string | Hive.PublicKey, number][],
-  element: [string | Hive.PublicKey, number],
-): [string | Hive.PublicKey, number][] => {
-  const index = getIndexOfStringFromTupleArray(array, element[0]);
-  if (index !== -1) {
-    return [...array.slice(0, index), ...array.slice(index + 1)];
-  }
-  return [...array];
-};
-
-export const clearAuthorityState = createAsyncThunk(
-  'updateAuthority/clearAuthorityState',
-  async () => {
-    return {} as AuthorityUpdateStateType;
-  },
-);
 const updateAuthoritySlice = createSlice({
   name: 'updateAuthority',
   initialState,
@@ -358,6 +276,14 @@ const updateAuthoritySlice = createSlice({
       );
     });
 
+    builder.addCase(updateActive.fulfilled, (state, action) => {
+      state.NewAuthorities.active = { ...action.payload };
+    });
+
+    builder.addCase(setThresholdWarning.fulfilled, (state, action) => {
+      state.thresholdWarning = action.payload;
+    });
+
     builder.addCase(setOwnerKeyDelete.fulfilled, (state, action) => {
       state.isOwnerKeyDeleted = action.payload;
     });
@@ -376,6 +302,51 @@ const updateAuthoritySlice = createSlice({
     });
     builder.addCase(setPostingAuthUpdate.fulfilled, (state, action) => {
       state.isPostingAuthUpdated = action.payload;
+    });
+
+    builder.addCase(addAccountWarning.fulfilled, (state, action) => {
+      const warnings = state.accountRowWarning.filter(
+        (acc) => acc[0] !== action.payload.username,
+      );
+      state.accountRowWarning = [
+        ...warnings.concat([[action.payload.username, action.payload.warning]]),
+      ];
+    });
+
+    builder.addCase(removeAccountWarning.fulfilled, (state, action) => {
+      state.accountRowWarning = state.accountRowWarning.filter(
+        (acc) => acc[0] !== action.payload,
+      );
+    });
+
+    builder.addCase(addKeyWarning.fulfilled, (state, action) => {
+      state.keyRowWarning = state.keyRowWarning.concat([
+        [action.payload.key, action.payload.warning],
+      ]);
+    });
+
+    builder.addCase(removeKeyWarning.fulfilled, (state, action) => {
+      state.keyRowWarning = state.keyRowWarning.filter(
+        (key) => key[0] !== action.payload,
+      );
+    });
+
+    builder.addCase(allowAddAccount.fulfilled, (state, action) => {
+      state.allowAddAccount = action.payload;
+    });
+    builder.addCase(allowAddKey.fulfilled, (state, action) => {
+      state.allowAddKey = action.payload;
+    });
+
+    builder.addCase(disableDeleteBtn.fulfilled, (state, action) => {
+      state.disableDetele = action.payload;
+    });
+    builder.addCase(allowEdit.fulfilled, (state, action) => {
+      state.allowEdit = action.payload;
+    });
+
+    builder.addCase(allowDeleteOnlyBot.fulfilled, (state, action) => {
+      state.allowDeleteOnlyBot = action.payload;
     });
   },
 });

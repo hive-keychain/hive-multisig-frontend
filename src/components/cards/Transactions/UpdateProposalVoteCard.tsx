@@ -109,7 +109,7 @@ const UpdateProposalVoteCard: React.FC<{}> = () => {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           approve: false,

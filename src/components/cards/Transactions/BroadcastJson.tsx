@@ -119,7 +119,7 @@ function BroadcastJson() {
         validationSchema={schema}
         onSubmit={(values, actions) => {
           handleTransaction(values);
-          actions.resetForm();
+          
         }}
         initialValues={{
           id: '',

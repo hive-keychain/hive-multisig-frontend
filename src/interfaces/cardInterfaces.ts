@@ -19,6 +19,8 @@ export interface IAccountKeyRowProps {
   threshold?: number;
   isLoggedIn?: boolean;
   componentColor?: string;
+  disableDelete?: boolean;
+  enableEdit?: boolean;
 }
 
 export interface IAuthorityCardProps {

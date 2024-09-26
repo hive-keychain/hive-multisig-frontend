@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/multisig.interface';
+import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
 import {
   addBroadcastNotifications,
   addBroadcastedTransaction,
@@ -10,7 +11,10 @@ import {
   removeSignRequest,
   resetBroadcastNotifications,
   resetPendingSignRequest,
+  setBotOtp,
+  setReceiveBroadcastNotificationsOn,
   setSignRequestCount,
+  setTwoFASigners,
   signerConnectActive,
   signerConnectMessageActive,
   signerConnectMessagePosting,
@@ -28,6 +32,7 @@ const initialState: State = {
   signRequests: [],
   userNotifications: [],
   broadcastedTransactions: [],
+  twoFASigners: {},
   subscribeToSignRequest: false,
   subscribeToBroadcast: false,
   signRequestNotification: false,
@@ -36,6 +41,7 @@ const initialState: State = {
   newSignRequestCount: 0,
   success: false,
   error: undefined,
+  receiveBroadcastNotificationsOn: true,
 };
 
 const multisigSlice = createSlice({
@@ -227,6 +233,28 @@ const multisigSlice = createSlice({
       state.signRequestCount = 0;
       state.success = false;
     });
+    builder.addCase(setTwoFASigners.fulfilled, (state, action) => {
+      state.twoFASigners = action.payload;
+    });
+
+    builder.addCase(setBotOtp.fulfilled, (state, action) => {
+      let twoFASigners: TwoFACodes = state.twoFASigners
+        ? { ...state.twoFASigners }
+        : {};
+
+      Object.keys(action.payload).forEach((botName) => {
+        twoFASigners[botName] = action.payload[botName];
+      });
+
+      console.log(twoFASigners);
+      state.twoFASigners = { ...twoFASigners };
+    });
+    builder.addCase(
+      setReceiveBroadcastNotificationsOn.fulfilled,
+      (state, action) => {
+        state.receiveBroadcastNotificationsOn = action.payload;
+      },
+    );
     builder.addCase(multisigSlice.actions.resetState, () => initialState);
   },
 });
