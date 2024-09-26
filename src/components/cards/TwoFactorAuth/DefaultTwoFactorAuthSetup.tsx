@@ -1,6 +1,6 @@
 import { useAppSelector } from '../../../redux/app/hooks';
 import { AuthorityCard } from '../Account/AuthorityCard';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 
 export interface TwoFATabProp {
   isManageTwoFA: boolean;

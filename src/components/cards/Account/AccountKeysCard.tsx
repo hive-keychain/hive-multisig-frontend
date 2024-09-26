@@ -62,6 +62,7 @@ export function AccountKeysCard({
   useEffect(() => {
     const newComponents = accountKeyAuths.map(
       (accountKeyAuth): [string, ReactNode] => {
+        console.log(accountKeyAuth, 'acc bot', bots);
         const isBot =
           bots?.findIndex((bot) => bot[0] === accountKeyAuth[0].toString()) >=
           0;
@@ -70,7 +71,7 @@ export function AccountKeysCard({
         return [
           accountKeyAuth[0],
           <AccountKeyRow
-            key={accountKeyAuth[0].toString()}
+            key={accountKeyAuth[0]?.toString() || ''}
             authorityName={authorityName}
             type={authAccountType}
             accountKeyAuth={accountKeyAuth}
@@ -99,7 +100,7 @@ export function AccountKeysCard({
     const newRow: [string, ReactNode] = [
       newAccount[0].toString(),
       <AccountKeyRow
-        key={newAccount[0].toString()}
+        key={newAccount[0]?.toString()}
         authorityName={authorityName}
         type={authAccountType}
         accountKeyAuth={newAccount}

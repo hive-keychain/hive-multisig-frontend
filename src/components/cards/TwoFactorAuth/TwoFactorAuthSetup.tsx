@@ -34,7 +34,7 @@ import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
 import { TwoFAConfirmation } from './TwoFAConfirmation';
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 
 export const TwoFactorAuthSetup = () => {
   const navigate = useNavigate();

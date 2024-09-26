@@ -45,7 +45,7 @@ import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
 import { TwoFAConfirmation } from './TwoFAConfirmation';
 var deepequal = require('deep-equal');
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 export const ManageTwoFaAccount = () => {
   const dispatch = useAppDispatch();
   const multisig = useMultisigState();
