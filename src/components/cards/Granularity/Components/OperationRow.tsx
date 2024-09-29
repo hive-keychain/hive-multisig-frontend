@@ -16,14 +16,10 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
 
-  const didplayName = isCustomJson
-    ? 'Change Config'
-    : operation.operationName
-        .split('_')
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-        )
-        .join(' ');
+  const didplayName = operation.operationName
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 
   const handleDelete = () => {
     const updatedConfiguration = structuredClone(newConfiguration);

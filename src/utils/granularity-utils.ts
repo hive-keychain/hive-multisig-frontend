@@ -2,6 +2,7 @@ import {
   MultisigGbotConfig,
   Operation,
 } from '../interfaces/granularity.interface';
+const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
 
 const getOperationNames = (
   config: MultisigGbotConfig,
@@ -49,8 +50,10 @@ const getCustomJsonIds = (
     (op) => op.operationName === 'custom_json',
   );
 
-  return customJsonOp?.id || [];
+  return structuredClone(customJsonOp?.id || []);
 };
+
+const moveChangeConfigToCustomJson = (config: MultisigGbotConfig) => {};
 
 const updateCustomJsonIds = (
   ids: string[],
@@ -250,4 +253,5 @@ export const GranularityUtils = {
   addAllUserOp,
   deleteAllUserOp,
   deleteOpFromAuthority,
+  moveChangeConfigToCustomJson,
 };

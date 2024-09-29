@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
 import { useAppDispatch } from '../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../redux/features/granularity/granularityThunks';
+import { GranularityUtils } from '../../../utils/granularity-utils';
 import { AllUsersConfigCard } from './Components/AllUsersConfigCard';
 import { CustomUsersConfigCard } from './Components/CustomUsersConfigCard';
 import { MultisigGranularityHooks } from './GranularitySetupHooks';
@@ -22,6 +23,12 @@ export const GranularityConfigurationSetup = () => {
 
   const handleDiscard = () => {
     dispatch(updateGranularityConfiguration(configuration));
+  };
+
+  const handleUpdateAccount = () => {
+    const updated =
+      GranularityUtils.moveChangeConfigToCustomJson(newConfiguration);
+    //TODO: move the change config to custom json
   };
 
   return (
@@ -62,7 +69,7 @@ export const GranularityConfigurationSetup = () => {
           <Button
             disabled={disableButton}
             onClick={() => {
-              // handleUpdateAccount();
+              handleUpdateAccount();
             }}
             className="ms-2"
             variant="success">

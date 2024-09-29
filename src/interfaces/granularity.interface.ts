@@ -40,7 +40,7 @@ export interface MultisigGbotConfig {
 
 export enum OperationName {
   ALL = 'all',
-  CHANGE_CONFIG = 'custom_json',
+  CHANGE_CONFIG = 'change_config',
   VOTE = 'vote',
   COMMENT = 'comment',
   TRANSFER = 'transfer',

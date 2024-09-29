@@ -10,22 +10,17 @@ import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { capitalizeOpFirstLetter } from '../../../../utils/utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 
+const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
 interface IOperationSelection {
   authority?: string;
 }
 export const OperationSelection = ({ authority }: IOperationSelection) => {
   const operations = Object.entries(OperationName).map(([key, value]) => ({
     key,
-    displayName:
-      value === 'custom_json'
-        ? 'Change Config'
-        : value
-            .split('_')
-            .map(
-              (word) =>
-                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
-            )
-            .join(' '),
+    displayName: value
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' '),
   }));
 
   const [addedOps, setAddedOps] = useState<string[]>([]);
@@ -35,7 +30,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
   });
 
   const [options, setOptions] = useState([]);
-  const disptach = useAppDispatch();
+  const dispatch = useAppDispatch();
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
 
@@ -60,6 +55,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
     const selectOptions = operations.map((operation) => {
       const key = OperationName[operation.key as keyof typeof OperationName];
       const isAdded = addedOps.includes('all') || addedOps.includes(key);
+
       return (
         <option
           key={operation.key}
@@ -82,19 +78,22 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       const updatedConfiguration = structuredClone(newConfiguration);
       let newConfig = undefined;
       if (authority) {
+        //Add to specific authority
         newConfig = GranularityUtils.addOpToAuthority(
           authority,
           opTobeAdded,
           updatedConfiguration,
         );
       } else {
+        // Add to all users
         newConfig = GranularityUtils.addAllUserOp(
           opTobeAdded,
           updatedConfiguration,
         );
       }
+
       if (newConfig) {
-        disptach(updateGranularityConfiguration(newConfig));
+        dispatch(updateGranularityConfiguration(newConfig));
         console.log({ opTobeAdded });
       }
     } else {
@@ -102,9 +101,21 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
     }
   };
 
+  const generateOpToBeAdded = (op: string): Operation => {
+    const operationName = OperationName[op as keyof typeof OperationName];
+    if (operationName === OperationName.CHANGE_CONFIG) {
+      return {
+        operationName: OperationName.CHANGE_CONFIG,
+        id: [GBOT_CONFIG_ID],
+      };
+    }
+    return {
+      operationName,
+    };
+  };
   const handleSelectionChange = (op: string) => {
-    const toBeAdded = OperationName[op as keyof typeof OperationName];
-    setOpToBeAdded({ operationName: toBeAdded });
+    const toBeAdded = generateOpToBeAdded(op);
+    setOpToBeAdded(toBeAdded);
     setSelectedOp(op);
   };
 
