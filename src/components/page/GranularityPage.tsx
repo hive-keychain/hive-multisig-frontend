@@ -16,6 +16,7 @@ import { MultisigUtils } from '../../utils/multisig.utils';
 import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
+import { testConfig } from '../../../granularity-sample-config';
 
 const defaultBot = process.env.GRANULARITY_BOT;
 if (defaultBot === undefined) {
@@ -23,6 +24,9 @@ if (defaultBot === undefined) {
     'Default Granularity Bot is not defined in environment variables, this will cause error in 2FA setup.',
   );
 }
+
+
+
 export const GranularityPage = () => {
   const dispatch = useAppDispatch();
   const [authorities, setAuthorities] = useState(undefined);
@@ -77,28 +81,8 @@ export const GranularityPage = () => {
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
 
-    const testConfig = {
-      id: 'multisig-gbot-config', // You can replace this with your own logic to generate a unique ID
-      json: {
-        configurations: [
-          {
-            authority: 'choibounge',
-            operations: [
-              { operationName: 'transfer' },
-              { operationName: 'custom_json', id: ['test_id', 'b'] },
-              { operationName: 'delegate_vesting_shares' },
-            ],
-          },
-          {
-            operations: [
-              { operationName: 'vote' },
-              { operationName: 'comment' },
-              { operationName: 'custom_json', id: ['test_id', 'c'] },
-            ],
-          },
-        ],
-      },
-    } as MultisigGbotConfig;
+
+    //TODO: Replace with the config retrieved from the chain
     dispatch(initializeConfiguration(testConfig));
 
     return () => {
@@ -117,7 +101,7 @@ export const GranularityPage = () => {
   };
   return useMemo(() => {
     if (!authorities) {
-      return null; // or a placeholder if you need to return something
+      return null; 
     }
 
     if (hasDefaultGranularityBot === undefined) {

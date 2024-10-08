@@ -1,0 +1,4 @@
+API_ADDRESS = "http://localhost:5000"
+SOCKET_ADDRESS = "http://localhost:5000"
+TWOFA_BOT = "pampampompom"
+GRANULARITY_BOT="pampampompom"

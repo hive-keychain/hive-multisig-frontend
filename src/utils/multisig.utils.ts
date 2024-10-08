@@ -4,10 +4,10 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { IEncodeTransaction } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import moment from 'moment';
 import { Authorities } from '../interfaces';
-import { MultisigGbotConfig } from '../interfaces/granularity.interface';
 import { IExpiration, Initiator } from '../interfaces/transaction.interface';
 import { TwoFACodes } from '../interfaces/twoFactorAuth.interface';
 import AccountUtils from '../utils/hive.utils';
+import { MultisigGbotConfig } from './../interfaces/granularity.interface';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
@@ -217,13 +217,28 @@ const twoFAConfigBroadcast = async (
 const granularityConfigBroadcast = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
-  gbotConfig: MultisigGbotConfig,
+  gbotConfigs: MultisigGbotConfig,
   initiator: Initiator,
   newAuthorities: Authorities,
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const customJsonOp = await getGBotCustomJsonOp(username, bot, gbotConfig);
+      const customJsonOp = await getGBotCustomJsonOp(
+        username,
+        bot,
+        gbotConfigs,
+      );
+      const updateAccountOp = await getUpdateAccountOp(newAuthorities);
+      const transaction = await HiveTxUtils.createTx(
+        [customJsonOp, updateAccountOp],
+        {
+          date: undefined,
+          minutes: 60,
+        } as IExpiration,
+      );
+      broadcastTransaction(transaction, username, initiator)
+        .then((res) => resolve(res))
+        .catch((reason) => reject(reason));
     } catch (error) {
       reject(error);
     }
@@ -292,21 +307,18 @@ const broadcastTransaction = async (
 const getGBotCustomJsonOp = async (
   username: string,
   bot: [string | Hive.PublicKey, number],
-  gBotConfig: MultisigGbotConfig,
+  gBotConfigs: MultisigGbotConfig,
 ) => {
   return new Promise<any>(async (resolve, reject) => {
     try {
-      const auth = await AccountUtils.getActiveAuthorities(username);
-      // if (isValid) {
-      //   const customJsonOp = {
-      //     required_auths: [username],
-      //     required_posting_auths: [] as string[],
-      //     id: 'setTwoFaId',
-      //     json: JSON.stringify(gBotConfig),
-      //   };
-      //   const op = ['custom_json', customJsonOp];
-      //   resolve(op);
-      // }
+      const customJsonOp = {
+        required_auths: [username],
+        required_posting_auths: [] as string[],
+        id: `multisig-gbot-config`,
+        json: JSON.stringify(gBotConfigs.json),
+      };
+      const op = ['custom_json', customJsonOp];
+      resolve(op);
     } catch (error) {
       reject(error);
     }
@@ -389,4 +401,5 @@ export const MultisigUtils = {
   twoFAConfigBroadcast,
   getMultisigBots,
   getUpdateAccountOp,
+  granularityConfigBroadcast,
 };

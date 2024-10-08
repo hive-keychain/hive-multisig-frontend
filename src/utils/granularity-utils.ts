@@ -1,3 +1,4 @@
+import { Authorities } from '../interfaces';
 import {
   MultisigGbotConfig,
   Operation,
@@ -53,8 +54,6 @@ const getCustomJsonIds = (
   return structuredClone(customJsonOp?.id || []);
 };
 
-const moveChangeConfigToCustomJson = (config: MultisigGbotConfig) => {};
-
 const updateCustomJsonIds = (
   ids: string[],
   config: MultisigGbotConfig,
@@ -94,6 +93,108 @@ const updateCustomJsonIds = (
       configurations: newConfigurations,
     },
   };
+};
+
+const moveChangeConfigToCustomJson = (
+  config: MultisigGbotConfig,
+): MultisigGbotConfig => {
+  const configTobeUpdated = structuredClone(config);
+  const authorities = getAuthoritiesWithChangeConfig(config);
+  const newConfig = removeChangeConfig(configTobeUpdated);
+
+  const updatedConfig = newConfig.json.configurations.map((configuration) => {
+    const shouldUpdate =
+      (configuration.authority === undefined && authorities.includes('all')) ||
+      authorities.includes(configuration.authority);
+    if (shouldUpdate) {
+      const updatedOperations = (() => {
+        let hasCustomJson = false;
+
+        const operationsWithUpdatedIds = configuration.operations.map(
+          (operation) => {
+            if (operation.operationName === 'custom_json') {
+              hasCustomJson = true;
+              return {
+                ...operation,
+                id: [...operation.id, 'multisig-gbot-config'],
+              };
+            }
+            return operation;
+          },
+        );
+
+        // If no 'custom_json' operation was found, add it
+        if (!hasCustomJson) {
+          return [
+            ...operationsWithUpdatedIds,
+            {
+              operationName: 'custom_json',
+              id: ['multisig-gbot-config'],
+            },
+          ];
+        }
+
+        return operationsWithUpdatedIds;
+      })();
+
+      return { ...configuration, operations: updatedOperations };
+    }
+    return configuration;
+  });
+
+  return { ...config, json: { configurations: updatedConfig } };
+};
+
+const getAuthoritiesWithChangeConfig = (
+  config: MultisigGbotConfig,
+): string[] => {
+  const authorities: string[] = [];
+
+  config.json.configurations.forEach((configuration) => {
+    // Check if the configuration contains an operation with "change_config"
+    const hasChangeConfig = configuration.operations.some(
+      (operation) => operation.operationName === 'change_config',
+    );
+
+    if (hasChangeConfig) {
+      // Add the authority to the list, or "all" if there's no authority
+      authorities.push(configuration.authority ?? 'all');
+    }
+  });
+
+  return authorities;
+};
+
+const removeChangeConfig = (config: MultisigGbotConfig): MultisigGbotConfig => {
+  const updatedConfigurations = config.json.configurations.map(
+    (configuration) => {
+      // Filter out the change_config operation from the operations
+      const updatedOperations = configuration.operations.filter(
+        (operation) => operation.operationName !== 'change_config',
+      );
+
+      // Return the updated configuration
+      return {
+        ...configuration,
+        operations: updatedOperations,
+      };
+    },
+  );
+
+  // Return the updated config object
+  return {
+    ...config,
+    json: {
+      ...config.json,
+      configurations: updatedConfigurations,
+    },
+  };
+};
+
+const getBotAuthorities = (bots: string[][], newAuthorities: Authorities) => {
+  return newAuthorities.active.account_auths.filter((acc) =>
+    bots.some((bot) => bot[0] === acc[0]),
+  );
 };
 
 const getAuthorityNameList = (config: MultisigGbotConfig): string[] => {
@@ -254,4 +355,5 @@ export const GranularityUtils = {
   deleteAllUserOp,
   deleteOpFromAuthority,
   moveChangeConfigToCustomJson,
+  getBotAuthorities,
 };

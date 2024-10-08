@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Col, Container, Row } from 'react-bootstrap';
-import { useAppDispatch } from '../../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../redux/features/granularity/granularityThunks';
 import { GranularityUtils } from '../../../utils/granularity-utils';
+import { MultisigUtils } from '../../../utils/multisig.utils';
 import { AllUsersConfigCard } from './Components/AllUsersConfigCard';
 import { CustomUsersConfigCard } from './Components/CustomUsersConfigCard';
 import { MultisigGranularityHooks } from './GranularitySetupHooks';
@@ -13,7 +14,12 @@ export const GranularityConfigurationSetup = () => {
 
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
-
+  const [authority, newAuthorities] = MultisigGranularityHooks.useAuthorities();
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+  const transactionState = useAppSelector(
+    (state) => state.transaction.transaction,
+  );
+  const bots = useAppSelector((state) => state.granularity.granularity.bots);
   useEffect(() => {
     const disable = deepequal(configuration, newConfiguration, {
       strict: true,
@@ -25,10 +31,22 @@ export const GranularityConfigurationSetup = () => {
     dispatch(updateGranularityConfiguration(configuration));
   };
 
-  const handleUpdateAccount = () => {
-    const updated =
+  const handleUpdateAccount = async () => {
+    const configToBroadcast =
       GranularityUtils.moveChangeConfigToCustomJson(newConfiguration);
-    //TODO: move the change config to custom json
+    const botAuths = GranularityUtils.getBotAuthorities(bots, newAuthorities);
+    console.log({ botAuths });
+    const res = await MultisigUtils.granularityConfigBroadcast(
+      signedAccountObj.data.username,
+      botAuths[0],
+      configToBroadcast,
+      transactionState.initiator,
+      newAuthorities,
+    );
+
+    if (res) {
+      alert(res);
+    }
   };
 
   return (
