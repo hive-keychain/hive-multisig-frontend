@@ -62,7 +62,6 @@ export function AccountKeysCard({
   useEffect(() => {
     const newComponents = accountKeyAuths.map(
       (accountKeyAuth): [string, ReactNode] => {
-        console.log(accountKeyAuth, 'acc bot', bots);
         const isBot =
           bots?.findIndex((bot) => bot[0] === accountKeyAuth[0].toString()) >=
           0;

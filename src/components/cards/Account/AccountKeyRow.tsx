@@ -69,17 +69,17 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
         const accWarn = accountWarning?.filter(
           (acc) => acc[0] === accountKeyAuth[0],
         );
-        if (accWarn.length > 0 && accWarn[0][1] !== '') {
+        if (accWarn?.length > 0 && accWarn[0][1] !== '') {
           setWarningText(accWarn[0][1]);
         } else {
           setWarningText('');
         }
         break;
       case 'keys':
-        const keyWarn = keyWarning.filter(
+        const keyWarn = keyWarning?.filter(
           (key) => key[0] === accountKeyAuth[0],
         );
-        if (keyWarn.length > 0 && keyWarn[0][1] !== '') {
+        if (keyWarn?.length > 0 && keyWarn[0][1] !== '') {
           setWarningText(keyWarn[0][1]);
         } else {
           setWarningText('');
