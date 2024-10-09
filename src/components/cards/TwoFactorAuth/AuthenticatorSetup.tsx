@@ -23,7 +23,7 @@ import {
   generateRandomKey,
 } from '../../../utils/utils';
 var base32 = require('thirty-two');
-const defaultBot = process.env.BOT;
+const defaultBot = process.env.TWOFA_BOT;
 authenticator.options = {
   window: 1,
 };
