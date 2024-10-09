@@ -187,7 +187,7 @@ const NavBar = () => {
 
             {isLoggedIn && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/twoFactor')}>
-                2FA
+                2FA (Beta)
               </Nav.Link>
             ) : (
               <></>

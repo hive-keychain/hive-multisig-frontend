@@ -1,16 +1,7 @@
 import * as Hive from '@hiveio/dhive';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Card,
-  Col,
-  Container,
-  Form,
-  Row,
-  Tab,
-  Tabs,
-} from 'react-bootstrap';
+import { Button, Card, Col, Container, Form, Row } from 'react-bootstrap';
 import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
@@ -40,7 +31,6 @@ import {
 import HiveTxUtils from '../../../utils/hivetx.utils';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 import { OtpModal } from '../../modals/OtpModal';
-import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
 import { TwoFAConfirmation } from './TwoFAConfirmation';
@@ -79,13 +69,10 @@ export const ManageTwoFaAccount = () => {
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
   );
-  const hasDefaultBot = useAppSelector(
-    (state) => state.twoFactorAuth.twoFactorAuth.hasDefaultBot,
-  );
   const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
     useState<boolean>(false);
-  const [twoFaDisableCheckBoxChecked, setTwoFaDisableCheckBox] =
-    useState<boolean>(false);
+  const [showRemove, setShowRemove] = useState(false);
+
   useEffect(() => {
     allowRemoveBot();
     dispatch(isManageTwoFA(true));
@@ -119,17 +106,10 @@ export const ManageTwoFaAccount = () => {
     setDisableSubmitBtn(
       !(
         (accountRemoved || threshEdited || weightUpdated) &&
-        ownerKeyCheckBoxChecked &&
-        twoFaDisableCheckBoxChecked
+        ownerKeyCheckBoxChecked
       ),
     );
-  }, [
-    accountRemoved,
-    threshEdited,
-    weightUpdated,
-    ownerKeyCheckBoxChecked,
-    twoFaDisableCheckBoxChecked,
-  ]);
+  }, [accountRemoved, threshEdited, weightUpdated, ownerKeyCheckBoxChecked]);
 
   useEffect(() => {
     dispatch(removeBotSuccess(accountRemoved));
@@ -207,14 +187,10 @@ export const ManageTwoFaAccount = () => {
   const handleReset = async () => {
     dispatch(initializeAuthorities(originalAuthorities));
     setOwnerKeyCheckBox(false);
-    setTwoFaDisableCheckBox(false);
   };
 
-  const handleOwnerKeyAgreement = (value: any) => {
+  const handle2FAAgreement = (value: any) => {
     setOwnerKeyCheckBox(value);
-  };
-  const handle2faDisablingAgreement = (value: any) => {
-    setTwoFaDisableCheckBox(value);
   };
 
   const handleOnTabChanged = () => {
@@ -244,66 +220,70 @@ export const ManageTwoFaAccount = () => {
               <Card.Body>
                 <h3 className="card-title text-center">
                   Manage Multisig 2FA Bot
+                  <br />
+                  <br />
                 </h3>
-                <Tabs
-                  mountOnEnter={true}
-                  id="controlled-tab"
-                  activeKey={key}
-                  onSelect={(k) => setKey(k)}
-                  className="mb-3">
-                  <Tab eventKey="default" title="Default">
-                    <DefaultTwoFactorAuthSetup isManageTwoFA={true} />
-                  </Tab>
-
-                  <Tab eventKey="custom" title="Custom">
-                    <CustomTwoFactorAuthSetup isManageTwoFA={true} />
-                  </Tab>
-                </Tabs>
               </Card.Body>
-              <div>
-                <div className="ms-3 me-3">
-                  <Form>
-                    <Form.Check
-                      onChange={(e) => {
-                        handleOwnerKeyAgreement(e.target.checked);
-                      }}
-                      type={'checkbox'}
-                      id={`owner-key-agreement`}
-                      label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}
-                      checked={ownerKeyCheckBoxChecked}></Form.Check>
-                    <Form.Check
-                      onChange={(e) => {
-                        handle2faDisablingAgreement(e.target.checked);
-                      }}
-                      checked={twoFaDisableCheckBoxChecked}
-                      type={'checkbox'}
-                      id={`2fa-disabling-agreement`}
-                      label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the 2FA`}></Form.Check>
-                  </Form>
-                </div>
-                <div className="d-flex justify-content-end mb-3 me-3 rem-10">
-                  {accountRemoved ? (
+              {showRemove ? (
+                <>
+                  <DefaultTwoFactorAuthSetup isManageTwoFA={true} />
+                  <div>
+                    <div className="ms-3 me-3">
+                      <Form>
+                        <Form.Check
+                          onChange={(e) => {
+                            handle2FAAgreement(e.target.checked);
+                          }}
+                          type={'checkbox'}
+                          id={`owner-key-agreement`}
+                          label={`I understand that my account will not be protected by 2FA anymore`}
+                          checked={ownerKeyCheckBoxChecked}></Form.Check>
+                      </Form>
+                    </div>
+                    <div className="d-flex justify-content-end mb-3 me-3 rem-10">
+                      {accountRemoved ? (
+                        <Button
+                          onClick={() => {
+                            handleReset();
+                          }}
+                          variant="danger">
+                          Reset
+                        </Button>
+                      ) : (
+                        ''
+                      )}
+                      <Button
+                        onClick={() => {
+                          handleUpdateAccount();
+                        }}
+                        className="ms-2"
+                        variant="success"
+                        disabled={disableSubmitBtn}>
+                        Submit
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <p
+                    className="justify-content-md-center"
+                    style={{ marginLeft: 20 }}>
+                    2FA is set up with bot <strong>@{`${bots[0][0]}.`}</strong>
+                  </p>{' '}
+                  <div className="d-flex justify-content-end mb-3 me-3 rem-10">
                     <Button
                       onClick={() => {
-                        handleReset();
+                        setShowRemove(true);
                       }}
+                      style={{ marginBottom: 20 }}
+                      className="ms-2"
                       variant="danger">
-                      Reset
+                      Disable 2FA
                     </Button>
-                  ) : (
-                    ''
-                  )}
-                  <Button
-                    onClick={() => {
-                      handleUpdateAccount();
-                    }}
-                    className="ms-2"
-                    variant="success"
-                    disabled={disableSubmitBtn}>
-                    Submit
-                  </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </Container>
           </Card>
         </Col>

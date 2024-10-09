@@ -19,9 +19,9 @@ export const TwoFactorIntro = () => {
                   Welcome to Hive Multisig 2FA!
                 </h3>
                 <p className="card-text text-center">
-                  Hive Multisig fortifies account security by employing
-                  Time-Based One-Time Passwords (TOTP), ensuring a dynamic and
-                  time-sensitive layer of protection for user authentication.{' '}
+                  Hive Multisig enhances your account security by employing
+                  Time-Based One-Time Passwords (TOTP), adding an extra layer of
+                  protection for your active authority operations.{' '}
                 </p>
                 <h3 className="card-title text-center"> How it works</h3>
                 <p>
@@ -52,14 +52,12 @@ export const TwoFactorIntro = () => {
                 </Container>
                 <p>
                   <strong>Scan QR Code:</strong>During the setup, use the app to
-                  scan our provided QR code, linking it securely to your
-                  account.
+                  scan our QR code, linking it securely to your account.
                 </p>
 
                 <p>
-                  <strong>Generate OTP:</strong> Your authenticator app and Hive
-                  Multisig generate a time-sensitive, unique OTP for added
-                  security during login.
+                  <strong>Generate OTP:</strong> When signing transfers and
+                  other active authority operations, enter your TOTP.
                 </p>
 
                 <div className="d-flex justify-content-end">
