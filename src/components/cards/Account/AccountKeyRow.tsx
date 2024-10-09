@@ -66,7 +66,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
   useEffect(() => {
     switch (type.toLowerCase()) {
       case 'accounts':
-        const accWarn = accountWarning.filter(
+        const accWarn = accountWarning?.filter(
           (acc) => acc[0] === accountKeyAuth[0],
         );
         if (accWarn.length > 0 && accWarn[0][1] !== '') {
