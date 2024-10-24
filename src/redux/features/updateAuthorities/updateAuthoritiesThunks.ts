@@ -60,6 +60,13 @@ export const updateActive = createAsyncThunk(
   },
 );
 
+export const updatePosting = createAsyncThunk(
+  'updateAuthority/updatePosting',
+  async (authity: Hive.AuthorityType) => {
+    return authity;
+  },
+);
+
 export const setThresholdWarning = createAsyncThunk(
   'updateAuthority/setThresholdWarning',
   async (warining: string) => {

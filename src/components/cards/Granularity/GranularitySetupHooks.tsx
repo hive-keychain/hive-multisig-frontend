@@ -1,7 +1,13 @@
 import * as Hive from '@hiveio/dhive';
 import { useEffect, useState } from 'react';
 import { useAppSelector } from '../../../redux/app/hooks';
-import { MultisigUtils } from '../../../utils/multisig.utils';
+import { GranularityUtils } from '../../../utils/granularity-utils';
+const defaultBot = process.env.GRANULARITY_BOT;
+if (defaultBot === undefined) {
+  console.error(
+    'Default Granularity Bot is not defined in environment variables, this will cause error in 2FA setup.',
+  );
+}
 
 var deepequal = require('deep-equal');
 
@@ -33,6 +39,35 @@ const useActiveAuthority = () => {
   return [originalActiveAuthorities, newActiveAuthorities];
 };
 
+const usePostingAuthority = () => {
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
+  const originalAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.Authorities,
+  );
+
+  const [newPostingAuthorities, setNewPostingAuthorities] =
+    useState<Hive.Authority>();
+  const [originalPostingAuthorities, setOriginalPostingAuthorities] =
+    useState<Hive.Authority>();
+
+  useEffect(() => {
+    if (newAuthorities) {
+      setNewPostingAuthorities({ ...newAuthorities.posting });
+    }
+  }, [newAuthorities]);
+
+  // Set the original posting authorities when originalAuthorities changes
+  useEffect(() => {
+    if (originalAuthorities) {
+      setOriginalPostingAuthorities(originalAuthorities.posting);
+    }
+  }, [originalAuthorities]);
+
+  return [originalPostingAuthorities, newPostingAuthorities];
+};
+
 const useAddedActiveAuthority = () => {
   const [originalActiveAuthorities, newActiveAuthorities] =
     useActiveAuthority();
@@ -58,7 +93,9 @@ const useAddedActiveAuthority = () => {
           (acc) => acc[0] === auth[0],
         );
         if (index === -1) {
-          const res = await MultisigUtils.checkMultisigBot(auth[0] as string);
+          const res = await GranularityUtils.checkGranularityBot(
+            auth[0] as string,
+          );
           addedAuths.push([auth[0], auth[1], res ? 'bot' : 'nonBot']);
         }
       });
@@ -70,6 +107,49 @@ const useAddedActiveAuthority = () => {
   }, [newActiveAuthorities, originalActiveAuthorities]);
 
   return [addedActiveAuthorities, latestAddedActiveAuthority];
+};
+
+const useAddedPostingAuthority = () => {
+  const [originalPostingAuthorities, newPostingAuthorities] =
+    usePostingAuthority(); // Assuming a hook to fetch posting authorities
+  const [addedPostingAuthorities, setAddedAuthorities] = useState<
+    [string, number, string][]
+  >([]);
+
+  const [latestAddedPostingAuthority, setLatestAddedPostingAuthority] =
+    useState<[string, number, string]>(undefined);
+
+  // Effect to update the latest added posting authority
+  useEffect(() => {
+    if (addedPostingAuthorities?.length > 0) {
+      const latest = addedPostingAuthorities.slice(-1)[0];
+      setLatestAddedPostingAuthority(latest);
+    }
+  }, [addedPostingAuthorities]);
+
+  // Effect to compute and update added posting authorities
+  useEffect(() => {
+    if (newPostingAuthorities) {
+      const addedAuths: [string, number, string][] = [];
+      const promises = newPostingAuthorities.account_auths.map(async (auth) => {
+        const index = originalPostingAuthorities.account_auths.findIndex(
+          (acc) => acc[0] === auth[0],
+        );
+        if (index === -1) {
+          const res = await GranularityUtils.checkGranularityBot(
+            auth[0] as string,
+          );
+          addedAuths.push([auth[0], auth[1], res ? 'bot' : 'nonBot']);
+        }
+      });
+
+      Promise.all(promises).then(() => {
+        setAddedAuthorities(addedAuths);
+      });
+    }
+  }, [newPostingAuthorities, originalPostingAuthorities]);
+
+  return [addedPostingAuthorities, latestAddedPostingAuthority];
 };
 
 const useAuthorities = () => {
@@ -153,7 +233,6 @@ const useGroupedAuthorities = () => {
   return [groupedAuthorities];
 };
 
-
 export const MultisigGranularityHooks = {
   useActiveAuthority,
   useAddedActiveAuthority,
@@ -161,4 +240,6 @@ export const MultisigGranularityHooks = {
   useAccountEditedFlag,
   useGranularityConfiguration,
   useGroupedAuthorities,
+  usePostingAuthority,
+  useAddedPostingAuthority,
 };

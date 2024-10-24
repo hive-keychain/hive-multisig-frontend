@@ -11,7 +11,7 @@ import { MultisigGbotConfig } from './../interfaces/granularity.interface';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
-const defaultBot = process.env.TWOFA_BOT;
+const default2FABot = process.env.TWOFA_BOT;
 
 const getOptions = () => {
   return {
@@ -45,7 +45,7 @@ const getMultisigBots = async (username: string) => {
     const botName = activeAuth.account_auths[i][0];
     const isBot = await checkMultisigBot(botName);
     if (isBot) {
-      bots.push([botName, botName === defaultBot ? 'default' : 'custom']);
+      bots.push([botName, botName === default2FABot ? 'default' : 'custom']);
     }
   }
   return !bots || bots.length === 0 ? undefined : bots;
@@ -119,7 +119,7 @@ const multisigTxBroadcast = async (
     const txToEncode: IEncodeTransaction = {
       transaction: { ...transaction },
       method: keyType,
-      expirationDate: moment().add(60, 'm').toDate(),
+      expirationDate: moment().add(59, 'm').toDate(),
       initiator,
     };
 
@@ -155,7 +155,7 @@ const accountUpdateWithActiveAuthority = async (
     const op = ['account_update', updatedAuthorities];
     const transaction = await HiveTxUtils.createTx([op], {
       date: undefined,
-      minutes: 60,
+      minutes: 59,
     } as IExpiration);
     // determine if the transaction could be done with or without multisig
     const signer_weight = activeAuthority.key_auths[0][1];
@@ -202,7 +202,7 @@ const twoFAConfigBroadcast = async (
         [customJsonOp, updateAccountOp],
         {
           date: undefined,
-          minutes: 60,
+          minutes: 59,
         } as IExpiration,
       );
       broadcastTransaction(transaction, username, initiator)
@@ -233,7 +233,7 @@ const granularityConfigBroadcast = async (
         [customJsonOp, updateAccountOp],
         {
           date: undefined,
-          minutes: 60,
+          minutes: 59,
         } as IExpiration,
       );
       broadcastTransaction(transaction, username, initiator)

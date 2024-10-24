@@ -1,10 +1,9 @@
 export interface State {
   proceedIntro: boolean;
   proceedConfiguration: boolean;
-  hasDefaultBot: boolean;
   proceedMultisig: boolean;
   isManageGranularity: boolean;
-  bots: string[][];
+  bots: { botName: string; type: string; keyType: string }[];
   addedBot: [string, number];
   removedBot: [string, number];
   botSetupSuccess: boolean;
@@ -15,6 +14,8 @@ export interface State {
   isMultisigTransaction: boolean;
   configuration: MultisigGbotConfig;
   newConfiguration: MultisigGbotConfig;
+  activeHasExistingGBot: boolean;
+  postingHasExistingGBot: boolean;
 }
 
 export interface GBotTabProp {

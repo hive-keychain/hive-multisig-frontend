@@ -1,9 +1,12 @@
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { Authorities } from '../interfaces';
 import {
   MultisigGbotConfig,
   Operation,
 } from '../interfaces/granularity.interface';
+import HiveUtils from './hive.utils';
 const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
+const defaultGBot = process.env.TWOFA_BOT;
 
 const getOperationNames = (
   config: MultisigGbotConfig,
@@ -191,9 +194,12 @@ const removeChangeConfig = (config: MultisigGbotConfig): MultisigGbotConfig => {
   };
 };
 
-const getBotAuthorities = (bots: string[][], newAuthorities: Authorities) => {
+const getBotAuthorities = (
+  bots: { botName: string; type: string; keyType: string }[],
+  newAuthorities: Authorities,
+) => {
   return newAuthorities.active.account_auths.filter((acc) =>
-    bots.some((bot) => bot[0] === acc[0]),
+    bots.some((bot) => bot.botName === acc[0]),
   );
 };
 
@@ -252,6 +258,54 @@ const deleteAllUserOp = (operation: Operation, config: MultisigGbotConfig) => {
   };
 };
 
+const checkGranularityBot = async (username: string) => {
+  const metadata = await HiveUtils.getJSONMetadata(username);
+  return metadata?.isGranularityBot === true ? true : false;
+};
+
+const getGranularityBots = async (username: string) => {
+  try {
+    const activeAuth = await HiveUtils.getAuthority(
+      username,
+      KeychainKeyTypes.active,
+    );
+    const postingAuth = await HiveUtils.getAuthority(
+      username,
+      KeychainKeyTypes.posting,
+    );
+    let bots: { botName: string; type: string; keyType: string }[] = [];
+
+    // Check activeAuth for bots
+    for (const [botName] of activeAuth.account_auths) {
+      const isBot = await checkGranularityBot(botName);
+      if (isBot) {
+        bots.push({
+          botName: botName,
+          type: botName === defaultGBot ? 'default' : 'custom',
+          keyType: 'active',
+        });
+      }
+    }
+
+    // Check postingAuth for bots
+    for (const [botName] of postingAuth.account_auths) {
+      const isBot = await checkGranularityBot(botName);
+      if (isBot) {
+        bots.push({
+          botName: botName,
+          type: botName === defaultGBot ? 'default' : 'custom',
+          keyType: 'posting',
+        });
+      }
+    }
+
+    // Return undefined if no bots found, otherwise return the list of bots
+    return bots.length > 0 ? bots : undefined;
+  } catch (error) {
+    console.error(`Error fetching multisig bots for ${username}:`, error);
+    throw error;
+  }
+};
 const addAuthority = (authority: string, config: MultisigGbotConfig) => {
   const newConfigurations = [
     ...config.json.configurations,
@@ -356,4 +410,6 @@ export const GranularityUtils = {
   deleteOpFromAuthority,
   moveChangeConfigToCustomJson,
   getBotAuthorities,
+  getGranularityBots,
+  checkGranularityBot,
 };

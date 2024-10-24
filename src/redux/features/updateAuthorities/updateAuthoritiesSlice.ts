@@ -24,6 +24,7 @@ import {
   setPostingKeyDelete,
   setThresholdWarning,
   updateActive,
+  updatePosting,
 } from './updateAuthoritiesThunks';
 export type AuthorityUpdateStateType = {
   Authorities: Authorities;
@@ -278,6 +279,10 @@ const updateAuthoritySlice = createSlice({
 
     builder.addCase(updateActive.fulfilled, (state, action) => {
       state.NewAuthorities.active = { ...action.payload };
+    });
+
+    builder.addCase(updatePosting.fulfilled, (state, action) => {
+      state.NewAuthorities.posting = { ...action.payload };
     });
 
     builder.addCase(setThresholdWarning.fulfilled, (state, action) => {

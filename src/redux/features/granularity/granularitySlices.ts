@@ -1,10 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { State } from '../../../interfaces/granularity.interface';
 import {
+  activeHasExistingGBot,
   botSetupSuccess,
-  hasDefaultBot,
   initializeConfiguration,
   isManageGranularity,
+  postingHasExistingGBot,
   proceedConfiguration,
   proceedIntro,
   proceedMultisig,
@@ -21,7 +22,6 @@ import {
 const initialState: State = {
   proceedIntro: false,
   proceedConfiguration: false,
-  hasDefaultBot: false,
   proceedMultisig: false,
   isManageGranularity: false,
   bots: undefined,
@@ -35,6 +35,8 @@ const initialState: State = {
   isMultisigTransaction: false,
   configuration: undefined,
   newConfiguration: undefined,
+  activeHasExistingGBot: false,
+  postingHasExistingGBot: false,
 };
 
 const granularitySlice = createSlice({
@@ -44,10 +46,6 @@ const granularitySlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(proceedIntro.fulfilled, (state, action) => {
       state.proceedIntro = action.payload;
-    });
-
-    builder.addCase(hasDefaultBot.fulfilled, (state, action) => {
-      state.hasDefaultBot = action.payload;
     });
 
     builder.addCase(proceedMultisig.fulfilled, (state, action) => {
@@ -99,6 +97,13 @@ const granularitySlice = createSlice({
     builder.addCase(initializeConfiguration.fulfilled, (state, action) => {
       state.configuration = structuredClone(action.payload);
       state.newConfiguration = structuredClone(action.payload);
+    });
+
+    builder.addCase(activeHasExistingGBot.fulfilled, (state, action) => {
+      state.activeHasExistingGBot = action.payload;
+    });
+    builder.addCase(postingHasExistingGBot.fulfilled, (state, action) => {
+      state.postingHasExistingGBot = action.payload;
     });
   },
 });

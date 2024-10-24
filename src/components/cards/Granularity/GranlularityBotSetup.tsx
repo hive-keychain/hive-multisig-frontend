@@ -15,6 +15,7 @@ import {
   deleteAccount,
   disableDeleteBtn,
   updateActive,
+  updatePosting,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { MultisigUtils } from '../../../utils/multisig.utils';
 import { CustomGranularityBotSetup } from './CustomGranularityBotSetup';
@@ -35,8 +36,12 @@ export const GranularityBotSetup = () => {
   );
   const [addedActiveAuthorities, latestAddedActiveAuthority] =
     MultisigGranularityHooks.useAddedActiveAuthority();
-  const hasDefaultGranularityBot = useAppSelector(
-    (state) => state.granularity.granularity.hasDefaultBot,
+
+  const [addedPostingAuthorities, latestAddedPostingAuthority] =
+    MultisigGranularityHooks.useAddedPostingAuthority();
+
+  const granularityBots = useAppSelector(
+    (state) => state.granularity.granularity.bots,
   );
   const [originalAuthorities, newAuthorities] =
     MultisigGranularityHooks.useAuthorities();
@@ -44,10 +49,7 @@ export const GranularityBotSetup = () => {
     (state) => state.transaction.transaction,
   );
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
-  const [botToBeAdded, setBotTobeAdded] = useState<[string, number]>([
-    defaultBot,
-    1,
-  ]);
+
   const [accountEdited] = MultisigGranularityHooks.useAccountEditedFlag();
 
   const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
@@ -55,16 +57,18 @@ export const GranularityBotSetup = () => {
   const [botDisableCheckBoxChecked, setBotDisableCheckBox] =
     useState<boolean>(false);
 
+  const hasPostingDefaultGBot = useAppSelector(
+    (state) => state.granularity.granularity.postingHasExistingGBot,
+  );
+  const hasActiveDefaultGBot = useAppSelector(
+    (state) => state.granularity.granularity.activeHasExistingGBot,
+  );
   const [disableSubmitBtn, setDisableSubmitBtn] = useState(false);
 
   // Effects
   useEffect(() => {
     setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
   }, []);
-
-  useEffect(() => {
-    checkAddedCustomBot();
-  }, [latestAddedActiveAuthority]);
 
   useEffect(() => {
     dispatch(allowAddAccount(addedActiveAuthorities.length === 0));
@@ -80,12 +84,14 @@ export const GranularityBotSetup = () => {
     dispatch(initializeAuthorities(originalAuthorities));
     setOwnerKeyCheckBox(false);
     setBotDisableCheckBox(false);
+  }, [key]);
+
+  useEffect(() => {
     switch (key) {
       case 'default':
         if (originalAuthorities) {
-          if (!hasDefaultGranularityBot) {
-            updateUseBot(true);
-          }
+          upadteUseActiveGBot(true);
+          updateUsePostingGBot(true);
         }
         dispatch(allowEdit(false));
         dispatch(disableDeleteBtn(true));
@@ -95,9 +101,8 @@ export const GranularityBotSetup = () => {
         break;
       case 'custom':
         if (originalAuthorities) {
-          if (!hasDefaultGranularityBot) {
-            updateUseBot(false);
-          }
+          upadteUseActiveGBot(false);
+          updateUsePostingGBot(false);
         }
         dispatch(allowEdit(true));
         dispatch(disableDeleteBtn(true));
@@ -106,21 +111,29 @@ export const GranularityBotSetup = () => {
         console.log('custom');
         break;
     }
-  }, [key]);
+  }, [key, originalAuthorities]);
+
+  useEffect(() => {
+    validateAndAddActiveBot();
+  }, [latestAddedActiveAuthority]);
+
+  useEffect(() => {
+    validateAndAddPostingBot();
+  }, [latestAddedPostingAuthority]);
+
   // Functions
 
-  const checkAddedCustomBot = async () => {
+  const validateAndAddActiveBot = async () => {
     const latest = latestAddedActiveAuthority
       ? latestAddedActiveAuthority
       : undefined;
     if (latest) {
-      const username = latest[0];
-      const weight = latest[1];
-      const isMultisigBot = latest[2] === 'bot';
+      const [username, weight] = latest;
+      const isGranularityBot = latest[2] === 'bot';
       if (key === 'custom' && username !== defaultBot) {
-        if (!isMultisigBot) {
+        if (!isGranularityBot) {
           alert(
-            `You are adding ${latest[0]} that is not configured as a Multisig Bot`,
+            `You are adding ${latest[0]} that is not configured as a Granularity Bot`,
           );
           const accountToDelete: IDeleteAccount = {
             type: 'active',
@@ -128,29 +141,91 @@ export const GranularityBotSetup = () => {
             authorities: newAuthorities,
           };
           dispatch(deleteAccount(accountToDelete));
-          setBotTobeAdded(undefined);
         } else {
-          setBotTobeAdded([username, weight] as [string, number]);
-          dispatch(setGranularityBots([[username as string, key]]));
+          var bots = structuredClone(granularityBots);
+          bots.push({
+            botName: username as string,
+            type: 'custom',
+            keyType: 'active',
+          });
+          dispatch(setGranularityBots(bots));
         }
       } else if (username === defaultBot) {
-        dispatch(setGranularityBots([[username as string, key]]));
+        var bots = structuredClone(granularityBots);
+        bots.push({
+          botName: username as string,
+          type: 'custom',
+          keyType: 'active',
+        });
+        dispatch(setGranularityBots(bots));
+      }
+    }
+  };
+  const validateAndAddPostingBot = async () => {
+    const latest = latestAddedPostingAuthority
+      ? latestAddedPostingAuthority
+      : undefined;
+
+    if (latest) {
+      const [username, weight] = latest;
+      const isGranularityBot = latest[2] === 'bot';
+      // Ensure it's a custom key and not the default bot
+      if (key === 'custom' && username !== defaultBot) {
+        if (!isGranularityBot) {
+          alert(
+            `You are adding ${latest[0]} that is not configured as a Granularity Bot`,
+          );
+          // Delete the unrecognized bot from posting authorities
+          const accountToDelete: IDeleteAccount = {
+            type: 'posting', // Changed from 'active' to 'posting'
+            username: username as string,
+            authorities: newAuthorities,
+          };
+
+          dispatch(deleteAccount(accountToDelete));
+        } else {
+          // Add the recognized custom bot to the granularity bots for posting
+          const bots = structuredClone(granularityBots);
+          bots.push({
+            botName: username as string,
+            type: 'custom',
+            keyType: 'posting', // Changed from 'active' to 'posting'
+          });
+          dispatch(setGranularityBots(bots));
+        }
+      } else if (username === defaultBot) {
+        // If it's the default bot, still add it to the list for posting
+        const bots = structuredClone(granularityBots);
+        bots.push({
+          botName: username as string,
+          type: 'custom',
+          keyType: 'posting', // Changed from 'active' to 'posting'
+        });
+        dispatch(setGranularityBots(bots));
       }
     }
   };
 
-  const updateUseBot = async (use: boolean) => {
-    if (originalAuthorities) {
-      let newActive = structuredClone(originalAuthorities.active);
-      if (use) {
-        newActive.account_auths.push([defaultBot, 1]);
-        newActive.weight_threshold += 1;
-      }
-      setBotTobeAdded([defaultBot, 1]);
+  const upadteUseActiveGBot = async (use: boolean) => {
+    let newActive = structuredClone(originalAuthorities.active);
 
-      await dispatch(updateActive(newActive));
+    console.log({ hasActiveDefaultGBot });
+    if (use && !hasActiveDefaultGBot) {
+      newActive.account_auths.push([defaultBot, 1]);
+      newActive.weight_threshold += 1;
     }
+    await dispatch(updateActive(newActive));
   };
+  const updateUsePostingGBot = async (use: boolean) => {
+    let newPosting = structuredClone(originalAuthorities.posting);
+
+    if (use && !hasPostingDefaultGBot) {
+      newPosting.account_auths.push([defaultBot, 1]);
+      newPosting.weight_threshold += 1;
+    }
+    await dispatch(updatePosting(newPosting));
+  };
+
   const handleOwnerKeyAgreement = (value: any) => {
     setOwnerKeyCheckBox(value);
   };

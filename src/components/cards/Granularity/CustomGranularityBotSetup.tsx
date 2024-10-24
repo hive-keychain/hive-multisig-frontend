@@ -37,6 +37,8 @@ export const CustomGranularityBotSetup = ({
       )}
       <div>
         <AuthorityCard authorityName="Active" />
+        <br />
+        <AuthorityCard authorityName="Posting" />
       </div>
     </div>
   );

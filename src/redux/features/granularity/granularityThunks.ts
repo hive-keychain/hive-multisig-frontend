@@ -7,12 +7,6 @@ export const proceedIntro = createAsyncThunk(
     return proceedIntro;
   },
 );
-export const hasDefaultBot = createAsyncThunk(
-  'granularity/hasDefaultBot',
-  async (hasDefaultBot: boolean) => {
-    return hasDefaultBot;
-  },
-);
 
 export const proceedMultisig = createAsyncThunk(
   'granularity/proceedMultisig',
@@ -23,7 +17,7 @@ export const proceedMultisig = createAsyncThunk(
 
 export const setGranularityBots = createAsyncThunk(
   'granularity/setGranularityBots',
-  async (bots: string[][]) => {
+  async (bots: { botName: string; type: string; keyType: string }[]) => {
     return bots;
   },
 );
@@ -113,5 +107,19 @@ export const initializeConfiguration = createAsyncThunk(
         configurations: [],
       },
     } as MultisigGbotConfig;
+  },
+);
+
+export const postingHasExistingGBot = createAsyncThunk(
+  'granularuty/posgintHasExistingGBot',
+  (has: boolean) => {
+    return has;
+  },
+);
+
+export const activeHasExistingGBot = createAsyncThunk(
+  'granularity/activeHasExistingGBot',
+  (has: boolean) => {
+    return has;
   },
 );
