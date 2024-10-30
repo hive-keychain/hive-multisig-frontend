@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import {
+  ActiveOperationName,
   Operation,
   OperationName,
+  PostingOperationName,
 } from '../../../../interfaces/granularity.interface';
 import { useAppDispatch } from '../../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
@@ -15,29 +17,143 @@ interface IOperationSelection {
   authority?: string;
 }
 export const OperationSelection = ({ authority }: IOperationSelection) => {
-  const operations = Object.entries(OperationName).map(([key, value]) => ({
-    key,
-    displayName: value
-      .split('_')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' '),
-  }));
-
+  const [operationsOptions, setOperationsOptions] = useState([]);
+  const [activeOptions, setActiveOptions] = useState([]);
+  const [postingOptions, setPostingOptions] = useState([]);
+  const [isActiveAuth, isPostingAuth] =
+    MultisigGranularityHooks.useWhichAuthority(authority);
   const [addedOps, setAddedOps] = useState<string[]>([]);
   const [selectedOp, setSelectedOp] = useState('All');
   const [opTobeAdded, setOpToBeAdded] = useState<Operation>({
     operationName: 'all',
   });
-
-  const [options, setOptions] = useState([]);
-  const dispatch = useAppDispatch();
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
+  const dispatch = useAppDispatch();
 
-  // set the current selected operation
   useEffect(() => {
-    setSelectedOp(selectedOp);
-  }, [selectedOp]);
+    let firstOptionKey: string = null;
+    let opSelected: string = null;
+    if (isActiveAuth) {
+      const activeOps = Object.entries(ActiveOperationName).map(
+        ([key, value], index) => {
+          const isAdded = addedOps.includes(value);
+          const displayName = value
+            .split('_')
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+            )
+            .join(' ');
+          const element = (
+            <option
+              key={key}
+              value={key}
+              style={{
+                backgroundColor: isAdded ? '#d3d3d3' : 'white',
+              }}>
+              {displayName}
+            </option>
+          );
+          if (firstOptionKey === null && index === 0) {
+            firstOptionKey = value;
+            opSelected = displayName;
+          }
+
+          return element;
+        },
+      );
+
+      setActiveOptions(activeOps);
+    }
+
+    if (isPostingAuth) {
+      console.log({ addedOps });
+
+      const postingOps = Object.entries(PostingOperationName).map(
+        ([key, value], index) => {
+          const isAdded = addedOps.includes(value);
+
+          const displayName = value
+            .split('_')
+            .map(
+              (word) =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+            )
+            .join(' ');
+          const element = (
+            <option
+              key={key}
+              value={key}
+              style={{
+                backgroundColor: isAdded ? '#d3d3d3' : 'white',
+              }}>
+              {displayName}
+            </option>
+          );
+
+          if (firstOptionKey === null && index === 0) {
+            firstOptionKey = value;
+            opSelected = displayName;
+          }
+
+          return element;
+        },
+      );
+
+      setPostingOptions(postingOps);
+    }
+
+    if (!authority || authority === '') {
+      setOpToBeAdded({ operationName: 'all' });
+      setSelectedOp('All');
+    } else {
+      setOpToBeAdded({ operationName: firstOptionKey });
+      setSelectedOp(opSelected);
+    }
+  }, [isActiveAuth, isPostingAuth, newConfiguration, addedOps]);
+
+  useEffect(() => {
+    var activeOptsGroup;
+    var postingOptsGroup;
+
+    if (activeOptions && activeOptions.length > 0) {
+      activeOptsGroup = (
+        <optgroup key={'active'} label={`Active Operations`}>
+          {activeOptions}
+        </optgroup>
+      );
+    }
+
+    if (postingOptions && postingOptions.length > 0) {
+      postingOptsGroup = (
+        <optgroup key={'posting'} label={`Posting Operations`}>
+          {postingOptions}
+        </optgroup>
+      );
+    }
+
+    if (!authority || authority === '') {
+      const isAdded = addedOps.includes('all');
+      const allOpt = (
+        <option
+          key={`all`}
+          value={`all`}
+          style={{
+            backgroundColor: isAdded ? '#d3d3d3' : 'white',
+          }}>
+          {`All`}
+        </option>
+      );
+      setOperationsOptions([allOpt, activeOptsGroup, postingOptsGroup]);
+    } else {
+      setOperationsOptions([activeOptsGroup, postingOptsGroup]);
+    }
+  }, [activeOptions, activeOptions]);
+  // set the current selected operation
+  // useEffect(() => {
+  //   setSelectedOp(selectedOp);
+  // }, [selectedOp]);
 
   // update the local list of added operations
   useEffect(() => {
@@ -46,30 +162,10 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
         newConfiguration,
         authority,
       );
+      console.log({ ops });
       setAddedOps([...ops]);
     }
   }, [newConfiguration]);
-
-  // create the options
-  useEffect(() => {
-    const selectOptions = operations.map((operation) => {
-      const key = OperationName[operation.key as keyof typeof OperationName];
-      const isAdded = addedOps.includes('all') || addedOps.includes(key);
-
-      return (
-        <option
-          key={operation.key}
-          value={operation.key}
-          style={{
-            backgroundColor: isAdded ? '#d3d3d3' : 'white',
-          }}>
-          {operation.displayName}
-        </option>
-      );
-    });
-
-    setOptions(selectOptions);
-  }, [addedOps]);
 
   const handleAdd = () => {
     if (addedOps.includes('all')) {
@@ -126,7 +222,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
         <Form.Select
           value={selectedOp}
           onChange={(e) => handleSelectionChange(e.target.value)}>
-          {options}
+          {operationsOptions}
         </Form.Select>
         <Button
           variant="outline-primary"

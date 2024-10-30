@@ -39,6 +39,15 @@ export interface MultisigGbotConfig {
   };
 }
 
+export enum ActiveOperationName {
+  TRANSFER = 'transfer',
+}
+
+export enum PostingOperationName {
+  VOTE = 'vote',
+  COMMENT = 'comment',
+}
+
 export enum OperationName {
   ALL = 'all',
   CHANGE_CONFIG = 'change_config',

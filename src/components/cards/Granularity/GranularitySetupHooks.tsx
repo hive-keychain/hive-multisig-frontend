@@ -200,6 +200,34 @@ const useGranularityConfiguration = () => {
   return [configuration, newConfiguration];
 };
 
+const useWhichAuthority = (username: string) => {
+  const [isActiveAuth, setIsActiveAuth] = useState(false);
+  const [isPostingAuth, setIsPostingAuth] = useState(false);
+  const newAuthorities = useAppSelector(
+    (state) => state.updateAuthorities.NewAuthorities,
+  );
+
+  useEffect(() => {
+    if (!username || username === '') {
+      setIsActiveAuth(true);
+      setIsPostingAuth(true);
+    } else {
+      const isActive = newAuthorities.active.account_auths.some(
+        (acc) => acc[0] === username,
+      );
+
+      const isPosting = newAuthorities.posting.account_auths.some(
+        (acc) => acc[0] === username,
+      );
+
+      setIsActiveAuth(isActive);
+      setIsPostingAuth(isPosting);
+    }
+  }, [newAuthorities]);
+
+  return [isActiveAuth, isPostingAuth];
+};
+
 const useGroupedAuthorities = () => {
   const [groupedAuthorities, setGroupedAuthorities] =
     useState<Record<string, string[]>>();
@@ -242,4 +270,5 @@ export const MultisigGranularityHooks = {
   useGroupedAuthorities,
   usePostingAuthority,
   useAddedPostingAuthority,
+  useWhichAuthority,
 };

@@ -15,37 +15,62 @@ export const AuthoritySelection = () => {
   const [selectedAuthority, setSelectedAuthority] = useState<string>();
   useEffect(() => {
     if (groupedAuthorities) {
+      const allElements = Object.values(groupedAuthorities).reduce(
+        (acc, curr) => acc.concat(curr),
+        [],
+      );
+
+      const auths = [...new Set(allElements)];
+      console.log({ auths });
+
       let firstOptionKey: string = null; // Variable to store the first option's key
       const addedAuths =
         GranularityUtils.getAuthorityNameList(newConfiguration);
-      const opts = Object.keys(groupedAuthorities).map((group) => {
-        const options = groupedAuthorities[group].map((authority, index) => {
-          const isAdded = addedAuths.includes(authority);
-          const optionElement = (
-            <option
-              key={authority}
-              value={authority}
-              style={{
-                backgroundColor: isAdded ? '#d3d3d3' : 'white',
-              }}>
-              {authority}
-            </option>
-          );
-          if (firstOptionKey === null && index === 0) {
-            firstOptionKey = authority;
-          }
-          return optionElement;
-        });
+      // const opts = Object.keys(groupedAuthorities).map((group) => {
+      //   const options = groupedAuthorities[group].map((authority, index) => {
+      //     const isAdded = addedAuths.includes(authority);
+      //     const optionElement = (
+      //       <option
+      //         key={authority}
+      //         value={authority}
+      //         style={{
+      //           backgroundColor: isAdded ? '#d3d3d3' : 'white',
+      //         }}>
+      //         {authority}
+      //       </option>
+      //     );
+      //     if (firstOptionKey === null && index === 0) {
+      //       firstOptionKey = authority;
+      //     }
+      //     return optionElement;
+      //   });
 
-        return (
-          <optgroup key={group} label={`${group} Authorities`}>
-            {options}
-          </optgroup>
+      //   return (
+      //     <optgroup key={group} label={`${group} Authorities`}>
+      //       {options}
+      //     </optgroup>
+      //   );
+      // });
+
+      const options = auths.map((authority, index) => {
+        const isAdded = addedAuths.includes(authority);
+        const optionElement = (
+          <option
+            key={authority}
+            value={authority}
+            style={{
+              backgroundColor: isAdded ? '#d3d3d3' : 'white',
+            }}>
+            {authority}
+          </option>
         );
+        if (firstOptionKey === null && index === 0) {
+          firstOptionKey = authority;
+        }
+        return optionElement;
       });
-
       setAddedAuthorities(addedAuths);
-      setOptions(opts);
+      setOptions(options);
       setSelectedAuthority(firstOptionKey);
     }
   }, [groupedAuthorities, newConfiguration]);

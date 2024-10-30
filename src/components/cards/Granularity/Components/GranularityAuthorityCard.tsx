@@ -31,8 +31,8 @@ export const GranularityAuthorityCard = ({
           return { operationName: op } as Operation;
         });
         setOperations(ops);
-      }else{
-        setOperations([])
+      } else {
+        setOperations([]);
       }
     }
   }, [newConfiguration]);
