@@ -5,7 +5,10 @@ import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 import { OperationRow } from './OperationRow';
 import { OperationSelection } from './OperationSelection';
 
-export const AllUsersConfigCard = () => {
+interface IAllUsersConfigCard {
+  isConfirmation?: boolean;
+}
+export const AllUsersConfigCard = ({ isConfirmation }: IAllUsersConfigCard) => {
   const [operations, setOperations] = useState<Operation[]>([]);
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
@@ -23,9 +26,13 @@ export const AllUsersConfigCard = () => {
   }, [newConfiguration]);
   return (
     <div className="my-1 mx-2">
-      <div className="mx-2">
-        <OperationSelection />
-      </div>
+      {isConfirmation ? (
+        ''
+      ) : (
+        <div className="mx-2">
+          <OperationSelection />
+        </div>
+      )}
       <div>
         <div className="d-flex align-items-center my-2 mx-2">
           <Card className="flex-grow-1 ">
@@ -37,6 +44,8 @@ export const AllUsersConfigCard = () => {
                 operations.map((op, index) => {
                   return <OperationRow operation={op} key={index.toString()} />;
                 })
+              ) : isConfirmation ? (
+                ''
               ) : (
                 <div className="text-center text-muted">Add Operation</div>
               )}

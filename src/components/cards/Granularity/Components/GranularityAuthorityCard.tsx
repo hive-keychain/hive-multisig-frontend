@@ -9,10 +9,12 @@ import { OperationRow } from './OperationRow';
 import { OperationSelection } from './OperationSelection';
 
 export interface IGranularityAuthorityCard {
+  isConfirmation?: boolean;
   authority: string;
 }
 export const GranularityAuthorityCard = ({
   authority,
+  isConfirmation,
 }: IGranularityAuthorityCard) => {
   const dispatch = useAppDispatch();
   const [open, setOpen] = useState(false);
@@ -73,9 +75,13 @@ export const GranularityAuthorityCard = ({
           </Card.Header>
           <Accordion.Collapse eventKey={authority} in={open}>
             <div className="my-1 mx-2">
-              <div className="mx-2">
-                <OperationSelection authority={authority} />
-              </div>
+              {isConfirmation ? (
+                ''
+              ) : (
+                <div className="mx-2">
+                  <OperationSelection authority={authority} />
+                </div>
+              )}
               <div>
                 <div className="d-flex align-items-center my-2 mx-2">
                   <Card className="flex-grow-1 ">
@@ -93,6 +99,8 @@ export const GranularityAuthorityCard = ({
                             />
                           );
                         })
+                      ) : isConfirmation ? (
+                        ''
                       ) : (
                         <div className="text-center text-muted">
                           Add Operation

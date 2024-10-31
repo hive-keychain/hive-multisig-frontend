@@ -1,23 +1,34 @@
 import { useEffect, useState } from 'react';
 import { Card } from 'react-bootstrap';
+import { useAppSelector } from '../../../../redux/app/hooks';
 import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 import { AuthoritySelection } from './AuthoritySelection';
 import { GranularityAuthorityCard } from './GranularityAuthorityCard';
-
-export const CustomUsersConfigCard = () => {
+interface ICustomUsersConfigCard {
+  isConfirmation?: boolean;
+}
+export const CustomUsersConfigCard = ({
+  isConfirmation,
+}: ICustomUsersConfigCard) => {
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
   const [authorityCards, setAuthorityCards] = useState([]);
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   useEffect(() => {
     if (newConfiguration) {
       const authorities =
         GranularityUtils.getAuthorityNameList(newConfiguration);
       const cards = authorities.map((authority, index) => {
-        return (
-          <GranularityAuthorityCard authority={authority} key={authority} />
-        );
+        if (authority !== signedAccountObj.data.username)
+          return (
+            <GranularityAuthorityCard
+              authority={authority}
+              isConfirmation={isConfirmation}
+              key={authority}
+            />
+          );
       });
 
       setAuthorityCards(cards);

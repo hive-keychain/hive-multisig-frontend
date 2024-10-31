@@ -194,13 +194,10 @@ const removeChangeConfig = (config: MultisigGbotConfig): MultisigGbotConfig => {
   };
 };
 
-const getBotAuthorities = (
-  bots: { botName: string; type: string; keyType: string }[],
-  newAuthorities: Authorities,
-) => {
-  return newAuthorities.active.account_auths.filter((acc) =>
-    bots.some((bot) => bot.botName === acc[0]),
-  );
+const getAuthority = (username: string, newAuthorities: Authorities) => {
+  return newAuthorities.active.account_auths.filter(
+    (acc) => username === acc[0],
+  )[0];
 };
 
 const getAuthorityNameList = (config: MultisigGbotConfig): string[] => {
@@ -409,7 +406,7 @@ export const GranularityUtils = {
   deleteAllUserOp,
   deleteOpFromAuthority,
   moveChangeConfigToCustomJson,
-  getBotAuthorities,
+  getAuthority,
   getGranularityBots,
   checkGranularityBot,
 };

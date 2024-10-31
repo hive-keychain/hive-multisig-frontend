@@ -6,6 +6,10 @@ export const testConfig = {
   json: {
     configurations: [
       {
+        authority: `hrdcr-hive`,
+        operations: [{ operationName: 'all' }],
+      },
+      {
         authority: 'choibounge',
         operations: [
           { operationName: 'transfer' },

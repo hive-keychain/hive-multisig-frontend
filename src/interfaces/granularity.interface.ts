@@ -16,6 +16,8 @@ export interface State {
   newConfiguration: MultisigGbotConfig;
   activeHasExistingGBot: boolean;
   postingHasExistingGBot: boolean;
+
+  proceedRemoval:boolean;
 }
 
 export interface GBotTabProp {

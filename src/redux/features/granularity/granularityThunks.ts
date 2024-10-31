@@ -111,7 +111,7 @@ export const initializeConfiguration = createAsyncThunk(
 );
 
 export const postingHasExistingGBot = createAsyncThunk(
-  'granularuty/posgintHasExistingGBot',
+  'granularity/posgintHasExistingGBot',
   (has: boolean) => {
     return has;
   },
@@ -121,5 +121,12 @@ export const activeHasExistingGBot = createAsyncThunk(
   'granularity/activeHasExistingGBot',
   (has: boolean) => {
     return has;
+  },
+);
+
+export const proceedRemovalConfirmation = createAsyncThunk(
+  'granularity/proceedRemovalConfirmation',
+  (proceed: boolean) => {
+    return proceed;
   },
 );

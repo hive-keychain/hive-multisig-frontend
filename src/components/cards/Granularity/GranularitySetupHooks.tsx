@@ -261,6 +261,8 @@ const useGroupedAuthorities = () => {
   return [groupedAuthorities];
 };
 
+
+
 export const MultisigGranularityHooks = {
   useActiveAuthority,
   useAddedActiveAuthority,

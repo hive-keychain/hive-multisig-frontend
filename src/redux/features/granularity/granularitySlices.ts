@@ -9,6 +9,7 @@ import {
   proceedConfiguration,
   proceedIntro,
   proceedMultisig,
+  proceedRemovalConfirmation,
   removeBotSuccess,
   setAddedBot,
   setGranularityBots,
@@ -37,6 +38,7 @@ const initialState: State = {
   newConfiguration: undefined,
   activeHasExistingGBot: false,
   postingHasExistingGBot: false,
+  proceedRemoval: false,
 };
 
 const granularitySlice = createSlice({
@@ -104,6 +106,10 @@ const granularitySlice = createSlice({
     });
     builder.addCase(postingHasExistingGBot.fulfilled, (state, action) => {
       state.postingHasExistingGBot = action.payload;
+    });
+
+    builder.addCase(proceedRemovalConfirmation.fulfilled, (state, action) => {
+      state.proceedRemoval = action.payload;
     });
   },
 });

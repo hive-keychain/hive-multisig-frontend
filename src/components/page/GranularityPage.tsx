@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Spinner } from 'react-bootstrap';
 import { testConfig } from '../../../granularity-sample-config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { granularityActions } from '../../redux/features/granularity/granularitySlices';
@@ -13,6 +14,7 @@ import { initializeAuthorities } from '../../redux/features/updateAuthorities/up
 import { allowAddKey } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { GranularityUtils } from '../../utils/granularity-utils';
 import AccountUtils from '../../utils/hive.utils';
+import { RemoveGranularityConfirmationCard } from '../cards/Granularity/Components/RemoveGranularityConfirmationCard';
 import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
@@ -28,6 +30,9 @@ if (defaultBot === undefined) {
 export const GranularityPage = () => {
   const dispatch = useAppDispatch();
   const [authorities, setAuthorities] = useState(undefined);
+  const granularityBots = useAppSelector(
+    (state) => state.granularity.granularity.bots,
+  );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const proceedMultisig = useAppSelector(
     (state) => state.granularity.granularity.proceedMultisig,
@@ -41,7 +46,9 @@ export const GranularityPage = () => {
   const proceedIntro = useAppSelector(
     (state) => state.granularity.granularity.proceedIntro,
   );
-
+  const proceedRemoval = useAppSelector(
+    (state) => state.granularity.granularity.proceedRemoval,
+  );
   const getAuthorities = async () => {
     if (signedAccountObj) {
       const auth = await AccountUtils.getAccountAuthorities(
@@ -59,10 +66,11 @@ export const GranularityPage = () => {
     const bots = await GranularityUtils.getGranularityBots(
       signedAccountObj.data.username,
     );
+    console.log({ bots });
     if (bots) {
       dispatch(setGranularityBots(bots));
     } else {
-      dispatch(setGranularityBots(bots));
+      dispatch(setGranularityBots([]));
     }
   };
 
@@ -108,16 +116,16 @@ export const GranularityPage = () => {
     }
 
     //TODO: retrieve gbot config
-    // if (hasDefaultGranularityBot === undefined) {
-    //   return (
-    //     <div className="d-flex justify-content-center align-items-center vh-100">
-    //       <div className="text-center">
-    //         <Spinner animation="grow" />
-    //         <p>Retrieving 2FA Data</p>
-    //       </div>
-    //     </div>
-    //   );
-    // }
+    if (granularityBots === undefined) {
+      return (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+          <div className="text-center">
+            <Spinner animation="grow" />
+            <p>Retrieving Granularity Data</p>
+          </div>
+        </div>
+      );
+    }
 
     // Show GranularityConfigurationSetup only if both proceedIntro and proceedConfiguration are true
     if (proceedConfiguration) {
@@ -129,7 +137,20 @@ export const GranularityPage = () => {
       return <GranularityBotSetup />;
     }
 
+    if (granularityBots && granularityBots.length > 0) {
+      if (proceedRemoval) {
+        return <RemoveGranularityConfirmationCard />;
+      }
+      return <GranularityConfigurationSetup />;
+    }
+
     // Default to GranularityIntro if none of the other conditions are met
     return <GranularityIntro />;
-  }, [authorities, proceedConfiguration, proceedIntro]);
+  }, [
+    authorities,
+    proceedConfiguration,
+    proceedIntro,
+    granularityBots,
+    proceedRemoval,
+  ]);
 };
