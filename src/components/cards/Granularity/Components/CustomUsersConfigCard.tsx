@@ -36,7 +36,7 @@ export const CustomUsersConfigCard = ({
   }, [newConfiguration]);
   return (
     <div className="mx-3 mb-3">
-      <AuthoritySelection />
+      {isConfirmation ? '' : <AuthoritySelection />}
       <Card className="flex-grow-1 mt-2">
         <Card.Header className="d-flex justify-content-between align-items-center">
           <div>Authorities</div>

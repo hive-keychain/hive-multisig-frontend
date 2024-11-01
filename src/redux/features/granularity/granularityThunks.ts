@@ -130,3 +130,10 @@ export const proceedRemovalConfirmation = createAsyncThunk(
     return proceed;
   },
 );
+
+export const proceedSetupConfirmation = createAsyncThunk(
+  'granularity/proceedSetupConfirmation',
+  (proceed: boolean) => {
+    return proceed;
+  },
+);

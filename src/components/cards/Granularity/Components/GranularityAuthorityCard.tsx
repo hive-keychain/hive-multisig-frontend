@@ -56,9 +56,15 @@ export const GranularityAuthorityCard = ({
             <div>{authority}</div>
 
             <div>
-              <Button variant="outline-danger" onClick={handleDeleteAuthority}>
-                <i className="fa fa-trash"></i>
-              </Button>
+              {isConfirmation ? (
+                ' '
+              ) : (
+                <Button
+                  variant="outline-danger"
+                  onClick={handleDeleteAuthority}>
+                  <i className="fa fa-trash"></i>
+                </Button>
+              )}
               <Button
                 className="ms-2"
                 variant="outline-dark"

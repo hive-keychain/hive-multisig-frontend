@@ -1,6 +1,6 @@
 import { Button, Col, Container, Form, InputGroup, Row } from 'react-bootstrap';
 import { Operation } from '../../../../interfaces/granularity.interface';
-import { useAppDispatch } from '../../../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
 import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
@@ -15,7 +15,9 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
   const isCustomJson = operation.operationName === 'custom_json';
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
-
+  const proceedSetupConfirmation = useAppSelector(
+    (state) => state.granularity.granularity.proceedSetupConfirmation,
+  );
   const didplayName = operation.operationName
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -56,13 +58,18 @@ export const OperationRow = ({ operation, authority }: IOperationRowProps) => {
               value={didplayName}
               readOnly={true}
             />
-            <Button
-              variant="outline-danger"
-              onClick={() => {
-                handleDelete();
-              }}>
-              <i className="fa fa-trash"></i>
-            </Button>
+
+            {proceedSetupConfirmation ? (
+              ''
+            ) : (
+              <Button
+                variant="outline-danger"
+                onClick={() => {
+                  handleDelete();
+                }}>
+                <i className="fa fa-trash"></i>
+              </Button>
+            )}
           </InputGroup>
 
           {isCustomJson ? <CustomJsonIdInput authority={authority} /> : ''}

@@ -18,6 +18,7 @@ import { RemoveGranularityConfirmationCard } from '../cards/Granularity/Componen
 import { GranularityBotSetup } from '../cards/Granularity/GranlularityBotSetup';
 import { GranularityConfigurationSetup } from '../cards/Granularity/GranularityConfigurationSetup';
 import { GranularityIntro } from '../cards/Granularity/GranularityIntro';
+import { GranularitySetupConfirmation } from '../cards/Granularity/GranularitySetupConfirmation';
 import { MultisigGranularityHooks } from '../cards/Granularity/GranularitySetupHooks';
 
 const defaultBot = process.env.GRANULARITY_BOT;
@@ -42,7 +43,9 @@ export const GranularityPage = () => {
   const proceedConfiguration = useAppSelector(
     (state) => state.granularity.granularity.proceedConfiguration,
   );
-
+  const proceedSetupConfirmation = useAppSelector(
+    (state) => state.granularity.granularity.proceedSetupConfirmation,
+  );
   const proceedIntro = useAppSelector(
     (state) => state.granularity.granularity.proceedIntro,
   );
@@ -137,10 +140,16 @@ export const GranularityPage = () => {
       return <GranularityBotSetup />;
     }
 
+    //Show the configuration setup when existing bot has been found.
+    //Show the removal card when proceedRemoval is true
     if (granularityBots && granularityBots.length > 0) {
       if (proceedRemoval) {
         return <RemoveGranularityConfirmationCard />;
+      } //Show the configuration setup after broadcast
+      else if (proceedSetupConfirmation) {
+        return <GranularitySetupConfirmation />;
       }
+
       return <GranularityConfigurationSetup />;
     }
 
@@ -152,5 +161,6 @@ export const GranularityPage = () => {
     proceedIntro,
     granularityBots,
     proceedRemoval,
+    proceedSetupConfirmation,
   ]);
 };

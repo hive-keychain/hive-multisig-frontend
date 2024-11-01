@@ -10,7 +10,10 @@ import {
 } from 'react-bootstrap';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
 import {
+  proceedConfiguration,
+  proceedIntro,
   proceedRemovalConfirmation,
+  proceedSetupConfirmation,
   updateGranularityConfiguration,
 } from '../../../redux/features/granularity/granularityThunks';
 import {
@@ -77,8 +80,10 @@ export const GranularityConfigurationSetup = () => {
       );
 
       if (res) {
+        dispatch(proceedIntro(false));
+        dispatch(proceedConfiguration(false));
+        dispatch(proceedSetupConfirmation(true));
         alert(res);
-        window.location.reload();
       }
     }
   };

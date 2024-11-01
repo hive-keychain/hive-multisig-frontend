@@ -3,14 +3,16 @@ import { AllUsersConfigCard } from './Components/AllUsersConfigCard';
 import { CustomUsersConfigCard } from './Components/CustomUsersConfigCard';
 
 export const GranularitySetupConfirmation = () => {
-  const handleDoneButton = () => {};
+  const handleDoneButton = () => {
+    window.location.reload();
+  };
   return (
     <Container className="d-flex flex-fill justify-content-md-center">
       <Card border="secondary" className="w-100">
         <Container fluid>
           <Card.Body>
             <h3 className="card-title text-center">
-              Granularity Configuration
+              Granularity Configuration Success
             </h3>
           </Card.Body>
           <Row className="justify-content-between">

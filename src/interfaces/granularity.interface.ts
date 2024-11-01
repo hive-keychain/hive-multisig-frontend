@@ -16,7 +16,7 @@ export interface State {
   newConfiguration: MultisigGbotConfig;
   activeHasExistingGBot: boolean;
   postingHasExistingGBot: boolean;
-
+  proceedSetupConfirmation: boolean;
   proceedRemoval:boolean;
 }
 
