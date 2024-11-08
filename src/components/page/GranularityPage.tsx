@@ -98,7 +98,6 @@ export const GranularityPage = () => {
     getAuthorities();
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
-    //TODO: Replace with the config retrieved from the chain
     setConfiguration();
     return () => {
       handleCleanUp();
@@ -135,7 +134,6 @@ export const GranularityPage = () => {
       return null;
     }
 
-    //TODO: retrieve gbot config
     if (granularityBots === undefined) {
       return (
         <div className="d-flex justify-content-center align-items-center vh-100">
