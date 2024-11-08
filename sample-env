@@ -1,4 +1,9 @@
-API_ADDRESS = "http://localhost:5000"
+MULTISIG_API_ADDRESS = "http://localhost:5000"
 SOCKET_ADDRESS = "http://localhost:5000"
 TWOFA_BOT = "pampampompom"
+GBOT_API_ADDRESS = "http://localhost:5003"
+GBOT_CONFIG_ID = 'multisig-gbot-config'
 GRANULARITY_BOT="pampampompom"
+
+
+

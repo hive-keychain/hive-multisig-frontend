@@ -16,7 +16,8 @@ const default2FABot = process.env.TWOFA_BOT;
 const getOptions = () => {
   return {
     apiAddress:
-      process.env.API_ADDRESS || 'https://api-multisig.hive-keychain.com',
+      process.env.MULTISIG_API_ADDRESS ||
+      'https://api-multisig.hive-keychain.com',
     socketAddress:
       process.env.SOCKET_ADDRESS || 'https://api-multisig.hive-keychain.com',
     clientAddress: 'https://api.deathwing.me',

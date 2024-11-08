@@ -1,12 +1,59 @@
+import axios from 'axios';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { Authorities } from '../interfaces';
 import {
+  Configuration,
   MultisigGbotConfig,
   Operation,
 } from '../interfaces/granularity.interface';
 import HiveUtils from './hive.utils';
-const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
 const defaultGBot = process.env.TWOFA_BOT;
+const GBOT_API_ADDRESS =
+  process.env.GBOT_API_ADDRESS || 'http://localhost/5003';
+const apiGetGBotConfig = async (username: string) => {
+  try {
+    const res = await axios.get(
+      `${GBOT_API_ADDRESS}/account-configuration/${username}`,
+    );
+    if (!res) {
+      return undefined;
+    }
+    const gBotConfig = toGBotConfig(res.data);
+    return gBotConfig;
+  } catch (error) {}
+};
+
+const toGBotConfig = (apiConfig: any): Configuration[] => {
+  const configMap: Record<string, Operation[]> = {};
+
+  apiConfig.operationConfigurations.forEach((opConfig: any) => {
+    const authority = opConfig.username || 'default';
+
+    if (!configMap[authority]) {
+      configMap[authority] = [];
+    }
+
+    if (opConfig.operation === 'custom_json') {
+      configMap[authority].push({
+        operationName: opConfig.operation,
+        id: [],
+      });
+    } else {
+      configMap[authority].push({
+        operationName: opConfig.operation,
+      });
+    }
+  });
+
+  const configurations: Configuration[] = Object.entries(configMap).map(
+    ([authority, operations]) => ({
+      authority: authority === 'default' ? undefined : authority,
+      operations: operations,
+    }),
+  );
+
+  return configurations;
+};
 
 const getOperationNames = (
   config: MultisigGbotConfig,
@@ -409,4 +456,5 @@ export const GranularityUtils = {
   getAuthority,
   getGranularityBots,
   checkGranularityBot,
+  apiGetGBotConfig,
 };

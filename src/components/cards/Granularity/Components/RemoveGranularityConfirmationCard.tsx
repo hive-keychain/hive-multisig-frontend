@@ -91,8 +91,6 @@ export const RemoveGranularityConfirmationCard = () => {
     }
   }, [activeBotAuths, postingBotAuths]);
   const handleBroadcast = async () => {
-    //generage empty config
-    //broadcast new auth and config
     const botAuth: [string, number] = GranularityUtils.getAuthority(
       granularityBots[0].botName,
       newAuthorities,
@@ -100,12 +98,7 @@ export const RemoveGranularityConfirmationCard = () => {
     const newConfig: MultisigGbotConfig = {
       id: 'multisig-gbot-config',
       json: {
-        configurations: [
-          {
-            authority: `${signedAccountObj.data.username}`,
-            operations: [{ operationName: 'all' }],
-          },
-        ],
+        configurations: [],
       },
     };
     const res = await MultisigUtils.granularityConfigBroadcast(
@@ -117,6 +110,7 @@ export const RemoveGranularityConfirmationCard = () => {
     );
 
     if (res) {
+      window.location.reload();
       alert(res);
     }
   };

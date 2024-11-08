@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Spinner } from 'react-bootstrap';
-import { testConfig } from '../../../granularity-sample-config';
+import { MultisigGbotConfig } from '../../interfaces/granularity.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { granularityActions } from '../../redux/features/granularity/granularitySlices';
 import {
@@ -22,6 +22,8 @@ import { GranularitySetupConfirmation } from '../cards/Granularity/GranularitySe
 import { MultisigGranularityHooks } from '../cards/Granularity/GranularitySetupHooks';
 
 const defaultBot = process.env.GRANULARITY_BOT;
+const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
+
 if (defaultBot === undefined) {
   console.error(
     'Default Granularity Bot is not defined in environment variables, this will cause error in 2FA setup.',
@@ -81,11 +83,11 @@ export const GranularityPage = () => {
     if (originalAuthorities) {
       const hasActiveDefaultGBot =
         originalAuthorities.active.account_auths.some(
-          (acc) => acc[0] === defaultBot,
+          (acc: [string, number]) => acc[0] === defaultBot,
         );
       const hasPostingDefaultGBot =
         originalAuthorities.posting.account_auths.some(
-          (acc) => acc[0] === defaultBot,
+          (acc: [string, number]) => acc[0] === defaultBot,
         );
       dispatch(activeHasExistingGBot(hasActiveDefaultGBot));
       dispatch(postingHasExistingGBot(hasPostingDefaultGBot));
@@ -97,12 +99,27 @@ export const GranularityPage = () => {
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
     //TODO: Replace with the config retrieved from the chain
-    dispatch(initializeConfiguration(testConfig));
-
+    setConfiguration();
     return () => {
       handleCleanUp();
     };
   }, []);
+
+  const setConfiguration = async () => {
+    const configurations = await GranularityUtils.apiGetGBotConfig(
+      signedAccountObj.data.username,
+    );
+
+    if (configurations) {
+      var gbotConfig: MultisigGbotConfig = {
+        id: GBOT_CONFIG_ID,
+        json: {
+          configurations,
+        },
+      };
+      dispatch(initializeConfiguration(gbotConfig));
+    }
+  };
 
   useEffect(() => {
     if (authorities) {
