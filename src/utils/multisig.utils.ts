@@ -220,23 +220,26 @@ const granularityConfigBroadcast = async (
   bot: [string | Hive.PublicKey, number],
   gbotConfigs: MultisigGbotConfig,
   initiator: Initiator,
-  newAuthorities: Authorities,
+  newAuthorities?: Authorities,
+  initialSetup: boolean = true,
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
+      let ops = [];
       const customJsonOp = await getGBotCustomJsonOp(
         username,
         bot,
         gbotConfigs,
       );
-      const updateAccountOp = await getUpdateAccountOp(newAuthorities);
-      const transaction = await HiveTxUtils.createTx(
-        [customJsonOp, updateAccountOp],
-        {
-          date: undefined,
-          minutes: 59,
-        } as IExpiration,
-      );
+      ops.push(customJsonOp);
+      if (initialSetup) {
+        const updateAccountOp = await getUpdateAccountOp(newAuthorities);
+        ops.push(updateAccountOp);
+      }
+      const transaction = await HiveTxUtils.createTx(ops, {
+        date: undefined,
+        minutes: 59,
+      } as IExpiration);
       broadcastTransaction(transaction, username, initiator)
         .then((res) => resolve(res))
         .catch((reason) => reject(reason));

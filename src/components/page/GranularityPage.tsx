@@ -6,6 +6,7 @@ import { granularityActions } from '../../redux/features/granularity/granularity
 import {
   activeHasExistingGBot,
   initializeConfiguration,
+  initialSetupFlag,
   postingHasExistingGBot,
   setGranularityBots,
 } from '../../redux/features/granularity/granularityThunks';
@@ -36,6 +37,8 @@ export const GranularityPage = () => {
   const granularityBots = useAppSelector(
     (state) => state.granularity.granularity.bots,
   );
+  const [configuration, newConfiguration] =
+    MultisigGranularityHooks.useGranularityConfiguration();
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const proceedMultisig = useAppSelector(
     (state) => state.granularity.granularity.proceedMultisig,
@@ -98,22 +101,37 @@ export const GranularityPage = () => {
     getAuthorities();
     dispatch(allowAddKey(false));
     dispatch(setReceiveBroadcastNotificationsOn(true));
-    setConfiguration();
     return () => {
       handleCleanUp();
     };
   }, []);
 
+  useEffect(() => {
+    if (granularityBots) {
+      setConfiguration();
+      dispatch(initialSetupFlag(false));
+    } else {
+      dispatch(initialSetupFlag(true));
+    }
+  }, [granularityBots]);
+
   const setConfiguration = async () => {
     const configurations = await GranularityUtils.apiGetGBotConfig(
       signedAccountObj.data.username,
     );
-
     if (configurations) {
       var gbotConfig: MultisigGbotConfig = {
         id: GBOT_CONFIG_ID,
         json: {
           configurations,
+        },
+      };
+      dispatch(initializeConfiguration(gbotConfig));
+    } else {
+      var gbotConfig: MultisigGbotConfig = {
+        id: GBOT_CONFIG_ID,
+        json: {
+          configurations: [],
         },
       };
       dispatch(initializeConfiguration(gbotConfig));

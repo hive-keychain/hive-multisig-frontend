@@ -34,7 +34,11 @@ export const GranularityConfigurationSetup = () => {
   const [showRemovalModal, setShowRemovalModal] = useState(false);
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
+
   const [authority, newAuthorities] = MultisigGranularityHooks.useAuthorities();
+  const initialSetupFlag = useAppSelector(
+    (state) => state.granularity.granularity.initialSetupFlag,
+  );
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const transactionState = useAppSelector(
     (state) => state.transaction.transaction,
@@ -77,6 +81,7 @@ export const GranularityConfigurationSetup = () => {
         configToBroadcast,
         transactionState.initiator,
         newAuthorities,
+        initialSetupFlag,
       );
 
       if (res) {

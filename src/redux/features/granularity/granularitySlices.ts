@@ -4,6 +4,7 @@ import {
   activeHasExistingGBot,
   botSetupSuccess,
   initializeConfiguration,
+  initialSetupFlag,
   isManageGranularity,
   postingHasExistingGBot,
   proceedConfiguration,
@@ -41,6 +42,7 @@ const initialState: State = {
   postingHasExistingGBot: false,
   proceedSetupConfirmation: false,
   proceedRemoval: false,
+  initialSetupFlag: false,
 };
 
 const granularitySlice = createSlice({
@@ -116,6 +118,10 @@ const granularitySlice = createSlice({
 
     builder.addCase(proceedSetupConfirmation.fulfilled, (state, action) => {
       state.proceedSetupConfirmation = action.payload;
+    });
+
+    builder.addCase(initialSetupFlag.fulfilled, (state, action) => {
+      state.initialSetupFlag = action.payload;
     });
   },
 });

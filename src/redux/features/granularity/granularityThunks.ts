@@ -137,3 +137,10 @@ export const proceedSetupConfirmation = createAsyncThunk(
     return proceed;
   },
 );
+
+export const initialSetupFlag = createAsyncThunk(
+  'granularity/initialSetupFlag',
+  (flag: boolean) => {
+    return flag;
+  },
+);

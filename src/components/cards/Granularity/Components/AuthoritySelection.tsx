@@ -14,7 +14,7 @@ export const AuthoritySelection = () => {
   const [groupedAuthorities] = MultisigGranularityHooks.useGroupedAuthorities();
   const [selectedAuthority, setSelectedAuthority] = useState<string>();
   useEffect(() => {
-    if (groupedAuthorities) {
+    if (groupedAuthorities && newConfiguration) {
       const allElements = Object.values(groupedAuthorities).reduce(
         (acc, curr) => acc.concat(curr),
         [],

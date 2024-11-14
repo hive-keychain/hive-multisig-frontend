@@ -17,7 +17,8 @@ export interface State {
   activeHasExistingGBot: boolean;
   postingHasExistingGBot: boolean;
   proceedSetupConfirmation: boolean;
-  proceedRemoval:boolean;
+  proceedRemoval: boolean;
+  initialSetupFlag:boolean;
 }
 
 export interface GBotTabProp {
