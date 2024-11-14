@@ -42,7 +42,7 @@ const initialState: State = {
   postingHasExistingGBot: false,
   proceedSetupConfirmation: false,
   proceedRemoval: false,
-  initialSetupFlag: false,
+  initialSetupFlag: true,
 };
 
 const granularitySlice = createSlice({

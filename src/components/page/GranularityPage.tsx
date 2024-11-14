@@ -33,6 +33,7 @@ if (defaultBot === undefined) {
 
 export const GranularityPage = () => {
   const dispatch = useAppDispatch();
+
   const [authorities, setAuthorities] = useState(undefined);
   const granularityBots = useAppSelector(
     (state) => state.granularity.granularity.bots,
@@ -77,7 +78,9 @@ export const GranularityPage = () => {
     console.log({ bots });
     if (bots) {
       dispatch(setGranularityBots(bots));
+      dispatch(initialSetupFlag(false));
     } else {
+      dispatch(initialSetupFlag(true));
       dispatch(setGranularityBots([]));
     }
   };
@@ -109,9 +112,6 @@ export const GranularityPage = () => {
   useEffect(() => {
     if (granularityBots) {
       setConfiguration();
-      dispatch(initialSetupFlag(false));
-    } else {
-      dispatch(initialSetupFlag(true));
     }
   }, [granularityBots]);
 
