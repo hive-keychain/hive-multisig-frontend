@@ -10,7 +10,7 @@ import {
   updateWeightSuccess,
 } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
   allowAddKey,
   allowDeleteOnlyBot,
   allowEdit,
@@ -62,7 +62,7 @@ export const TwoFAConfirmation = () => {
 
   useEffect(() => {
     dispatch(allowAddKey(false));
-    dispatch(allowAddAccount(false));
+    dispatch(allowAddActiveAccount(false));
     dispatch(disableDeleteBtn(true));
     dispatch(allowDeleteOnlyBot(false));
     dispatch(allowEdit(false));

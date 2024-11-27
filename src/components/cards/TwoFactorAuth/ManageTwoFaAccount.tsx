@@ -30,7 +30,7 @@ import {
   updateAccount,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
   allowAddKey,
   allowDeleteOnlyBot,
   allowEdit,
@@ -148,7 +148,7 @@ export const ManageTwoFaAccount = () => {
   };
   const allowRemoveBot = async () => {
     dispatch(allowAddKey(false));
-    dispatch(allowAddAccount(false));
+    dispatch(allowAddActiveAccount(false));
     dispatch(disableDeleteBtn(true));
     dispatch(allowDeleteOnlyBot(true));
     dispatch(allowEdit(key !== 'default'));

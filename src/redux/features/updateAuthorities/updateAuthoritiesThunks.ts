@@ -140,13 +140,25 @@ export const removeKeyWarning = createAsyncThunk(
   },
 );
 
-export const allowAddAccount = createAsyncThunk(
-  'updateAuthority/allowAddAccount',
+// export const allowAddAccount = createAsyncThunk(
+//   'updateAuthority/allowAddAccount',
+//   async (allow: boolean) => {
+//     return allow;
+//   },
+// );
+
+export const allowAddActiveAccount = createAsyncThunk(
+  'updateAuthority/allowAddActiveAccount',
   async (allow: boolean) => {
     return allow;
   },
 );
-
+export const allowAddPostingAccount = createAsyncThunk(
+  'updateAuthority/allowAddPostingAccount',
+  async (allow: boolean) => {
+    return allow;
+  },
+);
 export const allowAddKey = createAsyncThunk(
   'updateAuthority/allowAddKey',
   async (allow: boolean) => {

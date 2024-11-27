@@ -25,6 +25,8 @@ export function AuthorityCard({ authorityName }: IAuthoritiCardProp) {
   const allowEdit = useAppSelector(
     (state) => state.updateAuthorities.allowEdit,
   );
+
+  
   useEffect(() => {
     if (newAuthorities) {
       switch (authorityName.toLowerCase()) {

@@ -5,8 +5,9 @@ import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import {
   addAccountWarning,
   addKeyWarning,
-  allowAddAccount,
+  allowAddActiveAccount,
   allowAddKey,
+  allowAddPostingAccount,
   allowDeleteOnlyBot,
   allowEdit,
   deleteAccount,
@@ -43,11 +44,12 @@ export type AuthorityUpdateStateType = {
   thresholdWarning?: string;
   accountRowWarning?: [string, string][];
   keyRowWarning?: [string, string][];
-  allowAddAccount: boolean;
   allowAddKey: boolean;
   disableDetele: boolean;
   allowEdit: boolean;
   allowDeleteOnlyBot: boolean;
+  allowAddActiveAccount: boolean;
+  allowAddPostingAccount: boolean;
 };
 
 const initialState: AuthorityUpdateStateType = {
@@ -67,11 +69,12 @@ const initialState: AuthorityUpdateStateType = {
   thresholdWarning: '',
   accountRowWarning: [],
   keyRowWarning: [],
-  allowAddAccount: true,
   allowAddKey: true,
   disableDetele: false,
   allowEdit: true,
   allowDeleteOnlyBot: false,
+  allowAddActiveAccount: true,
+  allowAddPostingAccount: true,
 };
 
 const updateAuthoritySlice = createSlice({
@@ -336,9 +339,6 @@ const updateAuthoritySlice = createSlice({
       );
     });
 
-    builder.addCase(allowAddAccount.fulfilled, (state, action) => {
-      state.allowAddAccount = action.payload;
-    });
     builder.addCase(allowAddKey.fulfilled, (state, action) => {
       state.allowAddKey = action.payload;
     });
@@ -352,6 +352,12 @@ const updateAuthoritySlice = createSlice({
 
     builder.addCase(allowDeleteOnlyBot.fulfilled, (state, action) => {
       state.allowDeleteOnlyBot = action.payload;
+    });
+    builder.addCase(allowAddActiveAccount.fulfilled, (state, action) => {
+      state.allowAddActiveAccount = action.payload;
+    });
+    builder.addCase(allowAddPostingAccount.fulfilled, (state, action) => {
+      state.allowAddPostingAccount = action.payload;
     });
   },
 });

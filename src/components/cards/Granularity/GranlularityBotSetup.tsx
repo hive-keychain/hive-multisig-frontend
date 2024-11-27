@@ -9,7 +9,8 @@ import {
 } from '../../../redux/features/granularity/granularityThunks';
 import { initializeAuthorities } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
+  allowAddPostingAccount,
   allowDeleteOnlyBot,
   allowEdit,
   deleteAccount,
@@ -69,8 +70,9 @@ export const GranularityBotSetup = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(allowAddAccount(addedActiveAuthorities.length === 0));
-  }, [addedActiveAuthorities]);
+    dispatch(allowAddActiveAccount(addedActiveAuthorities.length === 0));
+    dispatch(allowAddPostingAccount(addedPostingAuthorities.length === 0));
+  }, [addedActiveAuthorities, addedPostingAuthorities]);
 
   useEffect(() => {
     setDisableSubmitBtn(!(accountEdited && ownerKeyCheckBoxChecked));
@@ -90,7 +92,8 @@ export const GranularityBotSetup = () => {
         }
         dispatch(allowEdit(false));
         dispatch(disableDeleteBtn(true));
-        dispatch(allowAddAccount(false));
+        dispatch(allowAddActiveAccount(false));
+        dispatch(allowAddPostingAccount(false));
         dispatch(allowDeleteOnlyBot(false));
 
         break;
@@ -101,7 +104,8 @@ export const GranularityBotSetup = () => {
         }
         dispatch(allowEdit(true));
         dispatch(disableDeleteBtn(true));
-        dispatch(allowAddAccount(true));
+        dispatch(allowAddActiveAccount(true));
+        dispatch(allowAddPostingAccount(true));
         dispatch(allowDeleteOnlyBot(true));
         console.log('custom');
         break;

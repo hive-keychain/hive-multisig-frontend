@@ -21,7 +21,7 @@ import {
 } from '../../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { initializeAuthorities } from '../../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
   allowDeleteOnlyBot,
   allowEdit,
   deleteAccount,
@@ -80,7 +80,7 @@ export const TwoFactorAuthSetup = () => {
   }, [latestAddedActiveAuthority]);
 
   useEffect(() => {
-    dispatch(allowAddAccount(addedActiveAuthorities.length === 0));
+    dispatch(allowAddActiveAccount(addedActiveAuthorities.length === 0));
   }, [addedActiveAuthorities]);
 
   useEffect(() => {
@@ -179,7 +179,7 @@ export const TwoFactorAuthSetup = () => {
         }
         dispatch(allowEdit(false));
         dispatch(disableDeleteBtn(true));
-        dispatch(allowAddAccount(false));
+        dispatch(allowAddActiveAccount(false));
         dispatch(allowDeleteOnlyBot(false));
 
         break;
@@ -191,7 +191,7 @@ export const TwoFactorAuthSetup = () => {
         }
         dispatch(allowEdit(true));
         dispatch(disableDeleteBtn(true));
-        dispatch(allowAddAccount(true));
+        dispatch(allowAddActiveAccount(true));
         dispatch(allowDeleteOnlyBot(true));
         console.log('custom');
         break;

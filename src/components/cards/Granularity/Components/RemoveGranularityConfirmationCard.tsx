@@ -4,7 +4,8 @@ import { Button, Card, Container, Row } from 'react-bootstrap';
 import { MultisigGbotConfig } from '../../../../interfaces/granularity.interface';
 import { useAppDispatch, useAppSelector } from '../../../../redux/app/hooks';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
+  allowAddPostingAccount,
   allowDeleteOnlyBot,
   allowEdit,
   disableDeleteBtn,
@@ -30,12 +31,11 @@ export const RemoveGranularityConfirmationCard = () => {
   const [deductedPostingWeight, setDeductedPostingWeight] = useState(0);
   const [deductedActiveWeight, setDeductedActiveWeight] = useState(0);
   useEffect(() => {
-    console.log({ granularityBots });
-    console.log({ activeBotAuths });
-    console.log({ postingBotAuths });
+
     dispatch(allowEdit(false));
     dispatch(disableDeleteBtn(true));
-    dispatch(allowAddAccount(false));
+    dispatch(allowAddActiveAccount(false));
+    dispatch(allowAddPostingAccount(false));
     dispatch(allowDeleteOnlyBot(false));
   }, []);
 

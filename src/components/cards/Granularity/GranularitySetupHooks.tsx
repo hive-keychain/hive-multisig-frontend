@@ -165,14 +165,19 @@ const useAuthorities = () => {
 
 const useAccountEditedFlag = () => {
   const [originalActive, newActive] = useActiveAuthority();
-  const [accountRemoved, setAccountRemoved] = useState(false);
+  const [originalPostingAuthorities, newPostingAuthorities] =
+    usePostingAuthority();
+  const [accountEdited, setAccountEdited] = useState(false);
   const [threshEdited, setThreshEdited] = useState(false);
   const [weightUpdated, setWeightUpdated] = useState(false);
   useEffect(() => {
     if (newActive) {
-      setAccountRemoved(
-        originalActive.account_auths.length !== newActive.account_auths.length,
-      );
+      const edited =
+        originalActive.account_auths.length !==
+          newActive.account_auths.length ||
+        originalPostingAuthorities.account_auths.length !==
+          newPostingAuthorities.account_auths.length;
+      setAccountEdited(edited);
       setWeightUpdated(
         !deepequal(originalActive.account_auths, newActive.account_auths, {
           strict: true,
@@ -186,7 +191,7 @@ const useAccountEditedFlag = () => {
     }
   }, [newActive]);
 
-  return [accountRemoved, threshEdited, weightUpdated];
+  return [accountEdited, threshEdited, weightUpdated];
 };
 
 const useGranularityConfiguration = () => {
@@ -260,8 +265,6 @@ const useGroupedAuthorities = () => {
 
   return [groupedAuthorities];
 };
-
-
 
 export const MultisigGranularityHooks = {
   useActiveAuthority,

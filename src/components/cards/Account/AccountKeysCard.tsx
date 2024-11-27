@@ -20,9 +20,14 @@ export function AccountKeysCard({
   const newAuthorities: Authorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
-  const allowAddAccount = useAppSelector(
-    (state) => state.updateAuthorities.allowAddAccount,
+
+  const allowAddActiveAccount = useAppSelector(
+    (state) => state.updateAuthorities.allowAddActiveAccount,
   );
+  const allowAddPostingAccount = useAppSelector(
+    (state) => state.updateAuthorities.allowAddPostingAccount,
+  );
+
   const allowAddKey = useAppSelector(
     (state) => state.updateAuthorities.allowAddKey,
   );
@@ -51,13 +56,22 @@ export function AccountKeysCard({
   const [newAccount, setNewAccount] = useState<[string, number]>(['', 1]);
   const [accountComponentList, setAccountComponentList] =
     useState<[string, ReactNode][]>();
+
   useEffect(() => {
-    if (authAccountType.toLowerCase() === 'accounts') {
-      setAllowAdd(allowAddAccount);
-    } else {
-      setAllowAdd(allowAddKey);
+    if (authorityName.toLowerCase() === 'active') {
+      if (authAccountType.toLowerCase() === 'accounts') {
+        setAllowAdd(allowAddActiveAccount);
+      } else {
+        setAllowAdd(allowAddKey);
+      }
+    } else if (authorityName.toLowerCase() === 'posting') {
+      if (authAccountType.toLowerCase() === 'accounts') {
+        setAllowAdd(allowAddPostingAccount);
+      } else {
+        setAllowAdd(allowAddKey);
+      }
     }
-  }, [allowAddAccount, allowAddKey]);
+  }, [allowAddActiveAccount, allowAddPostingAccount, allowAddKey]);
 
   useEffect(() => {
     const newComponents = accountKeyAuths.map(

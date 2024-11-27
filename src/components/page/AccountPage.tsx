@@ -11,8 +11,9 @@ import {
 } from '../../redux/features/twoFactorAuth/twoFactorAuthThunks';
 import { initializeAuthorities } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  allowAddAccount,
+  allowAddActiveAccount,
   allowAddKey,
+  allowAddPostingAccount,
   allowDeleteOnlyBot,
   allowEdit,
   disableDeleteBtn,
@@ -53,7 +54,8 @@ function AccountPage({ authorities }: IAccountPageProp) {
 
   useEffect(() => {
     dispatch(allowEdit(true));
-    dispatch(allowAddAccount(true));
+    dispatch(allowAddActiveAccount(true));
+    dispatch(allowAddPostingAccount(true));
     dispatch(allowAddKey(true));
     dispatch(disableDeleteBtn(false));
     dispatch(setThresholdWarning(''));
