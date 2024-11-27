@@ -21,14 +21,13 @@ export const CustomUsersConfigCard = ({
       const authorities =
         GranularityUtils.getAuthorityNameList(newConfiguration);
       const cards = authorities.map((authority, index) => {
-        if (authority !== signedAccountObj.data.username)
-          return (
-            <GranularityAuthorityCard
-              authority={authority}
-              isConfirmation={isConfirmation}
-              key={authority}
-            />
-          );
+        return (
+          <GranularityAuthorityCard
+            authority={authority}
+            isConfirmation={isConfirmation}
+            key={authority}
+          />
+        );
       });
 
       setAuthorityCards(cards);

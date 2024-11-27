@@ -104,13 +104,8 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       setPostingOptions(postingOps);
     }
 
-    if (!authority || authority === '') {
-      setOpToBeAdded({ operationName: 'all' });
-      setSelectedOp('All');
-    } else {
-      setOpToBeAdded({ operationName: firstOptionKey });
-      setSelectedOp(opSelected);
-    }
+    setOpToBeAdded({ operationName: 'all' });
+    setSelectedOp('All');
   }, [isActiveAuth, isPostingAuth, newConfiguration, addedOps]);
 
   useEffect(() => {
@@ -132,24 +127,20 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
         </optgroup>
       );
     }
-
-    if (!authority || authority === '') {
-      const isAdded = addedOps.includes('all');
-      const allOpt = (
-        <option
-          key={`all`}
-          value={`all`}
-          style={{
-            backgroundColor: isAdded ? '#d3d3d3' : 'white',
-          }}>
-          {`All`}
-        </option>
-      );
-      setOperationsOptions([allOpt, activeOptsGroup, postingOptsGroup]);
-    } else {
-      setOperationsOptions([activeOptsGroup, postingOptsGroup]);
-    }
-  }, [activeOptions, activeOptions]);
+    // include all option in the custom
+    const isAdded = addedOps.includes('all');
+    const allOpt = (
+      <option
+        key={`all`}
+        value={`all`}
+        style={{
+          backgroundColor: isAdded ? '#d3d3d3' : 'white',
+        }}>
+        {`All`}
+      </option>
+    );
+    setOperationsOptions([allOpt, activeOptsGroup, postingOptsGroup]);
+  }, [activeOptions, postingOptions]);
   // set the current selected operation
   // useEffect(() => {
   //   setSelectedOp(selectedOp);

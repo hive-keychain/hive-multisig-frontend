@@ -211,9 +211,10 @@ const useWhichAuthority = (username: string) => {
   const newAuthorities = useAppSelector(
     (state) => state.updateAuthorities.NewAuthorities,
   );
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
 
   useEffect(() => {
-    if (!username || username === '') {
+    if (!username || username === '' || username === signedAccountObj.data.username) {
       setIsActiveAuth(true);
       setIsPostingAuth(true);
     } else {

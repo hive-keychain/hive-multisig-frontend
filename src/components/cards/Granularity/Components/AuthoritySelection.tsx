@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
-import { useAppDispatch } from '../../../../redux/app/hooks';
+import { useAppDispatch, useAppSelector } from '../../../../redux/app/hooks';
 import { updateGranularityConfiguration } from '../../../../redux/features/granularity/granularityThunks';
 import { GranularityUtils } from '../../../../utils/granularity-utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
+const defaultBot = process.env.GRANULARITY_BOT;
 
 export const AuthoritySelection = () => {
   const dispatch = useAppDispatch();
+  const signedAccountObj = useAppSelector((state) => state.login.accountObject);
+
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
   const [options, setOptions] = useState([]);
@@ -20,54 +23,30 @@ export const AuthoritySelection = () => {
         [],
       );
 
-      const auths = [...new Set(allElements)];
+      const auths = [...new Set(allElements), signedAccountObj.data.username];
       console.log({ auths });
 
       let firstOptionKey: string = null; // Variable to store the first option's key
-      const addedAuths =
-        GranularityUtils.getAuthorityNameList(newConfiguration);
-      // const opts = Object.keys(groupedAuthorities).map((group) => {
-      //   const options = groupedAuthorities[group].map((authority, index) => {
-      //     const isAdded = addedAuths.includes(authority);
-      //     const optionElement = (
-      //       <option
-      //         key={authority}
-      //         value={authority}
-      //         style={{
-      //           backgroundColor: isAdded ? '#d3d3d3' : 'white',
-      //         }}>
-      //         {authority}
-      //       </option>
-      //     );
-      //     if (firstOptionKey === null && index === 0) {
-      //       firstOptionKey = authority;
-      //     }
-      //     return optionElement;
-      //   });
-
-      //   return (
-      //     <optgroup key={group} label={`${group} Authorities`}>
-      //       {options}
-      //     </optgroup>
-      //   );
-      // });
+      let addedAuths = GranularityUtils.getAuthorityNameList(newConfiguration);
 
       const options = auths.map((authority, index) => {
-        const isAdded = addedAuths.includes(authority);
-        const optionElement = (
-          <option
-            key={authority}
-            value={authority}
-            style={{
-              backgroundColor: isAdded ? '#d3d3d3' : 'white',
-            }}>
-            {authority}
-          </option>
-        );
-        if (firstOptionKey === null && index === 0) {
-          firstOptionKey = authority;
+        if (authority !== defaultBot) {
+          const isAdded = addedAuths.includes(authority);
+          const optionElement = (
+            <option
+              key={authority}
+              value={authority}
+              style={{
+                backgroundColor: isAdded ? '#d3d3d3' : 'white',
+              }}>
+              {authority}
+            </option>
+          );
+          if (firstOptionKey === null && index === 0) {
+            firstOptionKey = authority;
+          }
+          return optionElement;
         }
-        return optionElement;
       });
       setAddedAuthorities(addedAuths);
       setOptions(options);
