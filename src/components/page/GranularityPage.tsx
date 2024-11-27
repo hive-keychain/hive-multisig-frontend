@@ -135,6 +135,14 @@ export const GranularityPage = () => {
             {
               operations: [],
             },
+            {
+              authority: signedAccountObj.data.username,
+              operations: [
+                {
+                  operationName: 'all',
+                },
+              ],
+            },
           ],
         },
       };
