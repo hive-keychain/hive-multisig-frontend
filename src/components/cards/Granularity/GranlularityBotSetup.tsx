@@ -54,8 +54,6 @@ export const GranularityBotSetup = () => {
 
   const [ownerKeyCheckBoxChecked, setOwnerKeyCheckBox] =
     useState<boolean>(false);
-  const [botDisableCheckBoxChecked, setBotDisableCheckBox] =
-    useState<boolean>(false);
 
   const hasPostingDefaultGBot = useAppSelector(
     (state) => state.granularity.granularity.postingHasExistingGBot,
@@ -75,15 +73,12 @@ export const GranularityBotSetup = () => {
   }, [addedActiveAuthorities]);
 
   useEffect(() => {
-    setDisableSubmitBtn(
-      !(accountEdited && ownerKeyCheckBoxChecked && botDisableCheckBoxChecked),
-    );
-  }, [accountEdited, ownerKeyCheckBoxChecked, botDisableCheckBoxChecked]);
+    setDisableSubmitBtn(!(accountEdited && ownerKeyCheckBoxChecked));
+  }, [accountEdited, ownerKeyCheckBoxChecked]);
 
   useEffect(() => {
     dispatch(initializeAuthorities(originalAuthorities));
     setOwnerKeyCheckBox(false);
-    setBotDisableCheckBox(false);
   }, [key]);
 
   useEffect(() => {
@@ -229,9 +224,6 @@ export const GranularityBotSetup = () => {
   const handleOwnerKeyAgreement = (value: any) => {
     setOwnerKeyCheckBox(value);
   };
-  const handleBotDisablingAgreement = (value: any) => {
-    setBotDisableCheckBox(value);
-  };
 
   const handleProceedConfiguration = () => {
     dispatch(proceedConfiguration(true));
@@ -272,14 +264,6 @@ export const GranularityBotSetup = () => {
                     type={'checkbox'}
                     id={`owner-key-agreement`}
                     label={`My account @${signedAccountObj.data.username} owner key is safely stored offline`}></Form.Check>
-                  <Form.Check
-                    onChange={(e) => {
-                      handleBotDisablingAgreement(e.target.checked);
-                    }}
-                    checked={botDisableCheckBoxChecked}
-                    type={'checkbox'}
-                    id={`bot-disabling-agreement`}
-                    label={`I understand that I will need either my owner key, or my active key and a valid One Time Password (OTP) to disable the Granularity Bot`}></Form.Check>
                 </Form>
               </div>
               <div className="d-flex justify-content-end mb-3 me-3 rem-10">

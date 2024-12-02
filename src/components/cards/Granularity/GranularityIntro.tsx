@@ -19,17 +19,34 @@ export const GranularityIntro = () => {
                   Welcome to Hive Multisig Granularity!
                 </h3>
                 <p className="card-text text-center">
-                  Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                  Atque sed, velit sequi quisquam pariatur fugiat tempora iusto
-                  voluptatem officia animi debitis repellendus error! Obcaecati
-                  ipsum eaque voluptatem pariatur, nihil blanditiis.
+                  This bot helps you delegate access to hand picked operations
+                  on your account to certain users.
                 </p>
                 <h3 className="card-title text-center"> How it works</h3>
                 <p>
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Delectus praesentium, reprehenderit, incidunt at culpa
-                  cupiditate facere doloremque corrupti officia cum ex placeat
-                  atque nostrum esse totam quibusdam provident eveniet impedit?
+                  By adding posting or active authority to the granularity bot,
+                  you will be able to configure certain operations to be
+                  automatically accepted and signed by the bot when initiated by
+                  certain users. Other operations will be automatically
+                  rejected.
+                  <br />
+                  Operations initiated by its own account are accepted by
+                  default.
+                </p>
+                <h3 className="card-title text-center"> Example</h3>
+                <p>
+                  Let's say you have many account creation tickets and want to
+                  let an account creation service (@account-creator) use them.
+                  <br />
+                  You'd have your own account, @${
+                    process.env.GRANULARITY_BOT
+                  }{' '}
+                  and @account-creator all with a weight of 1 and a threshold of
+                  2, and a configuration that only accept account creation from
+                  @account-creator. <br />
+                  The bot will automatically sign and broadcast the requests
+                  made from your own account, while it we only comply to
+                  @account-creator when asking for an account creation.
                 </p>
 
                 <div className="d-flex justify-content-end">
