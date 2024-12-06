@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Form, InputGroup } from 'react-bootstrap';
 import {
   ActiveOperationName,
+  CommonOperationName,
   Operation,
   OperationName,
   PostingOperationName,
@@ -13,6 +14,8 @@ import { capitalizeOpFirstLetter } from '../../../../utils/utils';
 import { MultisigGranularityHooks } from '../GranularitySetupHooks';
 
 const GBOT_CONFIG_ID = process.env.GBOT_CONFIG_ID;
+const defaultBot = process.env.GRANULARITY_BOT;
+
 interface IOperationSelection {
   authority?: string;
 }
@@ -20,8 +23,11 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
   const [operationsOptions, setOperationsOptions] = useState([]);
   const [activeOptions, setActiveOptions] = useState([]);
   const [postingOptions, setPostingOptions] = useState([]);
+  const [commonOptions, setCommonOptions] = useState([]);
   const [isActiveAuth, isPostingAuth] =
     MultisigGranularityHooks.useWhichAuthority(authority);
+  const [isBotActiveAuth, isBotPostingAuth] =
+    MultisigGranularityHooks.useWhichAuthority(defaultBot);
   const [addedOps, setAddedOps] = useState<string[]>([]);
   const [selectedOp, setSelectedOp] = useState('All');
   const [opTobeAdded, setOpToBeAdded] = useState<Operation>({
@@ -34,7 +40,39 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
   useEffect(() => {
     let firstOptionKey: string = null;
     let opSelected: string = null;
-    if (isActiveAuth) {
+
+    const commonOps = Object.entries(CommonOperationName).map(
+      ([key, value], index) => {
+        const isAdded = addedOps.includes(value);
+        const displayName = value
+          .split('_')
+          .map(
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(' ');
+        const element = (
+          <option
+            key={key}
+            value={key}
+            style={{
+              backgroundColor: isAdded ? '#d3d3d3' : 'white',
+            }}>
+            {displayName}
+          </option>
+        );
+        if (firstOptionKey === null && index === 0) {
+          firstOptionKey = value;
+          opSelected = displayName;
+        }
+
+        return element;
+      },
+    );
+
+    setCommonOptions(commonOps);
+
+    if (isActiveAuth && isBotActiveAuth) {
       const activeOps = Object.entries(ActiveOperationName).map(
         ([key, value], index) => {
           const isAdded = addedOps.includes(value);
@@ -67,7 +105,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       setActiveOptions(activeOps);
     }
 
-    if (isPostingAuth) {
+    if (isPostingAuth && isBotPostingAuth) {
       console.log({ addedOps });
 
       const postingOps = Object.entries(PostingOperationName).map(
@@ -111,6 +149,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
   useEffect(() => {
     var activeOptsGroup;
     var postingOptsGroup;
+    var commonOptsGroup;
 
     if (activeOptions && activeOptions.length > 0) {
       activeOptsGroup = (
@@ -127,20 +166,17 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
         </optgroup>
       );
     }
-    // include all option in the custom
-    const isAdded = addedOps.includes('all');
-    const allOpt = (
-      <option
-        key={`all`}
-        value={`all`}
-        style={{
-          backgroundColor: isAdded ? '#d3d3d3' : 'white',
-        }}>
-        {`All`}
-      </option>
-    );
-    setOperationsOptions([allOpt, activeOptsGroup, postingOptsGroup]);
-  }, [activeOptions, postingOptions]);
+
+    if (commonOptions && commonOptions.length > 0) {
+      commonOptsGroup = (
+        <optgroup key={'common'} label={`Common Operations`}>
+          {commonOptions}
+        </optgroup>
+      );
+    }
+
+    setOperationsOptions([commonOptsGroup, activeOptsGroup, postingOptsGroup]);
+  }, [commonOptions, activeOptions, postingOptions]);
   // set the current selected operation
   // useEffect(() => {
   //   setSelectedOp(selectedOp);

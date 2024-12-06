@@ -89,7 +89,6 @@ export enum PostingOperationName {
 export enum CommonOperationName {
   ALL = 'all',
   CHANGE_CONFIG = 'change_config',
-
   CUSTOM = 'custom',
   CUSTOM_JSON = 'custom_json',
   CUSTOM_BINARY = 'custom_binary',
