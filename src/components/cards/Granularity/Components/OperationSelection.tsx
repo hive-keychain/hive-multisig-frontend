@@ -112,7 +112,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
     var activeOptsGroup;
     var postingOptsGroup;
 
-    if (activeOptions && activeOptions.length > 0) {
+    if (isActiveAuth && activeOptions && activeOptions.length > 0) {
       activeOptsGroup = (
         <optgroup key={'active'} label={`Active Operations`}>
           {activeOptions}
@@ -120,7 +120,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       );
     }
 
-    if (postingOptions && postingOptions.length > 0) {
+    if (isPostingAuth && postingOptions && postingOptions.length > 0) {
       postingOptsGroup = (
         <optgroup key={'posting'} label={`Posting Operations`}>
           {postingOptions}
@@ -140,7 +140,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       </option>
     );
     setOperationsOptions([allOpt, activeOptsGroup, postingOptsGroup]);
-  }, [activeOptions, postingOptions]);
+  }, [isActiveAuth, isPostingAuth, activeOptions, postingOptions]);
   // set the current selected operation
   // useEffect(() => {
   //   setSelectedOp(selectedOp);
