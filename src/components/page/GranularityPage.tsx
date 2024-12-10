@@ -119,11 +119,11 @@ export const GranularityPage = () => {
     const configurations = await GranularityUtils.apiGetGBotConfig(
       signedAccountObj.data.username,
     );
-    if (configurations) {
+    if (configurations && configurations.length > 0) {
       var gbotConfig: MultisigGbotConfig = {
         id: GBOT_CONFIG_ID,
         json: {
-          configurations,
+          configurations: [...configurations],
         },
       };
       dispatch(initializeConfiguration(gbotConfig));
