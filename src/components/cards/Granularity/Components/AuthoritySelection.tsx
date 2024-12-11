@@ -9,13 +9,17 @@ const defaultBot = process.env.GRANULARITY_BOT;
 export const AuthoritySelection = () => {
   const dispatch = useAppDispatch();
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
-
+  const [isBotActiveAuth, isBotPostingAuth] =
+    MultisigGranularityHooks.useWhichAuthority(defaultBot);
   const [configuration, newConfiguration] =
     MultisigGranularityHooks.useGranularityConfiguration();
   const [options, setOptions] = useState([]);
   const [addedAuthorities, setAddedAuthorities] = useState([]);
   const [groupedAuthorities] = MultisigGranularityHooks.useGroupedAuthorities();
   const [selectedAuthority, setSelectedAuthority] = useState<string>();
+
+  const [originalAuthorities, newAuthorities] =
+    MultisigGranularityHooks.useAuthorities();
   useEffect(() => {
     if (groupedAuthorities && newConfiguration) {
       const allElements = Object.values(groupedAuthorities).reduce(
@@ -29,9 +33,28 @@ export const AuthoritySelection = () => {
       let firstOptionKey: string = null; // Variable to store the first option's key
       let addedAuths = GranularityUtils.getAuthorityNameList(newConfiguration);
 
-      const options = auths.map((authority, index) => {
-        if (authority !== defaultBot) {
+      let options = auths
+        .filter((authority) => {
+          if (authority === defaultBot) return false;
+
           const isAdded = addedAuths.includes(authority);
+          const isPosting = isPostingAuth(authority);
+          const isActive = isActiveAuth(authority);
+
+          if (isBotActiveAuth && !isBotPostingAuth && !isActive && isPosting) {
+            console.log('case 1');
+            return false;
+          }
+          if (!isBotActiveAuth && isBotPostingAuth && isActive && !isPosting) {
+            console.log('case 2');
+            return false;
+          }
+
+          return true;
+        })
+        .map((authority, index) => {
+          const isAdded = addedAuths.includes(authority);
+
           const optionElement = (
             <option
               key={authority}
@@ -42,18 +65,35 @@ export const AuthoritySelection = () => {
               {authority}
             </option>
           );
+
           if (firstOptionKey === null && index === 0) {
             firstOptionKey = authority;
           }
+
           return optionElement;
-        }
-      });
+        });
+
+      console.log({ options });
       setAddedAuthorities(addedAuths);
       setOptions(options);
       setSelectedAuthority(firstOptionKey);
     }
   }, [groupedAuthorities, newConfiguration]);
 
+  const isPostingAuth = (username: string) => {
+    return (
+      newAuthorities.posting.account_auths.findIndex(([a, w]) => {
+        return a === username;
+      }) >= 0
+    );
+  };
+  const isActiveAuth = (username: string) => {
+    return (
+      newAuthorities.active.account_auths.findIndex(([a, w]) => {
+        return a === username;
+      }) >= 0
+    );
+  };
   const handleAdd = () => {
     if (!addedAuthorities.includes(selectedAuthority)) {
       const updatedConfiguration = structuredClone(newConfiguration);

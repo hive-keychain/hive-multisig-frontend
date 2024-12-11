@@ -177,10 +177,6 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
 
     setOperationsOptions([commonOptsGroup, activeOptsGroup, postingOptsGroup]);
   }, [commonOptions, activeOptions, postingOptions]);
-  // set the current selected operation
-  // useEffect(() => {
-  //   setSelectedOp(selectedOp);
-  // }, [selectedOp]);
 
   // update the local list of added operations
   useEffect(() => {

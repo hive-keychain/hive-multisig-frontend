@@ -25,7 +25,10 @@ const apiGetGBotConfig = async (username: string) => {
 
 const toGBotConfig = (apiConfig: any): Configuration[] => {
   const configMap: Record<string, Operation[]> = {};
-
+  if (apiConfig.operationConfigurations.length === 0) {
+    return undefined;
+  }
+  // Populate configMap based on operationConfigurations
   apiConfig.operationConfigurations.forEach((opConfig: any) => {
     const authority = opConfig.username || 'default';
 
@@ -45,6 +48,12 @@ const toGBotConfig = (apiConfig: any): Configuration[] => {
     }
   });
 
+  // Ensure "default" entry exists in configMap
+  if (!configMap['default']) {
+    configMap['default'] = [];
+  }
+
+  // Convert configMap to configurations array
   const configurations: Configuration[] = Object.entries(configMap).map(
     ([authority, operations]) => ({
       authority: authority === 'default' ? undefined : authority,
@@ -241,10 +250,20 @@ const removeChangeConfig = (config: MultisigGbotConfig): MultisigGbotConfig => {
   };
 };
 
-const getAuthority = (username: string, newAuthorities: Authorities) => {
-  return newAuthorities.active.account_auths.filter(
-    (acc) => username === acc[0],
-  )[0];
+const getAuthority = (
+  username: string,
+  newAuthorities: Authorities,
+  keyType: KeychainKeyTypes = KeychainKeyTypes.active,
+) => {
+  if (keyType === KeychainKeyTypes.active) {
+    return newAuthorities.active.account_auths.filter(
+      (acc) => username === acc[0],
+    )[0];
+  } else if (keyType === KeychainKeyTypes.posting) {
+    return newAuthorities.posting.account_auths.filter(
+      (acc) => username === acc[0],
+    )[0];
+  }
 };
 
 const getAuthorityNameList = (config: MultisigGbotConfig): string[] => {

@@ -51,14 +51,24 @@ export const GranularityConfigurationSetup = () => {
     (state) => state.granularity.granularity.activeHasExistingGBot,
   );
   useEffect(() => {
-    const disable = deepequal(configuration, newConfiguration, {
-      strict: true,
-    });
-    setDisableButtons(disable);
-  }, [newConfiguration, configuration]);
+    if (initialSetupFlag) {
+      console.log('disable');
+      setDisableButtons(false);
+    } else {
+      const disable = deepequal(configuration, newConfiguration, {
+        strict: true,
+      });
+      setDisableButtons(disable);
+    }
+  }, [initialSetupFlag, newConfiguration, configuration]);
 
   useEffect(() => {
-    setDisableButtons(!removeGranularityToggle);
+    if (initialSetupFlag) {
+      console.log('disable');
+      setDisableButtons(false);
+    } else {
+      setDisableButtons(!removeGranularityToggle);
+    }
   }, [removeGranularityToggle]);
   const handleDiscard = () => {
     dispatch(updateGranularityConfiguration(configuration));
@@ -94,12 +104,17 @@ export const GranularityConfigurationSetup = () => {
   };
   const handleRemoveGranularity = async () => {
     let proceedRemoval = false;
+    console.log({ bots });
     const activeBotAuths = bots
       .map((bot) => {
         if (
           bot.keyType.toLowerCase() === KeychainKeyTypes.active.toLowerCase()
         ) {
-          return GranularityUtils.getAuthority(bot.botName, newAuthorities);
+          return GranularityUtils.getAuthority(
+            bot.botName,
+            newAuthorities,
+            KeychainKeyTypes.active,
+          );
         }
         return null; // Explicitly return null for bots that don’t match
       })
@@ -110,12 +125,18 @@ export const GranularityConfigurationSetup = () => {
         if (
           bot.keyType.toLowerCase() === KeychainKeyTypes.posting.toLowerCase()
         ) {
-          return GranularityUtils.getAuthority(bot.botName, newAuthorities);
+          return GranularityUtils.getAuthority(
+            bot.botName,
+            newAuthorities,
+            KeychainKeyTypes.posting,
+          );
         }
         return null;
       })
       .filter(Boolean);
 
+    console.log({ activeBotAuths });
+    console.log({ postingBotAuths });
     if (activeBotAuths && activeBotAuths.length > 0) {
       const active = structuredClone(newAuthorities.active);
 
@@ -133,6 +154,7 @@ export const GranularityConfigurationSetup = () => {
         }
         return sum;
       }, 0);
+      newActive.weight_threshold = Math.max(newActive.weight_threshold, 1);
       await dispatch(updateActive(newActive));
       proceedRemoval = true;
     }
@@ -155,9 +177,13 @@ export const GranularityConfigurationSetup = () => {
         }
         return sum;
       }, 0);
+
+      newPosting.weight_threshold = Math.max(newPosting.weight_threshold, 1);
+
       await dispatch(updatePosting(newPosting));
       proceedRemoval = true;
     }
+    console.log({ proceedRemoval });
     dispatch(proceedRemovalConfirmation(proceedRemoval));
   };
 
