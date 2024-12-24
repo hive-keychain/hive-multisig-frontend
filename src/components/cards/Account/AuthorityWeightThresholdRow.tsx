@@ -22,7 +22,6 @@ export function AuthorityWeightThreshold({
   const thresholdWarningRedux = useAppSelector(
     (state) => state.updateAuthorities.thresholdWarning,
   );
-  
 
   useEffect(() => {
     setReadOnly(!enableEdit);
@@ -35,9 +34,14 @@ export function AuthorityWeightThreshold({
   }, [isLoggedIn]);
 
   useEffect(() => {
-    setNewWeightThresh(threshold);
+    handleThresholdOnChange(threshold);
   }, [threshold]);
 
+  const handleThresholdOnChange = (thresh: number) => {
+    if (thresh > 0) {
+      setNewWeightThresh(thresh);
+    }
+  };
   useDidMountEffect(() => {
     if (weight !== threshold) {
       setEdiFlag('text-danger');
@@ -65,7 +69,7 @@ export function AuthorityWeightThreshold({
           className="form-control"
           id="threshInput"
           onChange={(e) => {
-            setNewWeightThresh(parseInt(e.target.value));
+            handleThresholdOnChange(parseInt(e.target.value));
           }}
           placeholder={weight.toString()}
           value={weight}
