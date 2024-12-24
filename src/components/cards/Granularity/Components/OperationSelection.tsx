@@ -151,7 +151,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
     var postingOptsGroup;
     var commonOptsGroup;
 
-    if (activeOptions && activeOptions.length > 0) {
+    if (isActiveAuth && activeOptions && activeOptions.length > 0) {
       activeOptsGroup = (
         <optgroup key={'active'} label={`Active Operations`}>
           {activeOptions}
@@ -159,7 +159,7 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
       );
     }
 
-    if (postingOptions && postingOptions.length > 0) {
+    if (isPostingAuth && postingOptions && postingOptions.length > 0) {
       postingOptsGroup = (
         <optgroup key={'posting'} label={`Posting Operations`}>
           {postingOptions}
@@ -177,10 +177,6 @@ export const OperationSelection = ({ authority }: IOperationSelection) => {
 
     setOperationsOptions([commonOptsGroup, activeOptsGroup, postingOptsGroup]);
   }, [commonOptions, activeOptions, postingOptions]);
-  // set the current selected operation
-  // useEffect(() => {
-  //   setSelectedOp(selectedOp);
-  // }, [selectedOp]);
 
   // update the local list of added operations
   useEffect(() => {
