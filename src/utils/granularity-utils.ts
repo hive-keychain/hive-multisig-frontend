@@ -7,7 +7,7 @@ import {
   Operation,
 } from '../interfaces/granularity.interface';
 import HiveUtils from './hive.utils';
-const defaultGBot = process.env.TWOFA_BOT;
+const defaultGBot = process.env.GRANULARITY_BOT;
 const GBOT_API_ADDRESS =
   process.env.GBOT_API_ADDRESS || 'http://localhost:5003';
 const apiGetGBotConfig = async (username: string) => {
