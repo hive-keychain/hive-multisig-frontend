@@ -221,7 +221,12 @@ const broadcastTransaction = async (
   return new Promise(async (resolve, reject) => {
     try {
       const auth = await AccountUtils.getActiveAuthorities(username);
-      const signer_weight = auth.active.key_auths[0][1];
+      const signer_weight =
+        initiator.username === username
+          ? auth.active.key_auths[0][1]
+          : auth.active.account_auths.find(
+              (a) => a[0] === initiator.username,
+            )[1];
       if (signer_weight >= auth.active.weight_threshold) {
         //non multisig transaction
         nonMultisigTxBroadcast(transaction, username)

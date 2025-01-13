@@ -72,7 +72,6 @@ export const TransactionPage = () => {
   const [askOtp, setAskOtp] = useState<boolean>(false);
 
   const [transaction, setTransaction] = useState<Hive.Transaction>(undefined);
-
   const submittedOp = useSubmitTransactionState();
 
   useEffect(() => {
@@ -88,7 +87,7 @@ export const TransactionPage = () => {
 
   useEffect(() => {
     if (operation && isLoggedIn) {
-      handleMultisigTransaciton();
+      handleMultisigTransaction();
     }
   }, [submittedOp]);
 
@@ -131,9 +130,9 @@ export const TransactionPage = () => {
     await dispatch(setInitiator(initiator));
   };
 
-  const handleMultisigTransaciton = async () => {
+  const handleMultisigTransaction = async () => {
     const transaction = await HiveTxUtils.createTx(
-      [operation],
+      [operation as Hive.Operation],
       transactionState.expiration,
     );
 
@@ -144,9 +143,10 @@ export const TransactionPage = () => {
 
     if (twoFASigners.length === 0) {
       try {
+        const username = HiveMultisig.getUsernameFromTransaction(transaction);
         MultisigUtils.broadcastTransaction(
           transaction,
-          signedAccountObj.data.username,
+          username.toString(),
           transactionState.initiator,
         )
           .then((res: string) => {
