@@ -55,7 +55,9 @@ const getAccountActiveKey = async (username: string) => {
 const getJSONMetadata = async (username: string) => {
   try {
     const account = await getAccount(username);
+    console.log('before parsing 1', account?.[0]);
     const jsonMetadata = JSON.parse(account[0]['json_metadata']);
+    console.log('after parsing 1', jsonMetadata);
     return jsonMetadata;
   } catch {
     return undefined;
