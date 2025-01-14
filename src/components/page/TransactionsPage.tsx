@@ -86,7 +86,7 @@ export const TransactionPage = () => {
   }, []);
 
   useEffect(() => {
-    if (operation && isLoggedIn) {
+    if (submittedOp && operation && isLoggedIn) {
       handleMultisigTransaction();
     }
   }, [submittedOp]);
