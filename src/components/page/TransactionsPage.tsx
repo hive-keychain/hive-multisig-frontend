@@ -1,4 +1,5 @@
 import * as Hive from '@hiveio/dhive';
+import { sleep } from '@hiveio/dhive/lib/utils';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { ReactNode, useEffect, useState } from 'react';
@@ -86,9 +87,11 @@ export const TransactionPage = () => {
   }, []);
 
   useEffect(() => {
-    if (submittedOp && operation && isLoggedIn) {
-      handleMultisigTransaction();
-    }
+    sleep(200).then(() => {
+      if (submittedOp && operation && isLoggedIn) {
+        handleMultisigTransaction();
+      }
+    });
   }, [submittedOp]);
 
   useEffect(() => {
