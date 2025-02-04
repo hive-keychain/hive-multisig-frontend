@@ -207,9 +207,43 @@ export const GranularityBotSetup = () => {
   const handleOwnerKeyAgreement = (value: any) => {
     setOwnerKeyCheckBox(value);
   };
+  const validActiveThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.active.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.active.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
 
+    return totalWeight >= newAuthorities.active.weight_threshold;
+  };
+
+  const validPostingThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.posting.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.posting.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
+    return totalWeight >= newAuthorities.posting.weight_threshold;
+  };
   const handleProceedConfiguration = () => {
-    dispatch(proceedConfiguration(true));
+    const isValidActiveThreshold = validActiveThreshold();
+    const isValidPostingThreshold = validPostingThreshold();
+    if (isValidActiveThreshold && isValidPostingThreshold) {
+      dispatch(proceedConfiguration(true));
+    } else {
+      alert(`${
+        isValidActiveThreshold ? '' : 'Active weight assignments are invalid.\n'
+      }${
+        isValidPostingThreshold
+          ? ''
+          : 'Posting weight assignments are invalid.\n'
+      }Total weight must be greater than or equal to weight threshold.
+        `);
+    }
   };
 
   return (
