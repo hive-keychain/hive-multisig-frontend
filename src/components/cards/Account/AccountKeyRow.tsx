@@ -177,8 +177,8 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
         break;
     }
   };
-  const handleUpdate = (v: number) => {
-    setWeight(v);
+  const handleUpdateWeight = (weight: number) => {
+    if (weight > 0) setWeight(weight);
   };
   const handleDelete = () => {
     setDeleteComponentKey(accountKeyAuth[0]);
@@ -220,7 +220,7 @@ export const AccountKeyRow: FC<IAccountKeyRowProps> = ({
                 step="1"
                 className={`form-control ${outlineColor}`}
                 id="weightInput"
-                onChange={(e) => handleUpdate(parseInt(e.target.value))}
+                onChange={(e) => handleUpdateWeight(parseInt(e.target.value))}
                 placeholder={weight.toString()}
                 value={weight}
                 readOnly={readOnly}
