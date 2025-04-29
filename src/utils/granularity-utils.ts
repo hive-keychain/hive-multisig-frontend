@@ -39,7 +39,7 @@ const toGBotConfig = (apiConfig: any): Configuration[] => {
     if (opConfig.operation === 'custom_json') {
       configMap[authority].push({
         operationName: opConfig.operation,
-        id: [],
+        id: opConfig.ids || [],
       });
     } else {
       configMap[authority].push({
