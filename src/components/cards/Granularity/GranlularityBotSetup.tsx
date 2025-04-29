@@ -70,11 +70,6 @@ export const GranularityBotSetup = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(allowAddActiveAccount(addedActiveAuthorities.length === 0));
-    dispatch(allowAddPostingAccount(addedPostingAuthorities.length === 0));
-  }, [addedActiveAuthorities, addedPostingAuthorities]);
-
-  useEffect(() => {
     setDisableSubmitBtn(!(accountEdited && ownerKeyCheckBoxChecked));
   }, [accountEdited, ownerKeyCheckBoxChecked]);
 
@@ -84,32 +79,16 @@ export const GranularityBotSetup = () => {
   }, [key]);
 
   useEffect(() => {
-    switch (key) {
-      case 'default':
-        if (originalAuthorities) {
-          upadteUseActiveGBot(true);
-          updateUsePostingGBot(true);
-        }
-        dispatch(allowEdit(false));
-        dispatch(disableDeleteBtn(true));
-        dispatch(allowAddActiveAccount(false));
-        dispatch(allowAddPostingAccount(false));
-        dispatch(allowDeleteOnlyBot(false));
-
-        break;
-      case 'custom':
-        if (originalAuthorities) {
-          upadteUseActiveGBot(false);
-          updateUsePostingGBot(false);
-        }
-        dispatch(allowEdit(true));
-        dispatch(disableDeleteBtn(true));
-        dispatch(allowAddActiveAccount(true));
-        dispatch(allowAddPostingAccount(true));
-        dispatch(allowDeleteOnlyBot(true));
-        console.log('custom');
-        break;
+    if (originalAuthorities) {
+      const isDefault = key === 'default';
+      upadteUseActiveGBot(isDefault);
+      updateUsePostingGBot(isDefault);
     }
+    dispatch(allowEdit(true));
+    dispatch(disableDeleteBtn(true));
+    dispatch(allowAddActiveAccount(true));
+    dispatch(allowAddPostingAccount(true));
+    dispatch(allowDeleteOnlyBot(true));
   }, [key, originalAuthorities]);
 
   useEffect(() => {
@@ -228,9 +207,43 @@ export const GranularityBotSetup = () => {
   const handleOwnerKeyAgreement = (value: any) => {
     setOwnerKeyCheckBox(value);
   };
+  const validActiveThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.active.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.active.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
 
+    return totalWeight >= newAuthorities.active.weight_threshold;
+  };
+
+  const validPostingThreshold = (): boolean => {
+    let totalWeight = 0;
+    newAuthorities.posting.account_auths.forEach((account) => {
+      totalWeight += account[1];
+    });
+    newAuthorities.posting.key_auths.forEach((key) => {
+      totalWeight += key[1];
+    });
+    return totalWeight >= newAuthorities.posting.weight_threshold;
+  };
   const handleProceedConfiguration = () => {
-    dispatch(proceedConfiguration(true));
+    const isValidActiveThreshold = validActiveThreshold();
+    const isValidPostingThreshold = validPostingThreshold();
+    if (isValidActiveThreshold && isValidPostingThreshold) {
+      dispatch(proceedConfiguration(true));
+    } else {
+      alert(`${
+        isValidActiveThreshold ? '' : 'Active weight assignments are invalid.\n'
+      }${
+        isValidPostingThreshold
+          ? ''
+          : 'Posting weight assignments are invalid.\n'
+      }Total weight must be greater than or equal to weight threshold.
+        `);
+    }
   };
 
   return (

@@ -99,6 +99,7 @@ export const GranularityPage = () => {
       dispatch(postingHasExistingGBot(hasPostingDefaultGBot));
     }
   }, [originalAuthorities]);
+  
   useEffect(() => {
     dispatch(granularityActions.resetState());
     getAuthorities();

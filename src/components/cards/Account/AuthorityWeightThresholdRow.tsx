@@ -48,6 +48,7 @@ export function AuthorityWeightThreshold({
     } else {
       setEdiFlag('text-body');
     }
+
     const payload: IAccountKeyRowProps = {
       authorityName,
       type,
