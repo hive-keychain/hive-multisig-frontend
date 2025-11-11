@@ -204,6 +204,7 @@ const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
     props.newAuthorities,
     Hive.PrivateKey.from(props.ownerKey),
   );
+  console.log('result', result, props.newAuthorities, props.ownerKey);
 };
 
 const requestSignTx = async (

@@ -10,6 +10,7 @@ import {
   resetOperation,
   setInitiator,
 } from '../../redux/features/transaction/transactionThunks';
+import { dhiveBroadcastUpdateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import HiveUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
 import { useDidMountEffect } from '../../utils/utils';
@@ -30,12 +31,14 @@ export const UpdateAuthoritiesConfirmation = ({
 
   const [
     updateAuthorityState,
+    ownerState,
     activeState,
     postingState,
     isActiveKeyDeleted,
     isPostingKeyDeleted,
   ] = useAuthoritiesUpdateState();
   const [askOtp, setAskOtp] = useState<boolean>(false);
+  const [ownerKey, setOwnerKey] = useState<string>('');
 
   const originalAuthorities = useAppSelector(
     (state) => state.updateAuthorities.Authorities,
@@ -89,6 +92,27 @@ export const UpdateAuthoritiesConfirmation = ({
 
   const handleUpdate = async () => {
     console.log('========== Starting Account Update ==========');
+    if (ownerState) {
+      if (!ownerKey) {
+        alert('Owner private key is required to update Owner authority.');
+        return;
+      }
+      try {
+        console.log('updating account with owner key: ', ownerKey);
+        await dispatch(
+          dhiveBroadcastUpdateAccount({
+            newAuthorities: newAuths,
+            ownerKey,
+          }),
+        );
+        setTimeout(() => {
+          setReloadWindow(true);
+        }, 3000);
+      } catch (reason) {
+        alert(reason);
+      }
+      return;
+    }
     if (updateAuthorityState) {
       MultisigUtils.accountUpdateWithActiveAuthority(
         signedAccountObj.data.username,
@@ -158,6 +182,17 @@ export const UpdateAuthoritiesConfirmation = ({
           </Modal.Header>
           <Modal.Body>
             <Form.Label>Are you sure you want to update?</Form.Label>
+            {ownerState ? (
+              <div style={{ marginTop: '12px' }}>
+                <Form.Label>Enter Owner private key</Form.Label>
+                <Form.Control
+                  type="password"
+                  placeholder="5..."
+                  value={ownerKey}
+                  onChange={(e) => setOwnerKey(e.target.value)}
+                />
+              </div>
+            ) : null}
           </Modal.Body>
           <Modal.Footer>
             <Button
@@ -171,7 +206,11 @@ export const UpdateAuthoritiesConfirmation = ({
             <Button
               variant="primary"
               onClick={() => {
-                twoFASigners ? handleOtp() : handleUpdate();
+                ownerState
+                  ? handleUpdate()
+                  : twoFASigners
+                  ? handleOtp()
+                  : handleUpdate();
               }}>
               Update
             </Button>
@@ -183,6 +222,9 @@ export const UpdateAuthoritiesConfirmation = ({
 };
 
 const useAuthoritiesUpdateState = () => {
+  const isOwnerAuthUpdated = useAppSelector(
+    (state) => state.updateAuthorities.isOwnerAuthUpdated,
+  );
   const isPostingAuthUpdated = useAppSelector(
     (state) => state.updateAuthorities.isPostingAuthUpdated,
   );
@@ -198,7 +240,8 @@ const useAuthoritiesUpdateState = () => {
   );
 
   return [
-    isActiveAuthUpdated || isPostingAuthUpdated,
+    isOwnerAuthUpdated || isActiveAuthUpdated || isPostingAuthUpdated,
+    isOwnerAuthUpdated,
     isActiveAuthUpdated,
     isPostingAuthUpdated,
     isActiveKeyDeleted,
