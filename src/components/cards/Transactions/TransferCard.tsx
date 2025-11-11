@@ -125,6 +125,30 @@ function Transfer() {
                 <Card.Title>Transfer Operation</Card.Title>
                 <Form noValidate onSubmit={handleSubmit}>
                   <InputRow
+                    rowKey="from"
+                    prepend="@"
+                    label="From"
+                    rowName="from"
+                    type="text"
+                    placeholder="Username"
+                    value={values.from}
+                    onChangeFunc={handleChange}
+                    invalidFlag={touched.from && !!errors.from}
+                    error={errors.from}
+                  />
+                  <InputRow
+                    rowKey="to"
+                    prepend="@"
+                    label="To"
+                    rowName="to"
+                    type="text"
+                    placeholder="Username"
+                    value={values.to}
+                    onChangeFunc={handleChange}
+                    invalidFlag={touched.to && !!errors.to}
+                    error={errors.to}
+                  />
+                  <InputRow
                     rowKey="amount"
                     label="Amount"
                     rowName="amount"
@@ -149,32 +173,8 @@ function Transfer() {
                     invalidFlag={touched.memo && !!errors.memo}
                     error={errors.memo}
                   />
-                  <Expiration setExpiration={setTxExpiration} />
 
-                  <InputRow
-                    rowKey="from"
-                    prepend="@"
-                    label="From"
-                    rowName="from"
-                    type="text"
-                    placeholder="Username"
-                    value={values.from}
-                    onChangeFunc={handleChange}
-                    invalidFlag={touched.from && !!errors.from}
-                    error={errors.from}
-                  />
-                  <InputRow
-                    rowKey="to"
-                    prepend="@"
-                    label="To"
-                    rowName="to"
-                    type="text"
-                    placeholder="Username"
-                    value={values.to}
-                    onChangeFunc={handleChange}
-                    invalidFlag={touched.to && !!errors.to}
-                    error={errors.to}
-                  />
+                  <Expiration setExpiration={setTxExpiration} />
 
                   <div className="d-flex justify-content-end">
                     <Button
