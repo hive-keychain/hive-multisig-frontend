@@ -2,7 +2,7 @@ import * as Hive from '@hiveio/dhive';
 import { sleep } from '@hiveio/dhive/lib/utils';
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { HiveMultisig } from 'hive-multisig-sdk/src';
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
@@ -74,6 +74,8 @@ export const TransactionPage = () => {
 
   const [transaction, setTransaction] = useState<Hive.Transaction>(undefined);
   const submittedOp = useSubmitTransactionState();
+  const isProcessingRef = useRef<boolean>(false);
+  const lastProcessedOperationRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (signedAccountObj) {
@@ -88,11 +90,19 @@ export const TransactionPage = () => {
 
   useEffect(() => {
     sleep(200).then(() => {
-      if (submittedOp && operation && isLoggedIn) {
-        handleMultisigTransaction();
+      if (submittedOp && operation && isLoggedIn && !isProcessingRef.current) {
+        // Create a unique identifier for this operation to prevent reprocessing
+        const operationId = JSON.stringify(operation);
+        
+        // Only process if this is a new operation
+        if (lastProcessedOperationRef.current !== operationId) {
+          isProcessingRef.current = true;
+          lastProcessedOperationRef.current = operationId;
+          handleMultisigTransaction();
+        }
       }
     });
-  }, [submittedOp]);
+  }, [submittedOp, operation]);
 
   useEffect(() => {
     handleSelectOnChange(transactionType);
@@ -156,14 +166,23 @@ export const TransactionPage = () => {
             if (confirm(res)) {
               //wait for confirmation
             }
+            // Reset operation after successful broadcast to prevent reprocessing
+            dispatch(resetOperation());
+            isProcessingRef.current = false;
             dispatch(setTxStatus(TxStatus.success));
           })
           .catch((e) => {
             if (confirm(e)) {
             }
+            // Reset operation after failed broadcast to prevent reprocessing
+            dispatch(resetOperation());
+            isProcessingRef.current = false;
             dispatch(setTxStatus(TxStatus.failed));
           });
       } catch (error) {
+        // Reset operation after error to prevent reprocessing
+        dispatch(resetOperation());
+        isProcessingRef.current = false;
         dispatch(setTxStatus(TxStatus.failed));
       }
     } else {
@@ -189,14 +208,26 @@ export const TransactionPage = () => {
           if (confirm(res)) {
             //wait for confirmation
           }
+          // Reset operation after successful broadcast to prevent reprocessing
+          dispatch(resetOperation());
+          isProcessingRef.current = false;
+          lastProcessedOperationRef.current = undefined;
           dispatch(setTxStatus(TxStatus.success));
         })
         .catch((e) => {
           if (confirm(e)) {
-            dispatch(setTxStatus(TxStatus.failed));
           }
+          // Reset operation after failed broadcast to prevent reprocessing
+          dispatch(resetOperation());
+          isProcessingRef.current = false;
+          lastProcessedOperationRef.current = undefined;
+          dispatch(setTxStatus(TxStatus.failed));
         });
     } catch (error) {
+      // Reset operation after error to prevent reprocessing
+      dispatch(resetOperation());
+      isProcessingRef.current = false;
+      lastProcessedOperationRef.current = undefined;
       dispatch(setTxStatus(TxStatus.failed));
     }
   };
@@ -366,14 +397,17 @@ const useTxStatus = () => {
   useEffect(() => {
     switch (txStatus) {
       case TxStatus.success:
+        dispatch(resetOperation());
         dispatch(setTxStatus(TxStatus.none));
         navigate('/');
         break;
       case TxStatus.failed:
+        dispatch(resetOperation());
         dispatch(setTxStatus(TxStatus.none));
         navigate('/');
         break;
       case TxStatus.cancel:
+        dispatch(resetOperation());
         dispatch(setTxStatus(TxStatus.none));
         navigate('/');
         break;
