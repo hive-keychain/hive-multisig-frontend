@@ -1,6 +1,52 @@
 a.nounderline {
   text-decoration: none;
 }
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--bs-tertiary-bg);
+}
+
+.app-main {
+  flex: 1;
+  padding-top: 2rem;
+  padding-bottom: 2.5rem;
+}
+
+.app-container {
+  max-width: 1100px;
+}
+
+.footer-text {
+  text-align: center;
+  padding: 12px 0;
+  color: var(--bs-secondary-color);
+  background-color: var(--bs-body-bg);
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+}
+
+.app-card {
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  border-radius: var(--bs-border-radius-lg);
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.page-subtitle {
+  margin: 0.25rem 0 0;
+  color: var(--bs-secondary-color);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
 @media (min-width: 576px) {
   .w-lg-50 {
     width: 50% !important;
@@ -52,7 +98,7 @@ a.nounderline {
   justify-content: center;
 }
 .nav-text-color {
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--bs-navbar-color);
 }
 .search-input-group {
   width: 20% !important;
@@ -140,32 +186,12 @@ a.nounderline {
   border-radius: 50%;
 }
 html {
-  min-height: 100%;
   height: 100%;
-  display: flex;
-  margin: 0;
-  padding: 0;
-  flex: 1;
 }
 
 body {
   margin: 0;
-  background-color: #212529;
-}
-
-body,
-#root,
-.App {
-  display: flex;
-  background-color: white;
-  height: 100%;
-  flex: 1;
-}
-
-.App {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  background-color: var(--bs-tertiary-bg);
 }
 
 .App-logo {
@@ -208,7 +234,4 @@ body,
   justify-content: center;
 }
 
-.footer-text {
-  text-align: center;
-  padding-bottom: 10px;
-}
+

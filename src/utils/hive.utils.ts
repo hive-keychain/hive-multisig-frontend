@@ -217,22 +217,34 @@ const requestSignTx = async (
       const keychain = window.hive_keychain;
       let signResult: Hive.SignedTransaction | undefined = undefined;
       try {
-        await keychain.requestSignTx(
-          username,
-          tx,
-          method,
-          async (response: { error: any; result: Hive.SignedTransaction }) => {
-            if (!response.error) {
-              signResult = response.result;
-              client.database.verifyAuthority(response.result).then((valid) => {
-                if (valid) resolve(signResult);
-                else reject(response);
-              });
-            } else {
-              reject(response);
-            }
-          },
-        );
+        const attempt = async (txToSend: any) => {
+          await keychain.requestSignTx(
+            username,
+            txToSend,
+            method,
+            async (response: { error: any; result: Hive.SignedTransaction }) => {
+              if (!response.error) {
+                signResult = response.result;
+                client.database
+                  .verifyAuthority(response.result)
+                  .then((valid) => {
+                    if (valid) resolve(signResult);
+                    else reject(response);
+                  });
+              } else {
+                reject(response);
+              }
+            },
+          );
+        };
+
+        try {
+          // Keychain typically expects an object transaction.
+          await attempt(tx as any);
+        } catch (e) {
+          // Some Keychain implementations accept a JSON string.
+          await attempt(JSON.stringify(tx));
+        }
       } catch (e) {
         reject(e);
       }

@@ -6,6 +6,15 @@ import { PersistGate } from 'redux-persist/integration/react';
 import App from './App';
 import './index.css';
 import { persistor, store } from './redux/app/store';
+
+import {
+  applyResolvedThemeToDocument,
+  readThemePreference,
+  resolveTheme,
+} from './utils/theme';
+
+// Apply theme as early as possible (pre-render).
+applyResolvedThemeToDocument(resolveTheme(readThemePreference()));
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );

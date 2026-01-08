@@ -25,11 +25,28 @@ import {
   getElapsedTimestampSeconds,
   getTimestampInSeconds,
 } from '../../utils/utils';
+import {
+  applyResolvedThemeToDocument,
+  cycleThemePreference,
+  resolveTheme,
+  ThemePreference,
+} from '../../utils/theme';
 
 const NavBar = () => {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [destination, setDestination] = useState<string>('');
   const [displayLoginBtn, setDisplayLoginBtn] = useState(false);
+  const [themePreference, setThemePreference] = useLocalStorage<ThemePreference>(
+    'themePreference',
+    'system',
+  );
+  const [prefersDark, setPrefersDark] = useState<boolean>(() => {
+    try {
+      return window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false;
+    } catch {
+      return false;
+    }
+  });
   const loginExpirationInSec = Config.login.expirationInSec;
   const isLoginSucceed = useAppSelector(
     (state) => state.login.isSignatureSuccess,
@@ -55,6 +72,41 @@ const NavBar = () => {
   );
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  const resolvedTheme = resolveTheme(
+    themePreference === 'system' ? (prefersDark ? 'dark' : 'light') : themePreference,
+  );
+
+  useEffect(() => {
+    applyResolvedThemeToDocument(resolvedTheme);
+  }, [resolvedTheme]);
+
+  useEffect(() => {
+    if (themePreference !== 'system') return;
+    let mql: MediaQueryList | null = null;
+    const onChange = (event: MediaQueryListEvent | MediaQueryList) => {
+      // MediaQueryListEvent in modern browsers, MediaQueryList in some fallbacks
+      const matches = 'matches' in event ? event.matches : (event as any).matches;
+      setPrefersDark(Boolean(matches));
+    };
+
+    try {
+      mql = window.matchMedia?.('(prefers-color-scheme: dark)') ?? null;
+      if (!mql) return;
+      setPrefersDark(Boolean(mql.matches));
+      if (typeof mql.addEventListener === 'function') {
+        mql.addEventListener('change', onChange);
+        return () => mql?.removeEventListener?.('change', onChange);
+      }
+      // Safari
+      if (typeof (mql as any).addListener === 'function') {
+        (mql as any).addListener(onChange);
+        return () => (mql as any).removeListener?.(onChange);
+      }
+    } catch {
+      // ignore
+    }
+  }, [themePreference]);
 
   useEffect(() => {
     if (destination !== '') {
@@ -108,17 +160,12 @@ const NavBar = () => {
       collapseOnSelect
       expanded={expanded}
       expand="lg"
-      bg="dark"
-      variant="dark"
+      bg={resolvedTheme === 'dark' ? 'dark' : 'light'}
+      variant={resolvedTheme === 'dark' ? 'dark' : 'light'}
       sticky="top">
       <Container fluid>
         <Navbar.Brand
-          className="nav-text-color ms-0 me-1"
-          style={{
-            paddingRight: 15,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
+          className="nav-text-color ms-0 me-1 clickable d-flex align-items-center"
           onClick={() => {
             isLoggedIn && accountDetails
               ? setDestination('/transaction')
@@ -193,6 +240,20 @@ const NavBar = () => {
               <></>
             )}
           </Nav>
+
+          <div className="ms-lg-auto d-flex align-items-center gap-2">
+            <Button
+              size="sm"
+              variant={resolvedTheme === 'dark' ? 'outline-light' : 'outline-dark'}
+              onClick={() => setThemePreference(cycleThemePreference(themePreference))}
+              aria-label="Toggle theme">
+              {themePreference === 'system'
+                ? 'Theme: System'
+                : themePreference === 'dark'
+                  ? 'Theme: Dark'
+                  : 'Theme: Light'}
+            </Button>
+          </div>
           {/* Search bar when collapsed and logged in
           <NavSearchBar
             classNames="w-auto mt-2 me-auto d-md d-lg-none d-xl-none d-xxl-none"

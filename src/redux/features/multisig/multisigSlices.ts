@@ -23,6 +23,18 @@ import {
   subscribeToSignRequests,
 } from './multisigThunks';
 
+const sameId = (a: unknown, b: unknown) => String(a) === String(b);
+
+const dedupeByIdPreserveOrder = <T extends { id: unknown }>(items: T[]): T[] => {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = String(item.id);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const initialState: State = {
   signerConnectMessageActive: undefined,
   signerConnectMessagePosting: undefined,
@@ -115,7 +127,7 @@ const multisigSlice = createSlice({
       if (action.payload) {
         action.payload.forEach((broadcasted) => {
           const index = state.signRequests.findIndex(
-            (sr) => sr.id === broadcasted.id,
+            (sr) => sameId(sr.id, broadcasted.id),
           );
           if (index !== -1) {
             state.signRequests = [
@@ -133,14 +145,14 @@ const multisigSlice = createSlice({
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
         );
 
-        state.signRequests = sortedSignRequests;
+        state.signRequests = dedupeByIdPreserveOrder(sortedSignRequests);
       }
     });
     builder.addCase(addSignRequest.fulfilled, (state, action) => {
       if (action.payload) {
         action.payload.forEach((newSignRequest) => {
           const index = state.signRequests.findIndex(
-            (sr) => sr.id === newSignRequest.id,
+            (sr) => sameId(sr.id, newSignRequest.id),
           );
 
           if (index !== -1) {
@@ -163,7 +175,7 @@ const multisigSlice = createSlice({
               new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           );
 
-          state.signRequests = sortedSignRequests;
+          state.signRequests = dedupeByIdPreserveOrder(sortedSignRequests);
         });
       }
     });
@@ -172,9 +184,7 @@ const multisigSlice = createSlice({
       if (action.payload) {
         action.payload.forEach((newReq) => {
           const existing = state.userPendingSignatureRequest.find(
-            (existingReq) => {
-              existingReq.id === newReq.id;
-            },
+            (existingReq) => sameId(existingReq.id, newReq.id),
           );
 
           if (!existing) {
@@ -194,7 +204,7 @@ const multisigSlice = createSlice({
         action.payload.forEach((notif) => {
           const exsisting = state.userNotifications.find(
             (exsistingNotif) =>
-              exsistingNotif.signatureRequest.id === notif.signatureRequest.id,
+              sameId(exsistingNotif.signatureRequest.id, notif.signatureRequest.id),
           );
           if (!exsisting) {
             state.userNotifications = [...state.userNotifications, notif];
@@ -209,7 +219,7 @@ const multisigSlice = createSlice({
 
     builder.addCase(removeSignRequest.fulfilled, (state, action) => {
       state.signRequests = state.signRequests.filter(
-        (item) => item.id !== action.payload,
+        (item) => !sameId(item.id, action.payload),
       );
       state.signRequestCount = state.signRequests.length;
       state.success = true;

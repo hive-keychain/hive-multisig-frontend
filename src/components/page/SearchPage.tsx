@@ -65,7 +65,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   return (
     <div>
-      <div className="ms-2 text-start" style={{ color: 'black' }}>
+      <div className="ms-2 text-start text-body">
         <h5>Search Account</h5>
       </div>
       <DisplayValidity />
