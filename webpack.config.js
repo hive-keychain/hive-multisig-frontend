@@ -12,7 +12,6 @@ module.exports = {
   },
   devServer: {
     port: 8080,
-    historyApiFallback: true,
     historyApiFallback: {
       disableDotRule: true,
     },
@@ -46,6 +45,9 @@ module.exports = {
           loader: 'ts-loader',
           options: {
             allowTsInNodeModules: true,
+            compilerOptions: {
+              module: 'esnext',
+            },
           },
         },
       },

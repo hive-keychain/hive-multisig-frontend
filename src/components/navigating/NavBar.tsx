@@ -12,7 +12,7 @@ import {
   Navbar,
   Stack,
 } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
@@ -22,9 +22,11 @@ import { transactionActions } from '../../redux/features/transaction/transaction
 import { twoFactorAuthActions } from '../../redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from '../../redux/features/updateAuthorities/updateAuthoritiesSlice';
 import {
-  getElapsedTimestampSeconds,
-  getTimestampInSeconds,
-} from '../../utils/utils';
+  isSessionExpired,
+  isSessionValid,
+  LOGIN_TIMESTAMP_STORAGE_KEY,
+  parseLoginTimestampSeconds,
+} from '../../utils/session';
 import {
   applyResolvedThemeToDocument,
   cycleThemePreference,
@@ -67,10 +69,11 @@ const NavBar = () => {
     signedAccountObj,
   );
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
   const resolvedTheme = resolveTheme(
@@ -118,18 +121,54 @@ const NavBar = () => {
   }, [destination]);
 
   useEffect(() => {
-    if (isLoggedIn) {
-      const loggedinDuration = getElapsedTimestampSeconds(
-        loginTimestamp,
-        getTimestampInSeconds(),
-      );
-      if (loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec) {
+    // Keep NavBar state consistent with the same session rule used elsewhere:
+    // a session is only valid if loginTimestamp is a positive number and not expired.
+    const rawNum =
+      typeof loginTimestamp === 'string' || typeof loginTimestamp === 'number'
+        ? Number(loginTimestamp)
+        : NaN;
+
+    // Explicit logout marker
+    if (rawNum === 0) {
+      if (isLoggedIn || accountDetails) {
+        setStorageAccountDetails(null);
+        setStorageIsLoggedIn(false);
+      }
+      return;
+    }
+
+    const ts = parseLoginTimestampSeconds(loginTimestamp);
+
+    // If we have loginStatus/accountDetails but no timestamp, treat it as stale
+    // *except* during the brief window where the login page is setting values.
+    if (ts === null) {
+      if (location.pathname === '/login') return;
+      if (isLoggedIn || accountDetails) {
         setLoginTimestamp(0);
         setStorageAccountDetails(null);
         setStorageIsLoggedIn(false);
       }
+      return;
     }
-  }, []);
+
+    // Normal expiration enforcement.
+    if (isSessionExpired(loginTimestamp, loginExpirationInSec)) {
+      setLoginTimestamp(0);
+      setStorageAccountDetails(null);
+      setStorageIsLoggedIn(false);
+    }
+  }, [
+    loginTimestamp,
+    loginExpirationInSec,
+    location.pathname,
+    isLoggedIn,
+    accountDetails,
+    setLoginTimestamp,
+    setStorageAccountDetails,
+    setStorageIsLoggedIn,
+  ]);
+
+  const sessionValid = isSessionValid(loginTimestamp, loginExpirationInSec);
 
   const handleNavigation = () => {
     navigate(destination);
@@ -151,7 +190,8 @@ const NavBar = () => {
       dispatch(transactionActions.resetState());
       dispatch(updateAuthorityActions.resetState());
       dispatch(twoFactorAuthActions.resetState());
-      setDestination('/login');
+      navigate('/login', { replace: true });
+      setDestination('');
     }
   };
 
@@ -165,9 +205,9 @@ const NavBar = () => {
       sticky="top">
       <Container fluid>
         <Navbar.Brand
-          className="nav-text-color ms-0 me-1 clickable d-flex align-items-center"
+          className="nav-text-color ms-0 me-1 clickable d-flex align-items-center gap-2"
           onClick={() => {
-            isLoggedIn && accountDetails
+            sessionValid && accountDetails
               ? setDestination('/transaction')
               : setDestination('/');
           }}>
@@ -175,10 +215,9 @@ const NavBar = () => {
             alt=""
             src="img/multisig.png"
             width="50"
-            className="d-inline-block align-top me-0"
-            style={{ marginRight: 10 }}
-          />{' '}
-          {`Hive Multisig`}
+            className="d-inline-block align-top"
+          />
+          Hive Multisig
         </Navbar.Brand>
         <Navbar.Toggle
           onClick={() => setExpanded(expanded ? false : true)}
@@ -198,7 +237,7 @@ const NavBar = () => {
             isLoggedIn={!accountDetails}
             setDestination={setDestination}
           /> */}
-          {isLoggedIn && accountDetails ? (
+          {sessionValid && accountDetails ? (
             <NavUserAvatar
               classNames="mt-1  d-md d-lg-none d-xl-none d-xxl-none"
               username={accountDetails.data.username}
@@ -206,12 +245,12 @@ const NavBar = () => {
           ) : null}
           {/*Navs*/}
           <Nav className="me-2">
-            {isLoggedIn && accountDetails ? (
+            {sessionValid && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/transaction')}>
                 Transactions
               </Nav.Link>
             ) : null}
-            {isLoggedIn && accountDetails ? (
+            {sessionValid && accountDetails ? (
               <Nav.Link
                 onClick={() =>
                   setDestination(`@${accountDetails.data.username}`)
@@ -219,7 +258,7 @@ const NavBar = () => {
                 Update Account
               </Nav.Link>
             ) : null}
-            {isLoggedIn && accountDetails ? (
+            {sessionValid && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/signRequest')}>
                 Sign Requests{' '}
                 {signRequest ? (
@@ -232,7 +271,7 @@ const NavBar = () => {
               <></>
             )}
 
-            {isLoggedIn && accountDetails ? (
+            {sessionValid && accountDetails ? (
               <Nav.Link onClick={() => setDestination('/twoFactor')}>
                 2FA (Beta)
               </Nav.Link>
@@ -267,7 +306,7 @@ const NavBar = () => {
             setDestination={setDestination}
           /> 
           */}
-          {isLoggedIn && accountDetails ? (
+          {sessionValid && accountDetails ? (
             <div className="mt-3 d-md d-lg-none d-xl-none d-xxl-none">
               <Nav.Link
                 className="nav-text-color"

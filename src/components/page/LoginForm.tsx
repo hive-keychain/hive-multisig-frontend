@@ -6,6 +6,7 @@ import { Button, Card, Form, InputGroup, Stack } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
+import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { login } from '../../redux/features/login/loginSlice';
 import {
@@ -17,6 +18,8 @@ import {
   signerConnectPosting,
 } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import { notifyError, notifyWarning } from '../../utils/notify';
+import { isSessionValid, LOGIN_TIMESTAMP_STORAGE_KEY } from '../../utils/session';
 import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
@@ -49,10 +52,13 @@ const LoginForm = () => {
   );
 
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
   const [isFocused, setIsFocused] = useState<boolean>(false);
+
+  const isSubmittingRef = useRef(false);
+  const loginPayloadRef = useRef<LoginResponseType | null>(null);
 
   const inputRef = useRef(null);
 
@@ -66,17 +72,14 @@ const LoginForm = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && accountDetails) {
-      navigate(`/transaction`);
-    } else {
+    // If user manually navigates to /login while already logged in,
+    // redirect them to the main transactions page.
+    if (isSubmittingRef.current) return;
+    const sessionValid = isSessionValid(loginTimestamp, loginExpirationInSec);
+    if (sessionValid && accountDetails) {
+      navigate(`/transaction`, { replace: true });
     }
-  }, [accountDetails]);
-
-  useEffect(() => {
-    if (isLoginSucceed) {
-      loginInitAsync();
-    }
-  }, [isLoginSucceed]);
+  }, [accountDetails, loginExpirationInSec, loginTimestamp, navigate]);
 
   useEffect(() => {
     if (isFocused) {
@@ -92,10 +95,12 @@ const LoginForm = () => {
     }
   });
 
-  const loginInitAsync = async () => {
-    await setStorageIsLoggedIn(isLoginSucceed);
-    await setStorageAccountDetails(signedAccountObj);
-    await setLoginTimestamp(getTimestampInSeconds());
+  const loginInitAsync = async (payload: LoginResponseType | null) => {
+    // Important: set timestamp first so other components don't see
+    // loginStatus/accountDetails without a valid session timestamp.
+    setLoginTimestamp(getTimestampInSeconds());
+    setStorageAccountDetails(payload);
+    setStorageIsLoggedIn(true);
   };
 
   const connectActive = async () => {
@@ -103,7 +108,7 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.active,
     });
-    if (signerConnectResponse.result) {
+    if (signerConnectResponse?.result) {
       dispatch(
         signerConnectMessageActive({
           username,
@@ -112,20 +117,21 @@ const LoginForm = () => {
           keyType: KeychainKeyTypes.active,
         }),
       );
-      if (!posting)
-        dispatch(
-          login({
-            data: {
-              key: 'active',
-              message: signerConnectResponse.message,
-              method: KeychainKeyTypes.active,
-              username: username,
-            },
-            result: signerConnectResponse.message,
-            publicKey: signerConnectResponse.publicKey,
-            success: true,
-          }),
-        );
+      if (!posting) {
+        const payload: LoginResponseType = {
+          data: {
+            key: 'active',
+            message: signerConnectResponse.message,
+            method: KeychainKeyTypes.active,
+            username: username,
+          },
+          result: signerConnectResponse.message,
+          publicKey: signerConnectResponse.publicKey,
+          success: true,
+        };
+        loginPayloadRef.current = payload;
+        dispatch(login(payload));
+      }
 
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -144,7 +150,9 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectActive(signerConnectResponse));
     } else {
-      console.log('connectActive Failed');
+      throw new Error(
+        signerConnectResponse?.message || 'Active signer connect failed',
+      );
     }
   };
 
@@ -153,7 +161,7 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.posting,
     });
-    if (signerConnectResponse.result) {
+    if (signerConnectResponse?.result) {
       dispatch(
         signerConnectMessagePosting({
           username,
@@ -162,19 +170,19 @@ const LoginForm = () => {
           keyType: KeychainKeyTypes.posting,
         }),
       );
-      dispatch(
-        login({
-          data: {
-            key: 'posting',
-            message: signerConnectResponse.message,
-            method: KeychainKeyTypes.posting,
-            username: username,
-          },
-          result: signerConnectResponse.message,
-          publicKey: signerConnectResponse.publicKey,
-          success: true,
-        }),
-      );
+      const payload: LoginResponseType = {
+        data: {
+          key: 'posting',
+          message: signerConnectResponse.message,
+          method: KeychainKeyTypes.posting,
+          username: username,
+        },
+        result: signerConnectResponse.message,
+        publicKey: signerConnectResponse.publicKey,
+        success: true,
+      };
+      loginPayloadRef.current = payload;
+      dispatch(login(payload));
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
           signerConnectResponse.result.pendingSignatureRequests[username];
@@ -191,13 +199,26 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectPosting(signerConnectResponse));
     } else {
-      console.log('connectPosting Failed');
+      throw new Error(
+        signerConnectResponse?.message || 'Posting signer connect failed',
+      );
     }
   };
 
   const handleOnLoginSubmit = async () => {
+    if (isSubmittingRef.current) return;
+    if (!multisig) return;
     try {
-      if (!active && !posting) alert(`Choose at least one login method!`);
+      if (!active && !posting) {
+        notifyWarning('Choose at least one login method.');
+        return;
+      }
+      if (!username || username.trim().length === 0) {
+        notifyWarning('Please enter a username.');
+        return;
+      }
+
+      isSubmittingRef.current = true;
 
       try {
         localStorage.setItem(
@@ -208,10 +229,23 @@ const LoginForm = () => {
         // ignore
       }
 
+      // Run in a strict sequence: posting -> active.
+      // This avoids overlapping Keychain prompts and prevents navigation/storage
+      // updates in between from interrupting the second signature.
       if (posting) await connectPosting();
-      if (active) await connectActive();
+      if (active) {
+        await new Promise((r) => setTimeout(r, 250));
+        await connectActive();
+      }
+
+      // Finalize login only once all requested key-types are connected.
+      const payload = loginPayloadRef.current ?? signedAccountObj;
+      await loginInitAsync(payload);
+      navigate('/transaction', { replace: true });
     } catch (error) {
-      alert(`Login Failed \n ${error.message}`);
+      notifyError(`Login failed: ${error?.message ? String(error.message) : String(error)}`);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
@@ -245,8 +279,9 @@ const LoginForm = () => {
                 id="button-addon2"
                 onClick={() => handleOnLoginSubmit()}
                 onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}>
-                Login
+                onBlur={() => setIsFocused(false)}
+                disabled={isSubmittingRef.current}>
+                {isSubmittingRef.current ? 'Logging in…' : 'Login'}
               </Button>
             </InputGroup>
 

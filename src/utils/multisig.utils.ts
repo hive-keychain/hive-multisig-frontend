@@ -10,6 +10,7 @@ import AccountUtils from '../utils/hive.utils';
 import { orderAlphabetically } from './account-utils';
 import HiveUtils from './hive.utils';
 import HiveTxUtils from './hivetx.utils';
+import { notifyError } from './notify';
 const defaultBot = process.env.TWOFA_BOT;
 
 const getOptions = () => {
@@ -93,12 +94,16 @@ const nonMultisigTxBroadcast = async (
             })
             .catch((e) => reject(e));
         } else {
-          alert('[UpdateAuthConf] Signed Tx Error');
+          notifyError('Signed transaction error.');
           reject(undefined);
         }
       })
       .catch((e) => {
-        alert(JSON.stringify(e));
+        notifyError(
+          `Failed to sign transaction: ${
+            e?.message ? String(e.message) : JSON.stringify(e)
+          }`,
+        );
         reject(e);
       });
   });
@@ -108,6 +113,10 @@ const multisigTxBroadcast = async (
   transaction: Hive.Transaction,
   initiator: Initiator,
   twoFACodes?: TwoFACodes,
+  onRequestCreated?: (
+    signatureRequestId: string,
+    seedSigners: Array<{ publicKey: string; weight?: number }>,
+  ) => void,
 ) => {
   return new Promise((resolve, reject) => {
     const keyType = KeychainKeyTypes.active;
@@ -115,10 +124,43 @@ const multisigTxBroadcast = async (
       window,
       MultisigUtils.getOptions(),
     );
+
+    const txExpirationDate = (() => {
+      const raw = (transaction as any)?.expiration;
+      if (!raw) return undefined;
+
+      if (raw instanceof Date) {
+        return Number.isNaN(raw.getTime()) ? undefined : raw;
+      }
+
+      if (typeof raw === 'string') {
+        const s = raw.trim();
+        if (!s) return undefined;
+
+        // If it's an ISO string without timezone info, treat it as UTC.
+        // Example from HiveTx: "2026-01-11T02:27:18"
+        const hasTimezone = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(s);
+        const isoNoTimezone = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(s);
+        const toParse = !hasTimezone && isoNoTimezone ? `${s}Z` : s;
+        const d = new Date(toParse);
+        return Number.isNaN(d.getTime()) ? undefined : d;
+      }
+
+      // Fallback for other input types.
+      try {
+        const d = new Date(raw);
+        return Number.isNaN(d.getTime()) ? undefined : d;
+      } catch {
+        return undefined;
+      }
+    })();
+
     const txToEncode: IEncodeTransaction = {
       transaction: { ...transaction },
       method: keyType,
-      expirationDate: moment().add(60, 'm').toDate(),
+      // Keep the signature-request expiration aligned with the underlying
+      // blockchain transaction expiration (e.g. 24h if user selected 24h).
+      expirationDate: txExpirationDate ?? moment().add(24, 'h').toDate(),
       initiator,
     };
 
@@ -126,16 +168,121 @@ const multisigTxBroadcast = async (
       multisig.utils
         .encodeTransaction(txToEncode, twoFACodes)
         .then((encodedTxObj) => {
+          const debugOn = (() => {
+            try {
+              return window.localStorage.getItem('multisig:debugSigners') === '1';
+            } catch {
+              return false;
+            }
+          })();
+
+          const extractSignatureRequestId = (res: unknown): string | undefined => {
+            if (typeof res === 'number' && Number.isFinite(res)) return String(res);
+            if (typeof res === 'string') {
+              const trimmed = res.trim();
+              if (/^\d+$/.test(trimmed)) return trimmed;
+
+              // Try parsing JSON payloads (common in socket acks)
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (typeof parsed === 'number' && Number.isFinite(parsed)) return String(parsed);
+                if (typeof parsed === 'string' && /^\d+$/.test(parsed.trim())) return parsed.trim();
+                if (parsed && typeof parsed === 'object') {
+                  const id = (parsed as any).id ?? (parsed as any).signatureRequestId;
+                  if (id !== undefined && id !== null) {
+                    const s = String(id).trim();
+                    if (s.length > 0) return s;
+                  }
+                }
+              } catch {
+                // ignore
+              }
+
+              // Fallback: extract first run of digits
+              const match = trimmed.match(/(\d{1,})/);
+              if (match && match[1]) return match[1];
+            }
+
+            if (res && typeof res === 'object') {
+              const id = (res as any).id ?? (res as any).signatureRequestId;
+              if (id !== undefined && id !== null) {
+                const s = String(id).trim();
+                if (s.length > 0) return s;
+              }
+            }
+            return undefined;
+          };
+
+          // IMPORTANT: SDK's signatureRequest.signers is the "potential signers"
+          // list and intentionally excludes the initiator.
+          const seedSigners: Array<{ publicKey: string; weight?: number }> = (
+            ((encodedTxObj as any)?.signatureRequest?.signers ?? []) as any[]
+          )
+            .map((s: any) => ({
+              publicKey: String(s?.publicKey ?? ''),
+              weight:
+                typeof s?.weight === 'number'
+                  ? s.weight
+                  : typeof s?.weight === 'string'
+                    ? Number(s.weight)
+                    : undefined,
+            }))
+            .filter((s) => !!s.publicKey);
+
           multisig.wss.requestSignatures(encodedTxObj).then(async (res) => {
+            try {
+              const extractedId = extractSignatureRequestId(res);
+              if (debugOn) {
+                // eslint-disable-next-line no-console
+                console.log('[multisig debug] requestSignatures ack', {
+                  raw: res,
+                  extractedId,
+                  seedSigners: seedSigners.length,
+                });
+              }
+              if (extractedId) {
+                onRequestCreated?.(extractedId, seedSigners);
+              } else {
+                // Backend ack doesn't always include request id; store a short-lived
+                // seed so the next signature-request fetch can attach it to the
+                // created request once the id is known.
+                try {
+                  window.localStorage.setItem(
+                    'multisig:pendingSignerSeed',
+                    JSON.stringify({
+                      createdAtMs: Date.now(),
+                      initiator: String(initiator?.username ?? ''),
+                      keyType,
+                      expirationDateIso: txToEncode.expirationDate
+                        ? (() => {
+                            const d =
+                              txToEncode.expirationDate instanceof Date
+                                ? txToEncode.expirationDate
+                                : new Date(txToEncode.expirationDate);
+                            return Number.isNaN(d.getTime())
+                              ? undefined
+                              : d.toISOString();
+                          })()
+                        : undefined,
+                      seedSigners,
+                    }),
+                  );
+                } catch {
+                  // ignore
+                }
+              }
+            } catch {
+              // ignore seeding callback errors
+            }
             resolve(res);
           });
         })
         .catch((e) => {
-          alert(e.message);
+          notifyError(e?.message ? String(e.message) : String(e));
           reject(e);
         });
     } catch (error) {
-      alert(`${error}`);
+      notifyError(error?.message ? String(error.message) : String(error));
       reject(error);
     }
   });
@@ -217,6 +364,10 @@ const broadcastTransaction = async (
   username: string,
   initiator: Initiator,
   twoFACodes?: TwoFACodes,
+  onRequestCreated?: (
+    signatureRequestId: string,
+    seedSigners: Array<{ publicKey: string; weight?: number }>,
+  ) => void,
 ) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -251,7 +402,7 @@ const broadcastTransaction = async (
           });
       } else {
         //multisig transaction
-        multisigTxBroadcast(transaction, initiator, twoFACodes)
+        multisigTxBroadcast(transaction, initiator, twoFACodes, onRequestCreated)
           .then(async (res) => {
             const operationNames = transaction.operations.map((op) => {
               return op[0]

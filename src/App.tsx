@@ -1,16 +1,18 @@
 import { HiveMultisig } from 'hive-multisig-sdk/src';
 import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-request';
+import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { useEffect, useRef, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import './App.css';
 import NavBar from './components/navigating/NavBar';
+import GlobalToasts from './components/navigating/GlobalToasts';
 import Routing from './components/navigating/Routing';
 import { Config } from './config';
 import { useAppDispatch, useAppSelector } from './redux/app/hooks';
-import { LoginState, loginActions } from './redux/features/login/loginSlice';
 import { multisigActions } from './redux/features/multisig/multisigSlices';
+import { LoginState, loginActions } from './redux/features/login/loginSlice';
 import {
   addBroadcastNotifications,
   addBroadcastedTransaction,
@@ -20,6 +22,8 @@ import {
   notifySignRequest,
   resetBroadcastNotifications,
   signerConnectActive,
+  signerConnectMessageActive,
+  signerConnectMessagePosting,
   signerConnectPosting,
   subscribeToBroadcastedTransactions,
   subscribeToSignRequests,
@@ -28,18 +32,55 @@ import { transactionActions } from './redux/features/transaction/transactionSlic
 import { twoFactorAuthActions } from './redux/features/twoFactorAuth/twoFactorAuthSlices';
 import { updateAuthorityActions } from './redux/features/updateAuthorities/updateAuthoritiesSlice';
 import { MultisigUtils } from './utils/multisig.utils';
+import { notifyInfo, SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY } from './utils/notify';
 import {
-  getElapsedTimestampSeconds,
+  isSessionExpired,
+  isSessionValid,
+  LOGIN_TIMESTAMP_STORAGE_KEY,
+  parseLoginTimestampSeconds,
+} from './utils/session';
+import {
   getTimestampInSeconds,
 } from './utils/utils';
 
 function App() {
   const [multisig, setMultisig] = useState<HiveMultisig>(undefined);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const loginExpirationInSec = Config.login.expirationInSec;
   const signedAccountObj = useAppSelector((state) => state.login.accountObject);
   const loginState = useAppSelector((state) => state.login.loginState);
+
+  const isDebugSignersOn = () => {
+    try {
+      return window.localStorage.getItem('multisig:debugSigners') === '1';
+    } catch {
+      return false;
+    }
+  };
+
+  const debugReq = (prefix: string, req: SignatureRequest) => {
+    if (!isDebugSignersOn() || !req) return;
+    const signers = (req as any)?.signers;
+    const signerCount = Array.isArray(signers) ? signers.length : -1;
+    const signerKeys = Array.isArray(signers)
+      ? signers.map((s: any) => ({
+          k: String(s?.publicKey ?? ''),
+          sig: Boolean(s?.signature && String(s.signature).length > 0),
+          ref: Boolean(s?.refused),
+        }))
+      : [];
+    // eslint-disable-next-line no-console
+    console.log(`[multisig debug] ${prefix}`, {
+      id: String((req as any).id),
+      initiator: (req as any).initiator,
+      status: (req as any).status,
+      keyType: (req as any).keyType,
+      signers: signerCount,
+      signerKeys,
+    });
+  };
 
   const signRequests = useAppSelector((state) => state.multisig.multisig.signRequests);
 
@@ -49,7 +90,7 @@ function App() {
   );
 
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
 
@@ -78,6 +119,8 @@ function App() {
   const signRequestIdsRef = useRef<Set<string>>(new Set());
   const loginSessionIdRef = useRef<string>('');
   const lastBackendConnectKeyRef = useRef<string>('');
+  const signatureRequestsFetchInFlightRef = useRef(false);
+  const lastSignatureRequestsFetchMsRef = useRef(0);
 
   const postingConnectMessage = useAppSelector(
     (state) => state.multisig.multisig.signerConnectMessagePosting,
@@ -222,11 +265,12 @@ function App() {
         dispatch(notifySignRequest(false));
         return;
       }
-      if (
-        confirm('Received new sign request.\nClick OK to view the request.')
-      ) {
-        navigate('/signRequest');
-      }
+      notifyInfo('Received a new sign request.', {
+        action: {
+          label: 'View',
+          onClick: () => navigate('/signRequest'),
+        },
+      });
       dispatch(notifySignRequest(false));
     }
   }, [signRequestNotif, loginState, loginTimestamp, dispatch, navigate]);
@@ -241,13 +285,12 @@ function App() {
         dispatch(notifyBroadcastedTransaction(false));
         return;
       }
-      if (
-        confirm(
-          'A transaction has been broadcasted.\nClick OK to view the transactions.',
-        )
-      ) {
-        navigate('/signRequest');
-      }
+      notifyInfo('A transaction has been broadcasted.', {
+        action: {
+          label: 'View',
+          onClick: () => navigate('/signRequest'),
+        },
+      });
       dispatch(notifyBroadcastedTransaction(false));
     }
   }, [receiveBroadcastNotificationOn, broadcastNotif, loginState, loginTimestamp, dispatch, navigate]);
@@ -258,19 +301,19 @@ function App() {
         if (!shouldShowPopup('login-broadcast')) {
           return;
         }
-        if (
-          confirm(
-            `${
-              onLoginBroadcastNotif.length > 1
-                ? onLoginBroadcastNotif.length
-                : 'A'
-            } transaction${
-              onLoginBroadcastNotif.length > 1 ? 's' : ''
-            } has been broadcasted.\nClick OK to view the transactions.`,
-          )
-        ) {
-          navigate('/signRequest');
-        }
+        notifyInfo(
+          `${
+            onLoginBroadcastNotif.length > 1
+              ? onLoginBroadcastNotif.length
+              : 'A'
+          } transaction${onLoginBroadcastNotif.length > 1 ? 's' : ''} has been broadcasted.`,
+          {
+            action: {
+              label: 'View',
+              onClick: () => navigate('/signRequest'),
+            },
+          },
+        );
         dispatch(resetBroadcastNotifications());
       }
     }
@@ -307,12 +350,16 @@ function App() {
 
     const message =
       pendingToSign.length === 1
-        ? `You have 1 pending sign request to sign.\n${hint}\nClick OK to view it.`
-        : `You have ${pendingToSign.length} pending sign requests to sign.\n${hint}\nClick OK to view them.`;
+        ? `You have 1 pending sign request to sign.${hint ? `\n${hint}` : ''}`
+        : `You have ${pendingToSign.length} pending sign requests to sign.${hint ? `\n${hint}` : ''}`;
 
-    if (confirm(message)) {
-      navigate('/signRequest');
-    }
+    notifyInfo(message, {
+      timeoutMs: 12000,
+      action: {
+        label: 'View',
+        onClick: () => navigate('/signRequest'),
+      },
+    });
   }, [
     signRequests,
     loginState,
@@ -325,55 +372,108 @@ function App() {
   ]);
 
   useEffect(() => {
-    if (connectActiveKey && connectPostingKey && isLoggedIn()) {
-      setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
-    } else {
-    }
-  }, [connectActiveKey, connectPostingKey]);
-
-  useEffect(() => {
-    // If we have at least one connect message (posting or active), we can
-    // initialize the instance and let connectToBackend do the rest.
-    if (!multisig && isLoggedIn() && (activeConnectMessage || postingConnectMessage)) {
+    // On refresh we may have a valid session but no (or stale) connect messages.
+    // Always initialize the instance when the session is valid; connectToBackend
+    // will (re)handshake as needed.
+    if (!multisig && loginState !== LoginState.LOGGED_OUT && isLoggedIn()) {
       setMultisig(HiveMultisig.getInstance(window, MultisigUtils.getOptions()));
     }
-  }, [multisig, activeConnectMessage, postingConnectMessage, loginTimestamp]);
+  }, [multisig, loginState, loginTimestamp]);
 
   useEffect(() => {
-    const hasAnyConnectMessage = Boolean(
-      activeConnectMessage || postingConnectMessage,
-    );
+    const username = signedAccountObj?.data?.username ?? '';
+    if (!username) return;
 
-    // Important: don't mark "connected" until we actually have the connect messages.
-    // Otherwise App can run connectToBackend too early (no messages), set the guard,
-    // and then never load sign requests until a page triggers its own fetch.
-    if (multisig && loginState !== LoginState.LOGGED_OUT && hasAnyConnectMessage) {
+    if (multisig && loginState !== LoginState.LOGGED_OUT && isLoggedIn()) {
       if (!didConnectToBackendRef.current) {
         didConnectToBackendRef.current = true;
         connectToBackend();
       }
     }
+  }, [multisig, loginState, loginTimestamp, signedAccountObj?.data?.username]);
+
+  useEffect(() => {
+    if (!multisig) return;
+    if (loginState === LoginState.LOGGED_OUT) return;
+    if (!isLoggedIn()) return;
+
+    // Avoid doubling API traffic: the Sign Requests page already polls/refreshes.
+    if (location.pathname === '/signRequest') return;
+
+    let disposed = false;
+
+    const refresh = () => {
+      if (disposed) return;
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return;
+      }
+
+      // Avoid overlapping refreshes and excessive bursts on mount.
+      if (signatureRequestsFetchInFlightRef.current) return;
+      const now = Date.now();
+      if (now - lastSignatureRequestsFetchMsRef.current < 5000) return;
+      lastSignatureRequestsFetchMsRef.current = now;
+      signatureRequestsFetchInFlightRef.current = true;
+      void (async () => {
+        try {
+          await fetchSignatureRequests();
+        } finally {
+          signatureRequestsFetchInFlightRef.current = false;
+        }
+      })();
+    };
+
+    // Keep initiated + pending requests reasonably fresh even if websocket payloads are partial.
+    refresh();
+    const intervalId = window.setInterval(refresh, 45000);
+
+    const onFocus = () => refresh();
+    const onVisibility = () => refresh();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      disposed = true;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [
     multisig,
     loginState,
+    loginTimestamp,
     activeConnectMessage,
     postingConnectMessage,
+    location.pathname,
   ]);
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      handleLogout();
-      navigate('/login');
-    }
-  });
+    // Only force-logout when we can positively determine the session expired.
+    // During login, loginTimestamp may still be unset; treating that as "expired"
+    // causes route thrash between /login and /transaction and can interrupt Keychain.
+    if (loginState === LoginState.LOGGED_OUT) return;
 
-  const isLoggedIn = () => {
-    const loggedinDuration = getElapsedTimestampSeconds(
-      loginTimestamp,
-      getTimestampInSeconds(),
-    );
-    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
-  };
+    // If we don't have a valid timestamp yet, we can't reliably decide expiration.
+    // This is normal during the login flow while localStorage updates propagate.
+    if (parseLoginTimestampSeconds(loginTimestamp) === null) return;
+
+    if (
+      !isSessionExpired(
+        loginTimestamp,
+        loginExpirationInSec,
+        getTimestampInSeconds(),
+      )
+    )
+      return;
+
+    void (async () => {
+      await handleLogout();
+      navigate('/login', { replace: true });
+    })();
+  }, [loginState, loginTimestamp, loginExpirationInSec, navigate]);
+
+  const isLoggedIn = () =>
+    isSessionValid(loginTimestamp, loginExpirationInSec, getTimestampInSeconds());
 
   const subToSignRequests = async () => {
     try {
@@ -399,6 +499,91 @@ function App() {
 
   const fetchSignatureRequests = async () => {
     if (!multisig) return;
+    const tryApplyPendingSignerSeed = (reqs: SignatureRequest[]) => {
+      if (!Array.isArray(reqs) || reqs.length === 0) return;
+      let pendingRaw: string | null = null;
+      try {
+        pendingRaw = window.localStorage.getItem('multisig:pendingSignerSeed');
+      } catch {
+        return;
+      }
+      if (!pendingRaw) return;
+
+      type PendingSeed = {
+        createdAtMs?: number;
+        initiator?: string;
+        expirationDateIso?: string;
+        seedSigners?: Array<{ publicKey: string; weight?: number }>;
+      };
+
+      let pending: PendingSeed | undefined;
+      try {
+        pending = JSON.parse(pendingRaw) as PendingSeed;
+      } catch {
+        return;
+      }
+      if (!pending?.seedSigners || pending.seedSigners.length === 0) return;
+
+      const createdAtMs = typeof pending.createdAtMs === 'number' ? pending.createdAtMs : 0;
+      if (createdAtMs > 0 && Date.now() - createdAtMs > 10 * 60 * 1000) {
+        try {
+          window.localStorage.removeItem('multisig:pendingSignerSeed');
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
+      const initiator = (pending.initiator ?? '').toString();
+      const expIso = pending.expirationDateIso;
+      const expMs = expIso ? new Date(expIso).getTime() : undefined;
+      const expToleranceMs = 5 * 60 * 1000;
+
+      const candidates = reqs
+        .map((r) => ({ r, createdAt: new Date((r as any).createdAt ?? 0).getTime() }))
+        .filter(({ r, createdAt }) => {
+          if (initiator && String((r as any).initiator ?? '') !== initiator) return false;
+          if (createdAtMs && createdAt && Math.abs(createdAt - createdAtMs) > 5 * 60 * 1000) return false;
+          if (expMs !== undefined) {
+            const rExp = new Date((r as any).expirationDate ?? 0).getTime();
+            if (!Number.isFinite(rExp)) return false;
+            if (Math.abs(rExp - expMs) > expToleranceMs) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          const idA = Number((a.r as any).id);
+          const idB = Number((b.r as any).id);
+          if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) return idB - idA;
+          return b.createdAt - a.createdAt;
+        });
+
+      const match = candidates[0]?.r;
+      if (!match) return;
+
+      dispatch(
+        multisigActions.seedSignatureRequestSigners({
+          signatureRequestId: String((match as any).id),
+          signers: pending.seedSigners,
+        }),
+      );
+
+      if (isDebugSignersOn()) {
+        // eslint-disable-next-line no-console
+        console.log('[multisig debug] applied pending signer seed (App)', {
+          matchedId: String((match as any).id),
+          initiator: String((match as any).initiator ?? ''),
+          seedSigners: pending.seedSigners.length,
+        });
+      }
+
+      try {
+        window.localStorage.removeItem('multisig:pendingSignerSeed');
+      } catch {
+        // ignore
+      }
+    };
+
     // Keep in sync with SignRequestsPage.getSignRequests so data is available
     // immediately on login (for popups) even before navigating.
     if (activeConnectMessage) {
@@ -407,10 +592,17 @@ function App() {
           activeConnectMessage,
         );
         if (activeReqs) {
+          if (isDebugSignersOn()) {
+            activeReqs.forEach((r) => debugReq('api.getSignatureRequests(active)', r));
+          }
           dispatch(addSignRequest(activeReqs));
+          tryApplyPendingSignerSeed(activeReqs);
         }
       } catch (error) {
-        console.log(`activeConnect getSignatureRequests: ${error}`);
+        if (isDebugSignersOn()) {
+          // eslint-disable-next-line no-console
+          console.log(`activeConnect getSignatureRequests: ${error}`);
+        }
       }
     }
 
@@ -420,16 +612,24 @@ function App() {
           postingConnectMessage,
         );
         if (postingReqs) {
+          if (isDebugSignersOn()) {
+            postingReqs.forEach((r) => debugReq('api.getSignatureRequests(posting)', r));
+          }
           dispatch(addSignRequest(postingReqs));
+          tryApplyPendingSignerSeed(postingReqs);
         }
       } catch (error) {
-        console.log(`postingConnect getSignatureRequests: ${error}`);
+        if (isDebugSignersOn()) {
+          // eslint-disable-next-line no-console
+          console.log(`postingConnect getSignatureRequests: ${error}`);
+        }
       }
     }
   };
 
   const signRequestCallback = async (message: SignatureRequest) => {
     if (message) {
+      debugReq('wss.onReceiveSignRequest', message);
       const id = String(message.id);
       const alreadyKnown = signRequestIdsRef.current.has(id);
       await dispatch(addSignRequest([message]));
@@ -449,84 +649,173 @@ function App() {
   const broadcastedTransactionCallback = async (message: SignatureRequest) => {
     if (message) {
       await dispatch(addBroadcastedTransaction([message]));
-      if (Date.now() >= suppressRealtimeNotifsUntilRef.current) {
+      const initiator = String((message as any)?.initiator ?? '');
+      const me = String(signedAccountObj?.data?.username ?? '');
+      const initiatedByMe = Boolean(me) && initiator === me;
+
+      // If this tab just triggered a broadcast action, we already show an
+      // immediate success toast. Suppress the websocket toast for a short window.
+      try {
+        const raw = window.localStorage.getItem(SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY);
+        const suppressUntil = raw ? Number(raw) : NaN;
+        if (Number.isFinite(suppressUntil)) {
+          if (Date.now() < suppressUntil) return;
+          window.localStorage.removeItem(SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY);
+        }
+      } catch {
+        // ignore
+      }
+
+      // Avoid duplicate UX: the Transactions page already shows a local toast
+      // when the user broadcasts/submits. Only notify globally for other people's
+      // broadcasts.
+      if (!initiatedByMe && Date.now() >= suppressRealtimeNotifsUntilRef.current) {
         await dispatch(notifyBroadcastedTransaction(true));
       }
     }
   };
 
   const connectActive = async () => {
-    if (activeConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        activeConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              activeConnectMessage.username
-            ];
-          if (pendingReqs?.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-            let myReqs: SignatureRequest[] = [];
-            pendingReqs.forEach((req) => {
-              if (req.initiator !== activeConnectMessage.username) {
-                myReqs.push(req);
-              }
-            });
-            dispatch(addPendingSignRequest(myReqs));
-          }
-        }
+    if (!multisig) return;
+    const username = signedAccountObj?.data?.username ?? '';
+    if (!username) return;
 
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              activeConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addBroadcastNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectActive(signerConnectResponse));
+    let signerConnectResponse: any | undefined;
+    try {
+      if (activeConnectMessage) {
+        signerConnectResponse = await multisig.wss.subscribe(activeConnectMessage);
       } else {
+        signerConnectResponse = await multisig.wss.subscribe({
+          username,
+          keyType: KeychainKeyTypes.active,
+        });
+      }
+    } catch {
+      // ignore and retry below
+    }
+
+    // If a persisted connect message is stale/invalid, retry with a fresh handshake.
+    if (!signerConnectResponse?.result && activeConnectMessage) {
+      try {
+        signerConnectResponse = await multisig.wss.subscribe({
+          username,
+          keyType: KeychainKeyTypes.active,
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    if (signerConnectResponse?.result) {
+      // Store the fresh connect message for subsequent API calls.
+      if (signerConnectResponse.message && signerConnectResponse.publicKey) {
+        dispatch(
+          signerConnectMessageActive({
+            username,
+            message: signerConnectResponse.message,
+            publicKey: signerConnectResponse.publicKey,
+            keyType: KeychainKeyTypes.active,
+          }),
+        );
+      }
+
+      if (signerConnectResponse.result.pendingSignatureRequests) {
+        const pendingReqs = signerConnectResponse.result.pendingSignatureRequests[username];
+        if (pendingReqs?.length > 0) {
+          await dispatch(addSignRequest(pendingReqs));
+          let myReqs: SignatureRequest[] = [];
+          pendingReqs.forEach((req: SignatureRequest) => {
+            if ((req as any).initiator !== username) {
+              myReqs.push(req);
+            }
+          });
+          dispatch(addPendingSignRequest(myReqs));
+        }
+      }
+
+      if (signerConnectResponse.result.notifications) {
+        const notifications = signerConnectResponse.result.notifications[username];
+        if (notifications?.length > 0) {
+          await dispatch(addBroadcastNotifications(notifications));
+        }
+      }
+
+      await dispatch(signerConnectActive(signerConnectResponse));
+    } else {
+      if (isDebugSignersOn()) {
+        // eslint-disable-next-line no-console
         console.log('connectActive Failed');
       }
     }
   };
 
   const connectPosting = async () => {
-    if (postingConnectMessage) {
-      const signerConnectResponse = await multisig.wss.subscribe(
-        postingConnectMessage,
-      );
-      if (signerConnectResponse.result) {
-        if (signerConnectResponse.result.pendingSignatureRequests) {
-          const pendingReqs =
-            signerConnectResponse.result.pendingSignatureRequests[
-              postingConnectMessage.username
-            ];
-          if (pendingReqs.length > 0) {
-            await dispatch(addSignRequest(pendingReqs));
-            let myReqs: SignatureRequest[] = [];
-            pendingReqs.forEach((req) => {
-              if (req.initiator !== postingConnectMessage.username) {
-                myReqs.push(req);
-              }
-            });
-            dispatch(addPendingSignRequest(myReqs));
-          }
-        }
-        if (signerConnectResponse.result.notifications) {
-          const notifications =
-            signerConnectResponse.result.notifications[
-              postingConnectMessage.username
-            ];
-          if (notifications?.length > 0) {
-            await dispatch(addBroadcastNotifications(notifications));
-          }
-        }
-        await dispatch(signerConnectPosting(signerConnectResponse));
+    if (!multisig) return;
+    const username = signedAccountObj?.data?.username ?? '';
+    if (!username) return;
+
+    let signerConnectResponse: any | undefined;
+    try {
+      if (postingConnectMessage) {
+        signerConnectResponse = await multisig.wss.subscribe(postingConnectMessage);
       } else {
+        signerConnectResponse = await multisig.wss.subscribe({
+          username,
+          keyType: KeychainKeyTypes.posting,
+        });
+      }
+    } catch {
+      // ignore and retry below
+    }
+
+    // If a persisted connect message is stale/invalid, retry with a fresh handshake.
+    if (!signerConnectResponse?.result && postingConnectMessage) {
+      try {
+        signerConnectResponse = await multisig.wss.subscribe({
+          username,
+          keyType: KeychainKeyTypes.posting,
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    if (signerConnectResponse?.result) {
+      // Store the fresh connect message for subsequent API calls.
+      if (signerConnectResponse.message && signerConnectResponse.publicKey) {
+        dispatch(
+          signerConnectMessagePosting({
+            username,
+            message: signerConnectResponse.message,
+            publicKey: signerConnectResponse.publicKey,
+            keyType: KeychainKeyTypes.posting,
+          }),
+        );
+      }
+
+      if (signerConnectResponse.result.pendingSignatureRequests) {
+        const pendingReqs = signerConnectResponse.result.pendingSignatureRequests[username];
+        if (pendingReqs?.length > 0) {
+          await dispatch(addSignRequest(pendingReqs));
+          let myReqs: SignatureRequest[] = [];
+          pendingReqs.forEach((req: SignatureRequest) => {
+            if ((req as any).initiator !== username) {
+              myReqs.push(req);
+            }
+          });
+          dispatch(addPendingSignRequest(myReqs));
+        }
+      }
+      if (signerConnectResponse.result.notifications) {
+        const notifications = signerConnectResponse.result.notifications[username];
+        if (notifications?.length > 0) {
+          await dispatch(addBroadcastNotifications(notifications));
+        }
+      }
+      await dispatch(signerConnectPosting(signerConnectResponse));
+    } else {
+      if (isDebugSignersOn()) {
+        // eslint-disable-next-line no-console
         console.log('connectPosting Failed');
       }
     }
@@ -536,8 +825,9 @@ function App() {
     // Avoid double notifications: login connect can deliver pending items + websocket can replay.
     // We still add incoming items, but suppress "new" popups briefly during initial sync.
     suppressRealtimeNotifsUntilRef.current = Date.now() + 12000;
-    await connectPosting();
-    await connectActive();
+    const requested = getRequestedKeyTypes();
+    if (requested.posting) await connectPosting();
+    if (requested.active) await connectActive();
     await fetchSignatureRequests();
     await subToSignRequests();
     await subToBroadcastedTransactions();
@@ -564,6 +854,7 @@ function App() {
           <Routing />
         </Container>
       </main>
+      <GlobalToasts />
       <footer className="footer-text">@2023 Hive Keychain</footer>
     </div>
   );

@@ -25,6 +25,7 @@ import {
   setThresholdWarning,
 } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import { notifyError } from '../../utils/notify';
 import { AuthorityCard } from '../cards/Account/AuthorityCard';
 import { UpdateAuthoritiesConfirmation } from '../modals/UpdateAuthoritiesConfirmation';
 const defaultBot = process.env.TWOFA_BOT;
@@ -159,12 +160,12 @@ function AccountPage({ authorities }: IAccountPageProp) {
       if (validOwner && validActive && validPosting) {
         handleShow();
       } else {
-        alert(`${validOwner ? '' : 'Owner weight assignments are invalid.\n'}${
-          validActive ? '' : 'Active weight assignments are invalid.\n'
-        }${
-          validPosting ? '' : 'Posting weight assignments are invalid.\n'
-        }Total weight must be greater than or equal to weight threshold.
-        `);
+        const parts: string[] = [];
+        if (!validOwner) parts.push('Owner weight assignments are invalid.');
+        if (!validActive) parts.push('Active weight assignments are invalid.');
+        if (!validPosting) parts.push('Posting weight assignments are invalid.');
+        parts.push('Total weight must be greater than or equal to weight threshold.');
+        notifyError(parts.join(' '));
       }
     }
   };

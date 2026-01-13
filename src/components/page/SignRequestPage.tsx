@@ -3,8 +3,8 @@ import { SignatureRequest } from 'hive-multisig-sdk/src/interfaces/signature-req
 import {
   ISignTransaction,
   ITransaction,
-  SocketMessageCommand,
   SignTransactionMessage,
+  SocketMessageCommand,
 } from 'hive-multisig-sdk/src/interfaces/socket-message-interface';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -16,9 +16,6 @@ import {
   ListGroup,
   Spinner,
   Stack,
-  Toast,
-  ToastBody,
-  ToastContainer,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
@@ -27,11 +24,20 @@ import ReactJson from '@microlink/react-json-view';
 import { Config } from '../../config';
 import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { addSignRequest } from '../../redux/features/multisig/multisigThunks';
+import HiveUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import {
+  notifyError,
+  notifyInfo,
+  notifySuccess,
+  notifyWarning,
+  SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY,
+} from '../../utils/notify';
+import { isSessionValid, LOGIN_TIMESTAMP_STORAGE_KEY } from '../../utils/session';
 import { resolveTheme, ThemePreference } from '../../utils/theme';
 import {
-  getElapsedTimestampSeconds,
   getTimestampInSeconds,
 } from '../../utils/utils';
 type AlertType = {
@@ -112,13 +118,53 @@ const normalizeKeychainMethod = (method: any): any => {
 const getReactJsonTheme = (resolvedTheme: 'light' | 'dark') =>
   resolvedTheme === 'dark' ? 'monokai' : 'rjv-default';
 
+const toValidDate = (value: any): Date | undefined => {
+  if (!value) return undefined;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value;
+  }
+
+  // Normalize common backend formats:
+  // - ISO string with timezone: pass through
+  // - ISO string without timezone: assume UTC (append 'Z')
+  // - epoch seconds/milliseconds: detect and convert
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const ms = value < 10_000_000_000 ? value * 1000 : value;
+    const d = new Date(ms);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+
+    // If it's a pure number string, treat as epoch.
+    if (/^\d+$/.test(trimmed)) {
+      const asNum = Number(trimmed);
+      if (!Number.isFinite(asNum)) return undefined;
+      const ms = asNum < 10_000_000_000 ? asNum * 1000 : asNum;
+      const d = new Date(ms);
+      return Number.isNaN(d.getTime()) ? undefined : d;
+    }
+
+    const hasTimezone = /([zZ]|[+-]\d{2}:?\d{2})$/.test(trimmed);
+    const normalized = hasTimezone ? trimmed : `${trimmed}Z`;
+    const d = new Date(normalized);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }
+
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+};
+
 export const SignRequestsPage = () => {
   const dispatch = useAppDispatch();
 
   const loginExpirationInSec = Config.login.expirationInSec;
 
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
 
@@ -148,7 +194,17 @@ export const SignRequestsPage = () => {
 
   const [transactions, setTransactions] = useState<SignatureRequest[]>([]);
 
-  const [alerts, setAlerts] = useState<AlertType>({});
+  const setAlerts = (next: any) => {
+    const value: AlertType = typeof next === 'function' ? next({}) : next;
+    if (!value?.show || !value?.text) return;
+
+    const variant = String(value.variant ?? 'info');
+    const text = String(value.text);
+    if (variant === 'success') notifySuccess(text);
+    else if (variant === 'danger' || variant === 'error') notifyError(text);
+    else if (variant === 'warning') notifyWarning(text);
+    else notifyInfo(text);
+  };
 
   const [newRequestTimestamps, setNewRequestTimestamps] = useState<
     Record<string, number>
@@ -157,6 +213,8 @@ export const SignRequestsPage = () => {
   const prevRequestIdsRef = useRef<string[]>([]);
   const mountedAtRef = useRef<number>(Date.now());
   const hydrationSilenceUntilRef = useRef<number | null>(null);
+  const getSignRequestsInFlightRef = useRef(false);
+  const lastGetSignRequestsMsRef = useRef(0);
 
   const NEW_HIGHLIGHT_MS = 2 * 60 * 1000;
 
@@ -187,44 +245,179 @@ export const SignRequestsPage = () => {
 
   const navigate = useNavigate();
 
-  const isLoggedIn = () => {
-    const loggedinDuration = getElapsedTimestampSeconds(
-      loginTimestamp,
-      getTimestampInSeconds(),
-    );
-    return !(loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec);
-  };
+  const isLoggedIn = () =>
+    isSessionValid(loginTimestamp, loginExpirationInSec, getTimestampInSeconds());
 
   const getSignRequests = async () => {
     if (!multisig) return;
-    setListAltText('No transaction found');
-    if (activeConnectMessage) {
+
+    // Avoid overlapping fetches (interval + focus + state-churn) and reduce bursts on load.
+    if (getSignRequestsInFlightRef.current) return;
+    const now = Date.now();
+    if (now - lastGetSignRequestsMsRef.current < 5000) return;
+    lastGetSignRequestsMsRef.current = now;
+    getSignRequestsInFlightRef.current = true;
+
+    const debugOn = (() => {
       try {
-        const activeReqs = await multisig.api.getSignatureRequests(
-          activeConnectMessage,
-        );
-        if (activeReqs) {
-          dispatch(addSignRequest(activeReqs));
-        }
-      } catch (error) {
-        console.log(`activeConnect: ${error}`);
+        return window.localStorage.getItem('multisig:debugSigners') === '1';
+      } catch {
+        return false;
       }
-    } else {
-      console.log(`activeConnectMessage: ${activeConnectMessage}`);
-    }
-    if (postingConnectMessage) {
+    })();
+
+    const debugReq = (prefix: string, req: SignatureRequest) => {
+      if (!debugOn || !req) return;
+      const signers = (req as any)?.signers;
+      const signerCount = Array.isArray(signers) ? signers.length : -1;
+      // eslint-disable-next-line no-console
+      console.log(`[multisig debug] ${prefix}`, {
+        id: String((req as any).id),
+        initiator: (req as any).initiator,
+        status: (req as any).status,
+        keyType: (req as any).keyType,
+        signers: signerCount,
+      });
+    };
+
+    const tryApplyPendingSignerSeed = (reqs: SignatureRequest[]) => {
+      if (!Array.isArray(reqs) || reqs.length === 0) return;
+      let pendingRaw: string | null = null;
       try {
-        const postingReqs = await multisig.api.getSignatureRequests(
-          postingConnectMessage,
-        );
-        if (postingReqs) {
-          dispatch(addSignRequest(postingReqs));
-        }
-      } catch (error) {
-        console.log(`postingConnect: ${error}`);
+        pendingRaw = window.localStorage.getItem('multisig:pendingSignerSeed');
+      } catch {
+        return;
       }
-    } else {
-      console.log(`postingConnectMessage: ${postingConnectMessage}`);
+      if (!pendingRaw) return;
+
+      type PendingSeed = {
+        createdAtMs?: number;
+        initiator?: string;
+        keyType?: any;
+        expirationDateIso?: string;
+        seedSigners?: Array<{ publicKey: string; weight?: number }>;
+      };
+
+      let pending: PendingSeed | undefined;
+      try {
+        pending = JSON.parse(pendingRaw) as PendingSeed;
+      } catch {
+        return;
+      }
+      if (!pending?.seedSigners || pending.seedSigners.length === 0) return;
+
+      const createdAtMs = typeof pending.createdAtMs === 'number' ? pending.createdAtMs : 0;
+      // Only keep pending seeds for a short time.
+      if (createdAtMs > 0 && Date.now() - createdAtMs > 10 * 60 * 1000) {
+        try {
+          window.localStorage.removeItem('multisig:pendingSignerSeed');
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
+      const initiator = (pending.initiator ?? '').toString();
+      const expIso = pending.expirationDateIso;
+      const expMs = expIso ? new Date(expIso).getTime() : undefined;
+      const expToleranceMs = 5 * 60 * 1000;
+
+      // Find best match: same initiator, created recently, and close expiration.
+      const candidates = reqs
+        .map((r) => ({ r, createdAt: new Date((r as any).createdAt ?? 0).getTime() }))
+        .filter(({ r, createdAt }) => {
+          if (initiator && String((r as any).initiator ?? '') !== initiator) return false;
+          if (createdAtMs && createdAt && Math.abs(createdAt - createdAtMs) > 5 * 60 * 1000) return false;
+          if (expMs !== undefined) {
+            const rExp = new Date((r as any).expirationDate ?? 0).getTime();
+            if (!Number.isFinite(rExp)) return false;
+            if (Math.abs(rExp - expMs) > expToleranceMs) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          // prefer newest / highest id
+          const idA = Number((a.r as any).id);
+          const idB = Number((b.r as any).id);
+          if (Number.isFinite(idA) && Number.isFinite(idB) && idA !== idB) return idB - idA;
+          return b.createdAt - a.createdAt;
+        });
+
+      const match = candidates[0]?.r;
+      if (!match) return;
+
+      dispatch(
+        multisigActions.seedSignatureRequestSigners({
+          signatureRequestId: String((match as any).id),
+          signers: pending.seedSigners,
+        }),
+      );
+
+      if (debugOn) {
+        // eslint-disable-next-line no-console
+        console.log('[multisig debug] applied pending signer seed', {
+          matchedId: String((match as any).id),
+          initiator: String((match as any).initiator ?? ''),
+          seedSigners: pending.seedSigners.length,
+        });
+      }
+
+      try {
+        window.localStorage.removeItem('multisig:pendingSignerSeed');
+      } catch {
+        // ignore
+      }
+    };
+
+    try {
+      setListAltText('No transaction found');
+      if (activeConnectMessage) {
+        try {
+          const activeReqs = await multisig.api.getSignatureRequests(
+            activeConnectMessage,
+          );
+          if (activeReqs) {
+            if (debugOn) {
+              // eslint-disable-next-line no-console
+              console.log(`[multisig debug] SignRequestPage activeReqs count`, activeReqs.length);
+              activeReqs.forEach((r) => debugReq('SignRequestPage api(active)', r));
+            }
+            dispatch(addSignRequest(activeReqs));
+            tryApplyPendingSignerSeed(activeReqs);
+          }
+        } catch (error) {
+          if (debugOn) {
+            // eslint-disable-next-line no-console
+            console.log(`activeConnect: ${error}`);
+          }
+        }
+      } else {
+        // active connect message not available; nothing to fetch
+      }
+      if (postingConnectMessage) {
+        try {
+          const postingReqs = await multisig.api.getSignatureRequests(
+            postingConnectMessage,
+          );
+          if (postingReqs) {
+            if (debugOn) {
+              // eslint-disable-next-line no-console
+              console.log(`[multisig debug] SignRequestPage postingReqs count`, postingReqs.length);
+              postingReqs.forEach((r) => debugReq('SignRequestPage api(posting)', r));
+            }
+            dispatch(addSignRequest(postingReqs));
+          }
+        } catch (error) {
+          if (debugOn) {
+            // eslint-disable-next-line no-console
+            console.log(`postingConnect: ${error}`);
+          }
+        }
+      } else {
+        // posting connect message not available; nothing to fetch
+      }
+    } finally {
+      getSignRequestsInFlightRef.current = false;
     }
   };
 
@@ -263,14 +456,11 @@ export const SignRequestsPage = () => {
     // Initial fetch + keep fresh in case websocket messages are missed.
     refresh();
 
-    // Only poll/resync when websocket is not subscribed.
-    if (isSignRequestWebsocketSubscribed) {
-      return () => {
-        disposed = true;
-      };
-    }
-
-    const intervalId = window.setInterval(refresh, 15000);
+    // Even when websocket is subscribed, do a periodic resync.
+    // Some backends send partial signer updates, and browser tabs can miss events.
+    // Now that we also have in-flight + throttle guards, we can poll less often.
+    const intervalMs = isSignRequestWebsocketSubscribed ? 60000 : 20000;
+    const intervalId = window.setInterval(refresh, intervalMs);
 
     const onFocus = () => refresh();
     const onVisibility = () => refresh();
@@ -447,19 +637,6 @@ export const SignRequestsPage = () => {
           })}
         </Stack>
       )}
-      {alerts.show && (
-        <ToastContainer position="bottom-end">
-          <Toast
-            delay={5000}
-            autohide
-            bg={alerts.variant}
-            onClose={() => {
-              setAlerts({});
-            }}>
-            <ToastBody>{alerts.text}</ToastBody>
-          </Toast>
-        </ToastContainer>
-      )}
     </div>
   );
 };
@@ -486,6 +663,24 @@ const safeString = (value: any) => {
   } catch {
     return String(value);
   }
+};
+
+const shortPubKey = (key: any) => {
+  const s = typeof key === 'string' ? key : String(key ?? '');
+  if (s.length <= 16) return s;
+  return `${s.slice(0, 10)}…${s.slice(-6)}`;
+};
+
+const signerStatusParts = (req: SignatureRequest) => {
+  const signers: any[] = Array.isArray((req as any)?.signers) ? ((req as any).signers as any[]) : [];
+  const hasSig = (s: any) => typeof s?.signature === 'string' && s.signature.length > 0;
+  const refused = (s: any) => Boolean(s?.refused);
+
+  const signedCount = signers.filter((s) => hasSig(s)).length;
+  const refusedCount = signers.filter((s) => refused(s)).length;
+  const pendingCount = Math.max(0, signers.length - signedCount - refusedCount);
+
+  return { signers, signedCount, pendingCount, refusedCount, hasSig, refused };
 };
 
 const opKeyValues = (opName: string, payload: Record<string, any>) => {
@@ -617,12 +812,75 @@ const PendingRequestCard = ({
   const [decodeError, setDecodeError] = useState<string | undefined>(undefined);
   const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
 
+  useEffect(() => {
+    setRequest(signRequest);
+  }, [signRequest]);
+
+  useEffect(() => {
+    setAccount(account);
+  }, [account]);
+
   const createdByLabel =
     request?.initiator && user?.data?.username
       ? request.initiator === user.data.username
         ? 'you'
         : request.initiator
       : request?.initiator;
+
+  const signerView = signerStatusParts(request);
+  const myKeys = [user?.publicKey, (user as any)?.data?.publicKey]
+    .filter((k) => typeof k === 'string' && k.length > 0)
+    .map((k) => String(k));
+
+  const normalizedUsername =
+    typeof user?.data?.username === 'string' && user.data.username.length > 0
+      ? user.data.username.replace(/^@/, '').toLowerCase()
+      : undefined;
+
+  const [keyToAccounts, setKeyToAccounts] = useState<Record<string, string[]>>(
+    {},
+  );
+
+  const [showSigners, setShowSigners] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const keysToResolve = Array.from(
+      new Set(
+        (signerView.signers ?? [])
+          .map((s: any) => (typeof s?.publicKey === 'string' ? s.publicKey : ''))
+          .filter((k: string) => k.length > 0 && keyToAccounts[k] === undefined),
+      ),
+    );
+
+    if (keysToResolve.length === 0) return;
+
+    const run = async () => {
+      try {
+        const batch = await (HiveUtils as any).getKeyReferencesBatch(keysToResolve);
+        if (cancelled) return;
+        setKeyToAccounts((prev) => ({ ...prev, ...(batch ?? {}) }));
+      } catch {
+        if (cancelled) return;
+        // On batch failure, avoid retry storms by marking unknown keys as empty.
+        setKeyToAccounts((prev) => {
+          const next = { ...prev };
+          keysToResolve.forEach((k) => {
+            if (next[k] === undefined) next[k] = [];
+          });
+          return next;
+        });
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally depend on signer public keys only; keyToAccounts is used for caching.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signerView.signers]);
 
   const handleDecode = async () => {
     setIsDecoding(true);
@@ -819,10 +1077,16 @@ const PendingRequestCard = ({
       const txToBroadcast = structuredClone(decodedTransaction);
       txToBroadcast.transaction.signatures = [...signatures];
 
-      const broadcastResult = await multisig.wss.broadcastTransaction(
-        txToBroadcast,
-      );
-      console.log({ broadcastResult });
+      try {
+        window.localStorage.setItem(
+          SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY,
+          String(Date.now() + 7000),
+        );
+      } catch {
+        // ignore
+      }
+
+      const broadcastResult = await multisig.wss.broadcastTransaction(txToBroadcast);
       setIsBroadcasted(broadcastResult !== undefined);
       setAlerts({
         variant: 'success',
@@ -830,6 +1094,11 @@ const PendingRequestCard = ({
         show: true,
       });
     } catch (reason: any) {
+      try {
+        window.localStorage.removeItem(SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY);
+      } catch {
+        // ignore
+      }
       const rawMessage =
         (reason && typeof reason === 'object'
           ? (reason.message ?? reason.error ?? reason?.data?.message)
@@ -840,7 +1109,72 @@ const PendingRequestCard = ({
         text: message,
         show: true,
       });
-      console.log(`Sign Transaction Rejected ${reason}`);
+      keychainDebug('Sign Transaction Rejected', reason);
+    } finally {
+      setIsSigning(false);
+    }
+  };
+
+  const handleBroadcastOnly = async () => {
+    setIsSigning(true);
+    try {
+      if (!decodedTransaction || !decoded || !valid) {
+        setAlerts({
+          variant: 'warning',
+          text: 'Preview the transaction first so the app can load the payload to broadcast.',
+          show: true,
+        });
+        return;
+      }
+
+      const signaturesFromRequest = (signerView.signers ?? [])
+        .map((s: any) => s?.signature)
+        .filter((sig: any) => typeof sig === 'string' && sig.length > 0);
+
+      if (signaturesFromRequest.length === 0) {
+        setAlerts({
+          variant: 'warning',
+          text: 'No signatures found on this request yet.',
+          show: true,
+        });
+        return;
+      }
+
+      const txToBroadcast = structuredClone(decodedTransaction);
+      txToBroadcast.transaction.signatures = [...signaturesFromRequest];
+
+      try {
+        window.localStorage.setItem(
+          SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY,
+          String(Date.now() + 7000),
+        );
+      } catch {
+        // ignore
+      }
+
+      const broadcastResult = await multisig.wss.broadcastTransaction(txToBroadcast);
+      setIsBroadcasted(broadcastResult !== undefined);
+      setAlerts({
+        variant: 'success',
+        text: 'The transaction was broadcasted successfully!',
+        show: true,
+      });
+    } catch (reason: any) {
+      try {
+        window.localStorage.removeItem(SUPPRESS_BROADCAST_TOAST_UNTIL_MS_KEY);
+      } catch {
+        // ignore
+      }
+      const rawMessage =
+        (reason && typeof reason === 'object'
+          ? (reason.message ?? reason.error ?? reason?.data?.message)
+          : reason) ?? '';
+      const message = String(rawMessage || '') || 'Failed to broadcast.';
+      setAlerts({
+        variant: 'danger',
+        text: message,
+        show: true,
+      });
     } finally {
       setIsSigning(false);
     }
@@ -849,10 +1183,10 @@ const PendingRequestCard = ({
   useEffect(() => {
     if (request) {
       if (request.createdAt) {
-        setCreationDate(request.createdAt);
+        setCreationDate(toValidDate(request.createdAt));
       }
       if (request.expirationDate) {
-        setExpirationDate(request.expirationDate);
+        setExpirationDate(toValidDate(request.expirationDate));
       }
       setInitiated(initiatedByMe(request, user));
     }
@@ -873,19 +1207,60 @@ const PendingRequestCard = ({
       setStatus(TransactionStatus.PENDING_INITIATED_TRANSACTION);
     }
   }, [initiated]);
+
+  const isSignerMe = (signer: any) => {
+    const publicKey = typeof signer?.publicKey === 'string' ? signer.publicKey : undefined;
+    if (!publicKey) return false;
+    if (myKeys.includes(String(publicKey))) return true;
+
+    if (!normalizedUsername) return false;
+    const accounts = keyToAccounts[String(publicKey)];
+    return (
+      Array.isArray(accounts) &&
+      accounts.some(
+        (a) =>
+          typeof a === 'string' && a.replace(/^@/, '').toLowerCase() === normalizedUsername,
+      )
+    );
+  };
+
+  const orderedSigners = (signerView.signers ?? [])
+    .map((s: any, originalIndex: number) => ({ s, originalIndex }))
+    .sort((a, b) => {
+      const aMe = isSignerMe(a.s);
+      const bMe = isSignerMe(b.s);
+      if (aMe !== bMe) return aMe ? -1 : 1;
+
+      const rank = (signer: any) => {
+        const refused = signerView.refused(signer);
+        const signed = signerView.hasSig(signer);
+        if (!refused && !signed) return 0; // Pending
+        if (refused) return 1;
+        return 2; // Signed
+      };
+      const diff = rank(a.s) - rank(b.s);
+      return diff !== 0 ? diff : a.originalIndex - b.originalIndex;
+    });
+
   return (
     <div>
       <Card
         key={signRequest.id}
-        className={
-          highlight
-            ? 'border-primary border-2'
-            : isNew
-              ? 'border-info border-2'
-              : undefined
-        }>
+        className={highlight ? 'border-primary border-2' : undefined}>
         <Card.Body>
-          <Card.Title>{status}</Card.Title>
+          <Card.Title className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>{status}</span>
+            <div className="d-inline-flex align-items-center gap-2">
+              {status === TransactionStatus.PENDING_TRANSACTION ||
+              status === TransactionStatus.PENDING_INITIATED_TRANSACTION ? (
+                <Badge bg="secondary">Pending</Badge>
+              ) : null}
+              {highlight ? (
+                <Badge bg="primary">Needs your signature</Badge>
+              ) : null}
+              {isNew ? <Badge bg="info">New</Badge> : null}
+            </div>
+          </Card.Title>
           {createdByLabel ? (
             <Card.Subtitle className="mb-2 text-muted">{`Created by: ${createdByLabel}`}</Card.Subtitle>
           ) : null}
@@ -894,6 +1269,87 @@ const PendingRequestCard = ({
           ) : null}
           {expirationDate ? (
             <Card.Subtitle className="mb-2 text-muted">{`Expiration: ${expirationDate.toLocaleString()}`}</Card.Subtitle>
+          ) : null}
+
+          {signerView.signers.length > 0 ? (
+            <div className="mt-3">
+              <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div className="d-flex align-items-center gap-2">
+                  <div className="fw-semibold">Signers</div>
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-muted d-inline-flex align-items-center gap-2"
+                    aria-expanded={showSigners}
+                    onClick={() => setShowSigners((v) => !v)}>
+                    <span style={{ width: 16, textAlign: 'center' }}>
+                      {showSigners ? '▴' : '▾'}
+                    </span>
+                    <span>{showSigners ? 'Hide' : 'Show'}</span>
+                  </button>
+                </div>
+
+                <div className="text-muted" style={{ fontSize: '0.9rem' }}>
+                  {signerView.signedCount} signed · {signerView.pendingCount} pending
+                  {signerView.refusedCount > 0
+                    ? ` · ${signerView.refusedCount} refused`
+                    : ''}
+                </div>
+              </div>
+
+              <Collapse in={showSigners}>
+                <div>
+                  <ListGroup className="mt-2">
+                    {orderedSigners.map(({ s, originalIndex }) => {
+                      const key = String(s?.publicKey ?? originalIndex);
+                      const isMe = isSignerMe(s);
+
+                      const accountsForKey =
+                        typeof s?.publicKey === 'string'
+                          ? keyToAccounts[s.publicKey]
+                          : undefined;
+                      const primaryAccount =
+                        Array.isArray(accountsForKey) && accountsForKey.length > 0
+                          ? accountsForKey[0]
+                          : undefined;
+                      const extraCount =
+                        Array.isArray(accountsForKey) && accountsForKey.length > 1
+                          ? accountsForKey.length - 1
+                          : 0;
+
+                      const fallback = shortPubKey(s.publicKey);
+                      const displayUser = primaryAccount
+                        ? `@${primaryAccount}${extraCount > 0 ? ` (+${extraCount})` : ''}`
+                        : fallback;
+
+                      const label = isMe
+                        ? user?.data?.username
+                          ? `you (@${user.data.username})`
+                          : 'you'
+                        : displayUser;
+                      const signed = signerView.hasSig(s);
+                      const refused = signerView.refused(s);
+
+                      return (
+                        <ListGroup.Item
+                          key={`${signRequest.id}:${key}:${originalIndex}`}
+                          className="d-flex align-items-center justify-content-between gap-2">
+                          <div className="text-truncate">{label}</div>
+                          <div className="d-flex align-items-center gap-2">
+                            {refused ? (
+                              <Badge bg="danger">Refused</Badge>
+                            ) : signed ? (
+                              <Badge bg="success">Signed</Badge>
+                            ) : (
+                              <Badge bg="secondary">Pending</Badge>
+                            )}
+                          </div>
+                        </ListGroup.Item>
+                      );
+                    })}
+                  </ListGroup>
+                </div>
+              </Collapse>
+            </div>
           ) : null}
 
           {isDecoding ? (
@@ -994,6 +1450,22 @@ const PendingRequestCard = ({
                 {isSigning ? 'Signing…' : 'Sign'}
               </Button>
             ) : null}
+
+            {initiated &&
+            !isBroadcasted &&
+            isSignedd(request) &&
+            decoded &&
+            valid ? (
+              <Button
+                variant="primary"
+                type="button"
+                disabled={isSigning}
+                onClick={() => {
+                  handleBroadcastOnly();
+                }}>
+                {isSigning ? 'Broadcasting…' : 'Broadcast'}
+              </Button>
+            ) : null}
           </div>
         </Card.Body>
       </Card>
@@ -1028,6 +1500,14 @@ const BroadCastedTransactionCard = ({
   const [isDecoding, setIsDecoding] = useState(false);
   const [decodeError, setDecodeError] = useState<string | undefined>(undefined);
   const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
+
+  useEffect(() => {
+    setRequest(signRequest);
+  }, [signRequest]);
+
+  useEffect(() => {
+    setAccount(account);
+  }, [account]);
 
   const createdByLabel =
     request?.initiator && user?.data?.username
@@ -1081,10 +1561,10 @@ const BroadCastedTransactionCard = ({
   useEffect(() => {
     if (request) {
       if (request.createdAt) {
-        setCreationDate(request.createdAt);
+        setCreationDate(toValidDate(request.createdAt));
       }
       if (request.expirationDate) {
-        setExpirationDate(request.expirationDate);
+        setExpirationDate(toValidDate(request.expirationDate));
       }
       setIsBroadcasted(request.broadcasted);
       setInitiated(initiatedByMe(request, user));
@@ -1100,11 +1580,16 @@ const BroadCastedTransactionCard = ({
   }, [isBroadcasted]);
   return (
     <div>
-      <Card
-        key={signRequest.id}
-        className={isNew ? 'border-info border-2' : undefined}>
+      <Card key={signRequest.id}>
         <Card.Body>
-          <Card.Title>{status}</Card.Title>
+          <Card.Title className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>{status}</span>
+            {isNew ? (
+              <div className="d-inline-flex align-items-center gap-2">
+                <Badge bg="info">New</Badge>
+              </div>
+            ) : null}
+          </Card.Title>
           {createdByLabel ? (
             <Card.Subtitle className="mb-2 text-muted">{`Created by: ${createdByLabel}`}</Card.Subtitle>
           ) : null}
@@ -1220,6 +1705,14 @@ const ExpiredTransactionCard = ({
   const [decodeError, setDecodeError] = useState<string | undefined>(undefined);
   const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
 
+  useEffect(() => {
+    setRequest(signRequest);
+  }, [signRequest]);
+
+  useEffect(() => {
+    setAccount(account);
+  }, [account]);
+
   const createdByLabel =
     request?.initiator && user?.data?.username
       ? request.initiator === user.data.username
@@ -1272,10 +1765,10 @@ const ExpiredTransactionCard = ({
   useEffect(() => {
     if (request) {
       if (request.createdAt) {
-        setCreationDate(request.createdAt);
+        setCreationDate(toValidDate(request.createdAt));
       }
       if (request.expirationDate) {
-        setExpirationDate(request.expirationDate);
+        setExpirationDate(toValidDate(request.expirationDate));
       }
       setInitiated(initiatedByMe(request, user));
     }
@@ -1287,11 +1780,16 @@ const ExpiredTransactionCard = ({
   }, [initiated]);
   return (
     <div>
-      <Card
-        key={signRequest.id}
-        className={isNew ? 'border-info border-2' : undefined}>
+      <Card key={signRequest.id}>
         <Card.Body>
-          <Card.Title>{status}</Card.Title>
+          <Card.Title className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span>{status}</span>
+            {isNew ? (
+              <div className="d-inline-flex align-items-center gap-2">
+                <Badge bg="info">New</Badge>
+              </div>
+            ) : null}
+          </Card.Title>
           {createdByLabel ? (
             <Card.Subtitle className="mb-2 text-muted">{`Created by: ${createdByLabel}`}</Card.Subtitle>
           ) : null}

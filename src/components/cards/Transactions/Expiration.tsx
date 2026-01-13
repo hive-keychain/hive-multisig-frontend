@@ -6,8 +6,8 @@ interface IExpirationProp {
   setExpiration: Dispatch<SetStateAction<IExpiration>>;
 }
 export const Expiration = ({ setExpiration }: IExpirationProp) => {
-  const [minutes, setMinutes] = useState<number>(10);
-  const [hours, setHours] = useState<number>(0);
+  const [minutes, setMinutes] = useState<number>(0);
+  const [hours, setHours] = useState<number>(24);
   const supportsAboveOneHour = true;
 
   useEffect(() => {
@@ -34,8 +34,8 @@ export const Expiration = ({ setExpiration }: IExpirationProp) => {
   return (
     <div>
       <Form.Label>Expire in</Form.Label>
-      <Row className="mb-3" xs="auto">
-        <Col xs={3}>
+      <Row className="mb-3 g-2">
+        <Col xs={6} sm={3}>
           <FloatingLabel label="Hours">
             <Form.Select
               value={hours}
@@ -52,8 +52,8 @@ export const Expiration = ({ setExpiration }: IExpirationProp) => {
             </Form.Select>
           </FloatingLabel>
         </Col>
-        <Col xs={3}>
-          <FloatingLabel label="Min">
+        <Col xs={6} sm={3}>
+          <FloatingLabel label="Minutes">
             <Form.Select
               disabled={hours === 24 || (!supportsAboveOneHour && hours === 1)}
               value={minutes}

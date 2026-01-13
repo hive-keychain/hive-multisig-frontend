@@ -14,6 +14,7 @@ import {
 } from '../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
+import { multisigActions } from '../../redux/features/multisig/multisigSlices';
 import { setTwoFASigners } from '../../redux/features/multisig/multisigThunks';
 import {
   resetOperation,
@@ -26,10 +27,8 @@ import {
 import HiveUtils from '../../utils/hive.utils';
 import HiveTxUtils from '../../utils/hivetx.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
-import {
-  getElapsedTimestampSeconds,
-  getTimestampInSeconds,
-} from '../../utils/utils';
+import { notifyError, notifyInfo, notifySuccess } from '../../utils/notify';
+import { isSessionValid, LOGIN_TIMESTAMP_STORAGE_KEY } from '../../utils/session';
 import AccountWitnessProxCard from '../cards/Transactions/AccountWitnessProxCard';
 import { BlogpostOperationCard } from '../cards/Transactions/BlogpostOperationCard';
 import BroadcastJson from '../cards/Transactions/BroadcastJson';
@@ -126,7 +125,11 @@ export const TransactionPage = () => {
       dispatch(setTransactionMethod(method));
       dispatch(setAuthority(txInfo));
     } catch (error) {
-      console.log('Error while dispatching transaction details');
+      notifyError(
+        `Error while preparing transaction details: ${
+          error?.message ? String(error.message) : String(error)
+        }`,
+      );
     }
   };
   const handleSetInitiator = async (keyType: string) => {
@@ -139,7 +142,6 @@ export const TransactionPage = () => {
       publicKey: auth[0].toString(),
       weight: auth[1],
     };
-    console.log(initiator);
     await dispatch(setInitiator(initiator));
   };
 
@@ -161,19 +163,42 @@ export const TransactionPage = () => {
           transaction,
           username.toString(),
           transactionState.initiator,
+          undefined,
+          (signatureRequestId, seedSigners) => {
+            dispatch(
+              multisigActions.seedSignatureRequestSigners({
+                signatureRequestId,
+                signers: seedSigners,
+              }),
+            );
+          },
         )
           .then((res: string) => {
-            if (confirm(res)) {
-              //wait for confirmation
+            const isMultisigSubmitted =
+              typeof res === 'string' &&
+              ((/submit/i.test(res) && /multisig/i.test(res) && /signer/i.test(res)) ||
+                /Sign Requests?/i.test(res));
+            if (isMultisigSubmitted) {
+              notifyInfo(String(res), {
+                timeoutMs: 12000,
+                action: {
+                  label: 'View',
+                  onClick: () => navigate('/signRequest'),
+                },
+              });
+              // A multisig submission is not a final broadcast, so don't mark it as TxStatus.success.
+              // TxStatus.success triggers a redirect via useTxStatus.
+              dispatch(setTxStatus(TxStatus.none));
+            } else {
+              notifySuccess(String(res));
+              dispatch(setTxStatus(TxStatus.success));
             }
             // Reset operation after successful broadcast to prevent reprocessing
             dispatch(resetOperation());
             isProcessingRef.current = false;
-            dispatch(setTxStatus(TxStatus.success));
           })
           .catch((e) => {
-            if (confirm(e)) {
-            }
+            notifyError(e?.message ? String(e.message) : String(e));
             // Reset operation after failed broadcast to prevent reprocessing
             dispatch(resetOperation());
             isProcessingRef.current = false;
@@ -203,20 +228,41 @@ export const TransactionPage = () => {
         signedAccountObj.data.username,
         transactionState.initiator,
         twoFASigners,
+        (signatureRequestId, seedSigners) => {
+          dispatch(
+            multisigActions.seedSignatureRequestSigners({
+              signatureRequestId,
+              signers: seedSigners,
+            }),
+          );
+        },
       )
         .then((res: string) => {
-          if (confirm(res)) {
-            //wait for confirmation
+          const isMultisigSubmitted =
+            typeof res === 'string' &&
+            ((/submit/i.test(res) && /multisig/i.test(res) && /signer/i.test(res)) ||
+              /Sign Requests?/i.test(res));
+          if (isMultisigSubmitted) {
+            notifyInfo(String(res), {
+              timeoutMs: 12000,
+              action: {
+                label: 'View',
+                onClick: () => navigate('/signRequest'),
+              },
+            });
+            // Not a final broadcast; avoid triggering useTxStatus redirect.
+            dispatch(setTxStatus(TxStatus.none));
+          } else {
+            notifySuccess(String(res));
+            dispatch(setTxStatus(TxStatus.success));
           }
           // Reset operation after successful broadcast to prevent reprocessing
           dispatch(resetOperation());
           isProcessingRef.current = false;
           lastProcessedOperationRef.current = undefined;
-          dispatch(setTxStatus(TxStatus.success));
         })
         .catch((e) => {
-          if (confirm(e)) {
-          }
+          notifyError(e?.message ? String(e.message) : String(e));
           // Reset operation after failed broadcast to prevent reprocessing
           dispatch(resetOperation());
           isProcessingRef.current = false;
@@ -359,19 +405,12 @@ const useLoginState = () => {
   const loginExpirationInSec = Config.login.expirationInSec;
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
   useEffect(() => {
-    const loggedinDuration = getElapsedTimestampSeconds(
-      loginTimestamp,
-      getTimestampInSeconds(),
-    );
-    const status = !(
-      loginTimestamp > 0 && loggedinDuration >= loginExpirationInSec
-    );
-    setIsLoggedIn(status);
-  }, []);
+    setIsLoggedIn(isSessionValid(loginTimestamp, loginExpirationInSec));
+  }, [loginTimestamp, loginExpirationInSec]);
 
   return isLoggedIn;
 };

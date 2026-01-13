@@ -20,6 +20,11 @@ export interface IMultisig {
 
 export interface State extends IMultisig {
   receiveBroadcastNotificationsOn: boolean;
+  /**
+   * Client-side fallback for cases where backend returns a partial signer list
+   * (e.g. initiator only). Keyed by signatureRequestId.
+   */
+  seededSignersByRequestId?: Record<string, Array<{ publicKey: string; weight?: number }>>;
   signRequestNotification?: boolean;
   broadcastNotification?: boolean;
   signRequestCount?: number;
