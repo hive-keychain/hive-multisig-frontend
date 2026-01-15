@@ -3,7 +3,8 @@ export const Config = {
     expirationInSec: 60 * 60 * 2,
   },
   hive: {
-    node: 'https://api.hive.blog',
+    // Pick a node that works reliably from browsers (CORS) for Hive RPC.
+    node: 'https://api.deathwing.me',
     chain_id:
       'beeab0de00000000000000000000000000000000000000000000000000000000',
   },

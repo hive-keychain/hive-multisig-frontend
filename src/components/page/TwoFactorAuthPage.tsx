@@ -87,9 +87,6 @@ export const TwoFactorAuthPage = () => {
     dispatch(setReceiveBroadcastNotificationsOn(true));
   };
   useEffect(() => {
-    console.log({ transactionSubmittedFlag });
-  }, [transactionSubmittedFlag]);
-  useEffect(() => {
     if (authorities) {
       dispatch(initializeAuthorities(authorities));
     }

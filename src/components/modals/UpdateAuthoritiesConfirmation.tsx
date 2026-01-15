@@ -13,6 +13,7 @@ import {
 import { dhiveBroadcastUpdateAccount } from '../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import HiveUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import { notifyError, notifySuccess } from '../../utils/notify';
 import { useDidMountEffect } from '../../utils/utils';
 import { OtpModal } from './OtpModal';
 
@@ -91,14 +92,12 @@ export const UpdateAuthoritiesConfirmation = ({
   };
 
   const handleUpdate = async () => {
-    console.log('========== Starting Account Update ==========');
     if (ownerState) {
       if (!ownerKey) {
-        alert('Owner private key is required to update Owner authority.');
+        notifyError('Owner private key is required to update Owner authority.');
         return;
       }
       try {
-        console.log('updating account with owner key: ', ownerKey);
         await dispatch(
           dhiveBroadcastUpdateAccount({
             newAuthorities: newAuths,
@@ -109,7 +108,7 @@ export const UpdateAuthoritiesConfirmation = ({
           setReloadWindow(true);
         }, 3000);
       } catch (reason) {
-        alert(reason);
+        notifyError(typeof reason === 'string' ? reason : String(reason));
       }
       return;
     }
@@ -126,13 +125,13 @@ export const UpdateAuthoritiesConfirmation = ({
       )
         .then(async (res) => {
           if (res) {
-            confirm(res.toString());
+            notifySuccess(res.toString());
             await dispatch(resetOperation());
             window.location.reload();
           }
         })
         .catch((reason) => {
-          alert(reason);
+          notifyError(typeof reason === 'string' ? reason : String(reason));
         });
     } else {
       setReloadWindow(false);

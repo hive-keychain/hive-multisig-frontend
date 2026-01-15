@@ -171,7 +171,6 @@ export const TwoFAConfirmation = () => {
   }, [isChangesConfirmed]);
 
   useEffect(() => {
-    console.log(verificationRetryCount);
     if (verificationRetryCount >= MAX_VERIFICATION_RETRIES) {
       setVerificationTimeout(true);
       clearInterval(intervalRef.current);

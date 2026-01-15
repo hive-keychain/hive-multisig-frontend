@@ -6,6 +6,7 @@ import { IAccountKeyRowProps } from '../../../interfaces/cardInterfaces';
 import { IExpiration } from '../../../interfaces/transaction.interface';
 import { TwoFACodes } from '../../../interfaces/twoFactorAuth.interface';
 import { useAppDispatch, useAppSelector } from '../../../redux/app/hooks';
+import { multisigActions } from '../../../redux/features/multisig/multisigSlices';
 import { setTwoFASigners } from '../../../redux/features/multisig/multisigThunks';
 import {
   isManageTwoFA,
@@ -30,6 +31,7 @@ import {
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import HiveTxUtils from '../../../utils/hivetx.utils';
 import { MultisigUtils } from '../../../utils/multisig.utils';
+import { notifyError, notifyWarning } from '../../../utils/notify';
 import { OtpModal } from '../../modals/OtpModal';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
@@ -85,7 +87,6 @@ export const ManageTwoFaAccount = () => {
   }, [key]);
   useEffect(() => {
     if (suggestedThreshold) {
-      console.log({ suggestedThreshold });
       dispatch(
         setThresholdWarning(
           'You may not set a threshold bigger than the sum of the authority weights. ' +
@@ -98,7 +99,6 @@ export const ManageTwoFaAccount = () => {
   }, [suggestedThreshold]);
 
   useEffect(() => {
-    console.log({ deletedActiveAuthority });
     handleDefaultBotReduceThresh();
   }, [deletedActiveAuthority]);
 
@@ -148,6 +148,14 @@ export const ManageTwoFaAccount = () => {
         signedAccountObj.data.username,
         transactionState.initiator,
         twoFASigners,
+        (signatureRequestId, seedSigners) => {
+          dispatch(
+            multisigActions.seedSignatureRequestSigners({
+              signatureRequestId,
+              signers: seedSigners,
+            }),
+          );
+        },
       )
         .then((res: string) => {
           dispatch(setIsMultisigTransaction(res.includes('multisig')));
@@ -155,12 +163,12 @@ export const ManageTwoFaAccount = () => {
           dispatch(setRemovedBot(deletedActiveAuthority as [string, number]));
         })
         .catch((e) => {
-          alert(e);
+          notifyError(e?.message ? String(e.message) : String(e));
           dispatch(transactionSubmitted(false));
           window.location.reload();
         });
     } catch (error) {
-      alert(error);
+      notifyError(error?.message ? String(error.message) : String(error));
       window.location.reload();
     }
   };
@@ -180,7 +188,7 @@ export const ManageTwoFaAccount = () => {
 
   const handleUpdateAccount = async () => {
     if (thresholdWarning !== '') {
-      alert(`Invalid Threshold: ${thresholdWarning}`);
+      notifyWarning(`Invalid threshold: ${thresholdWarning}`);
     }
     setAskOtp(true);
   };

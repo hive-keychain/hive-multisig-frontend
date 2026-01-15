@@ -104,7 +104,6 @@ export const AuthenticatorSetup = () => {
     const isValid = authenticator.check(token, secret);
     dispatch(setTokenValidation(isValid));
     setOtpSubmitted(true);
-    console.log(`Result:${isValid}`);
   };
 
   const handleProceedMultisig = () => {

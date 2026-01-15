@@ -15,6 +15,7 @@ import {
 import { useAppSelector } from '../../redux/app/hooks';
 import AccountUtils from '../../utils/hive.utils';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import { isSessionValid, LOGIN_TIMESTAMP_STORAGE_KEY } from '../../utils/session';
 import AccountPage from './AccountPage';
 import SearchAccountPage from './SearchAccountPage';
 
@@ -65,7 +66,7 @@ export const SearchBar: React.FC<ISearchBarInterface> = (
 
   return (
     <div>
-      <div className="ms-2 text-start" style={{ color: 'black' }}>
+      <div className="ms-2 text-start text-body">
         <h5>Search Account</h5>
       </div>
       <DisplayValidity />
@@ -106,16 +107,13 @@ export const HomePage: React.FC<ISearchPageInterface> = (
     signedAccountObj,
   );
   const multisig = HiveMultisig.getInstance(window, MultisigUtils.getOptions());
-  const isLoggedIn = useReadLocalStorage<boolean>('loginStatus');
   const loginExpirationInSec = Config.login.expirationInSec;
-  const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
-    null,
-  );
+  const [loginTimestamp] = useLocalStorage(LOGIN_TIMESTAMP_STORAGE_KEY, null);
+  const isLoggedIn = isSessionValid(loginTimestamp, loginExpirationInSec);
 
   const loggedInAccount =
     useReadLocalStorage<LoginResponseType>('accountDetails');
-  const [isAccountSearch, setAccountSearch] = useState<boolean>(!isLoggedIn);
+  const [isAccountSearch, setAccountSearch] = useState<boolean>(() => !isLoggedIn);
   const getAuth = async () => {
     const auth = await AccountUtils.getAccountAuthorities(searchKey);
     if (auth) {

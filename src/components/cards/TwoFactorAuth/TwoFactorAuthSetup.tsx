@@ -30,6 +30,7 @@ import {
   updateActive,
 } from '../../../redux/features/updateAuthorities/updateAuthoritiesThunks';
 import { MultisigUtils } from '../../../utils/multisig.utils';
+import { notifyError, notifyWarning } from '../../../utils/notify';
 import { CustomTwoFactorAuthSetup } from './CustomTwoFactorAuthSetup';
 import { DefaultTwoFactorAuthSetup } from './DefaultTwoFactorAuthSetup';
 import { MultisigTwoFAHooks } from './Multisig2FAHooks';
@@ -110,7 +111,11 @@ export const TwoFactorAuthSetup = () => {
         dispatch(botSetupSuccess(true));
       })
       .catch((reason) => {
-        alert(`Failed to setup Multisig 2FA: ${JSON.stringify(reason)}`);
+        notifyError(
+          `Failed to setup Multisig 2FA: ${
+            typeof reason === 'string' ? reason : JSON.stringify(reason)
+          }`,
+        );
         dispatch(transactionSubmitted(false));
         dispatch(botSetupSuccess(false));
         window.location.reload();
@@ -127,8 +132,8 @@ export const TwoFactorAuthSetup = () => {
       const isMultisigBot = latest[2] === 'bot';
       if (key === 'custom' && username !== defaultBot) {
         if (!isMultisigBot) {
-          alert(
-            `You are adding ${latest[0]} that is not configured as a 2FA Bot`,
+          notifyWarning(
+            `You are adding ${latest[0]} that is not configured as a 2FA Bot.`,
           );
           const accountToDelete: IDeleteAccount = {
             type: 'active',
@@ -149,7 +154,7 @@ export const TwoFactorAuthSetup = () => {
 
   const handleUpdateAccount = () => {
     if (thresholdWarning !== '') {
-      alert(`Invalid Threshold: ${thresholdWarning}`);
+      notifyWarning(`Invalid threshold: ${thresholdWarning}`);
     } else {
       handleAddBot();
     }
@@ -195,7 +200,6 @@ export const TwoFactorAuthSetup = () => {
         dispatch(disableDeleteBtn(true));
         dispatch(allowAddAccount(true));
         dispatch(allowDeleteOnlyBot(true));
-        console.log('custom');
         break;
     }
   }, [key]);

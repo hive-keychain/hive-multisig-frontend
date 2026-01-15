@@ -2,10 +2,11 @@ import { HiveMultisig } from 'hive-multisig-sdk/src';
 
 import { KeychainKeyTypes } from 'hive-keychain-commons';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Form, InputGroup } from 'react-bootstrap';
+import { Button, Card, Form, InputGroup, Stack } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useLocalStorage } from 'usehooks-ts';
 import { Config } from '../../config';
+import { LoginResponseType } from '../../interfaces';
 import { useAppDispatch, useAppSelector } from '../../redux/app/hooks';
 import { login } from '../../redux/features/login/loginSlice';
 import {
@@ -17,6 +18,8 @@ import {
   signerConnectPosting,
 } from '../../redux/features/multisig/multisigThunks';
 import { MultisigUtils } from '../../utils/multisig.utils';
+import { notifyError, notifyWarning } from '../../utils/notify';
+import { isSessionValid, LOGIN_TIMESTAMP_STORAGE_KEY } from '../../utils/session';
 import { getTimestampInSeconds } from '../../utils/utils';
 
 const LoginForm = () => {
@@ -49,10 +52,13 @@ const LoginForm = () => {
   );
 
   const [loginTimestamp, setLoginTimestamp] = useLocalStorage(
-    'loginTimestap',
+    LOGIN_TIMESTAMP_STORAGE_KEY,
     null,
   );
   const [isFocused, setIsFocused] = useState<boolean>(false);
+
+  const isSubmittingRef = useRef(false);
+  const loginPayloadRef = useRef<LoginResponseType | null>(null);
 
   const inputRef = useRef(null);
 
@@ -66,17 +72,14 @@ const LoginForm = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoggedIn && accountDetails) {
-      navigate(`/transaction`);
-    } else {
+    // If user manually navigates to /login while already logged in,
+    // redirect them to the main transactions page.
+    if (isSubmittingRef.current) return;
+    const sessionValid = isSessionValid(loginTimestamp, loginExpirationInSec);
+    if (sessionValid && accountDetails) {
+      navigate(`/transaction`, { replace: true });
     }
-  }, [accountDetails]);
-
-  useEffect(() => {
-    if (isLoginSucceed) {
-      loginInitAsync();
-    }
-  }, [isLoginSucceed]);
+  }, [accountDetails, loginExpirationInSec, loginTimestamp, navigate]);
 
   useEffect(() => {
     if (isFocused) {
@@ -92,10 +95,12 @@ const LoginForm = () => {
     }
   });
 
-  const loginInitAsync = async () => {
-    await setStorageIsLoggedIn(isLoginSucceed);
-    await setStorageAccountDetails(signedAccountObj);
-    await setLoginTimestamp(getTimestampInSeconds());
+  const loginInitAsync = async (payload: LoginResponseType | null) => {
+    // Important: set timestamp first so other components don't see
+    // loginStatus/accountDetails without a valid session timestamp.
+    setLoginTimestamp(getTimestampInSeconds());
+    setStorageAccountDetails(payload);
+    setStorageIsLoggedIn(true);
   };
 
   const connectActive = async () => {
@@ -103,7 +108,7 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.active,
     });
-    if (signerConnectResponse.result) {
+    if (signerConnectResponse?.result) {
       dispatch(
         signerConnectMessageActive({
           username,
@@ -112,20 +117,21 @@ const LoginForm = () => {
           keyType: KeychainKeyTypes.active,
         }),
       );
-      if (!posting)
-        dispatch(
-          login({
-            data: {
-              key: 'active',
-              message: signerConnectResponse.message,
-              method: KeychainKeyTypes.active,
-              username: username,
-            },
-            result: signerConnectResponse.message,
-            publicKey: signerConnectResponse.publicKey,
-            success: true,
-          }),
-        );
+      if (!posting) {
+        const payload: LoginResponseType = {
+          data: {
+            key: 'active',
+            message: signerConnectResponse.message,
+            method: KeychainKeyTypes.active,
+            username: username,
+          },
+          result: signerConnectResponse.message,
+          publicKey: signerConnectResponse.publicKey,
+          success: true,
+        };
+        loginPayloadRef.current = payload;
+        dispatch(login(payload));
+      }
 
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
@@ -144,7 +150,9 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectActive(signerConnectResponse));
     } else {
-      console.log('connectActive Failed');
+      throw new Error(
+        signerConnectResponse?.message || 'Active signer connect failed',
+      );
     }
   };
 
@@ -153,7 +161,7 @@ const LoginForm = () => {
       username,
       keyType: KeychainKeyTypes.posting,
     });
-    if (signerConnectResponse.result) {
+    if (signerConnectResponse?.result) {
       dispatch(
         signerConnectMessagePosting({
           username,
@@ -162,19 +170,19 @@ const LoginForm = () => {
           keyType: KeychainKeyTypes.posting,
         }),
       );
-      dispatch(
-        login({
-          data: {
-            key: 'posting',
-            message: signerConnectResponse.message,
-            method: KeychainKeyTypes.posting,
-            username: username,
-          },
-          result: signerConnectResponse.message,
-          publicKey: signerConnectResponse.publicKey,
-          success: true,
-        }),
-      );
+      const payload: LoginResponseType = {
+        data: {
+          key: 'posting',
+          message: signerConnectResponse.message,
+          method: KeychainKeyTypes.posting,
+          username: username,
+        },
+        result: signerConnectResponse.message,
+        publicKey: signerConnectResponse.publicKey,
+        success: true,
+      };
+      loginPayloadRef.current = payload;
+      dispatch(login(payload));
       if (signerConnectResponse.result.pendingSignatureRequests) {
         const pendingReqs =
           signerConnectResponse.result.pendingSignatureRequests[username];
@@ -191,62 +199,119 @@ const LoginForm = () => {
       }
       await dispatch(signerConnectPosting(signerConnectResponse));
     } else {
-      console.log('connectPosting Failed');
+      throw new Error(
+        signerConnectResponse?.message || 'Posting signer connect failed',
+      );
     }
   };
 
   const handleOnLoginSubmit = async () => {
+    if (isSubmittingRef.current) return;
+    if (!multisig) return;
     try {
-      if (!active && !posting) alert(`Choose at least one login method!`);
+      if (!active && !posting) {
+        notifyWarning('Choose at least one login method.');
+        return;
+      }
+      if (!username || username.trim().length === 0) {
+        notifyWarning('Please enter a username.');
+        return;
+      }
+
+      isSubmittingRef.current = true;
+
+      try {
+        localStorage.setItem(
+          'multisig:loginRequestedKeyTypes',
+          JSON.stringify({ posting, active }),
+        );
+      } catch {
+        // ignore
+      }
+
+      // Run in a strict sequence: posting -> active.
+      // This avoids overlapping Keychain prompts and prevents navigation/storage
+      // updates in between from interrupting the second signature.
       if (posting) await connectPosting();
-      if (active) await connectActive();
+      if (active) {
+        await new Promise((r) => setTimeout(r, 250));
+        await connectActive();
+      }
+
+      // Finalize login only once all requested key-types are connected.
+      const payload = loginPayloadRef.current ?? signedAccountObj;
+      await loginInitAsync(payload);
+      navigate('/transaction', { replace: true });
     } catch (error) {
-      alert(`Login Failed \n ${error.message}`);
+      notifyError(`Login failed: ${error?.message ? String(error.message) : String(error)}`);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
   return (
-    <div>
-      <InputGroup className="mb-3">
-        <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
-        <Form.Control
-          placeholder={username !== '' ? username : 'Username'}
-          aria-label="Username"
-          aria-describedby="basic-addon2"
-          onChange={(e) => setUsername(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          value={username}
-          ref={inputRef}
-        />
-        <Button
-          variant="outline-secondary"
-          id="button-addon2"
-          onClick={() => handleOnLoginSubmit()}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}>
-          Login
-        </Button>
-      </InputGroup>
-      <div style={{ display: 'flex', flexDirection: 'row', columnGap: '20px' }}>
-        Login with:
-        <Form.Check
-          type={'checkbox'}
-          label={`Posting Key`}
-          checked={posting}
-          onChange={() => {
-            setPosting(!posting);
-          }}
-        />
-        <Form.Check
-          type={'checkbox'}
-          label={`Active Key`}
-          checked={active}
-          onChange={() => {
-            setActive(!active);
-          }}
-        />
-      </div>
+    <div className="d-flex justify-content-center">
+      <Card className="app-card w-100" style={{ maxWidth: 520 }}>
+        <Card.Body className="p-4">
+          <Stack gap={3}>
+            <div>
+              <h1 className="page-title">Sign in</h1>
+              <p className="page-subtitle">
+                Connect your Hive account via Keychain to manage multisig
+                transactions.
+              </p>
+            </div>
+
+            <InputGroup>
+              <InputGroup.Text id="basic-addon1">@</InputGroup.Text>
+              <Form.Control
+                placeholder="Username"
+                aria-label="Username"
+                aria-describedby="basic-addon1"
+                onChange={(e) => setUsername(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                value={username}
+                ref={inputRef}
+              />
+              <Button
+                variant="primary"
+                id="button-addon2"
+                onClick={() => handleOnLoginSubmit()}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                disabled={isSubmittingRef.current}>
+                {isSubmittingRef.current ? 'Logging in…' : 'Login'}
+              </Button>
+            </InputGroup>
+
+            <div>
+              <div className="fw-semibold mb-2">Login with</div>
+              <Stack direction="horizontal" gap={4} className="flex-wrap">
+                <Form.Check
+                  type="checkbox"
+                  label="Posting Key"
+                  checked={posting}
+                  onChange={() => {
+                    setPosting(!posting);
+                  }}
+                />
+                <Form.Check
+                  type="checkbox"
+                  label="Active Key"
+                  checked={active}
+                  onChange={() => {
+                    setActive(!active);
+                  }}
+                />
+              </Stack>
+              <Form.Text className="text-muted">
+                You can enable one or both; some actions require the Active key.
+              </Form.Text>
+            </div>
+          </Stack>
+        </Card.Body>
+      </Card>
     </div>
   );
 };

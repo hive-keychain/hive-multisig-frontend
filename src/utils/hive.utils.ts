@@ -21,6 +21,7 @@ import {
   IHiveAccountUpdateBroadcast,
 } from '../interfaces';
 import { Initiator } from '../interfaces/transaction.interface';
+import { notifyError } from './notify';
 import { getTimestampInSeconds } from './utils';
 
 let client: Client;
@@ -28,13 +29,16 @@ const getClient = () => {
   if (!client)
     client = new Client([
       'https://api.hive.blog',
-      'https://api.hivekings.com',
       'https://api.deathwing.me',
-      'https://anyx.io',
       'https://api.openhive.network',
+      'https://api.c0ff33a.uk',
+      'https://hiveapi.actifit.io',
     ]);
   return client;
 };
+
+// Cache key references to reduce RPC load / rate limiting.
+const keyReferencesCache = new Map<string, string[]>();
 
 const getAccount = async (username: string) => {
   client = getClient();
@@ -55,9 +59,7 @@ const getAccountActiveKey = async (username: string) => {
 const getJSONMetadata = async (username: string) => {
   try {
     const account = await getAccount(username);
-    console.log('before parsing 1', account?.[0]);
     const jsonMetadata = JSON.parse(account[0]['json_metadata']);
-    console.log('after parsing 1', jsonMetadata);
     return jsonMetadata;
   } catch {
     return undefined;
@@ -200,11 +202,10 @@ const getActiveAuthorities = async (username: string) => {
 
 const broadcastUpdateAccount = async (props: IDHiveAccountUpdateBroadcast) => {
   client = getClient();
-  const result = await client.broadcast.updateAccount(
+  return client.broadcast.updateAccount(
     props.newAuthorities,
     Hive.PrivateKey.from(props.ownerKey),
   );
-  console.log('result', result, props.newAuthorities, props.ownerKey);
 };
 
 const requestSignTx = async (
@@ -217,22 +218,34 @@ const requestSignTx = async (
       const keychain = window.hive_keychain;
       let signResult: Hive.SignedTransaction | undefined = undefined;
       try {
-        await keychain.requestSignTx(
-          username,
-          tx,
-          method,
-          async (response: { error: any; result: Hive.SignedTransaction }) => {
-            if (!response.error) {
-              signResult = response.result;
-              client.database.verifyAuthority(response.result).then((valid) => {
-                if (valid) resolve(signResult);
-                else reject(response);
-              });
-            } else {
-              reject(response);
-            }
-          },
-        );
+        const attempt = async (txToSend: any) => {
+          await keychain.requestSignTx(
+            username,
+            txToSend,
+            method,
+            async (response: { error: any; result: Hive.SignedTransaction }) => {
+              if (!response.error) {
+                signResult = response.result;
+                client.database
+                  .verifyAuthority(response.result)
+                  .then((valid) => {
+                    if (valid) resolve(signResult);
+                    else reject(response);
+                  });
+              } else {
+                reject(response);
+              }
+            },
+          );
+        };
+
+        try {
+          // Keychain typically expects an object transaction.
+          await attempt(tx as any);
+        } catch (e) {
+          // Some Keychain implementations accept a JSON string.
+          await attempt(JSON.stringify(tx));
+        }
       } catch (e) {
         reject(e);
       }
@@ -250,7 +263,6 @@ const encodeMessage = async (
       if (response.result) {
         resolve(response);
       } else {
-        console.log(`${JSON.stringify(response)}`);
         reject(response);
       }
     };
@@ -373,7 +385,6 @@ const getInitiator = async (
     try {
       signBuffer(username, KeychainKeyTypes.active)
         .then(async (data) => {
-          console.log(data);
           if (data) {
             let signerWeight: number,
               authorityUsername: string,
@@ -390,7 +401,6 @@ const getInitiator = async (
                 .find((e) => {
                   const signature = dHive.Signature.fromString(data.result);
                   const key = dHive.PublicKey.fromString(e[0].toString());
-                  console.log(data.result, signature, e[0], key);
                   return key.verify(
                     dHive.cryptoUtils.sha256(data.data.message),
                     signature,
@@ -410,14 +420,14 @@ const getInitiator = async (
               publicKey,
               weight: signerWeight,
             };
-            console.log('initiator', initiator);
             resolve(initiator);
           } else {
             reject(data);
           }
         })
         .catch((e) => {
-          alert(e.message);
+          notifyError(e?.message ? String(e.message) : String(e));
+          reject(e);
         });
     } catch (error) {
       reject(error);
@@ -425,9 +435,128 @@ const getInitiator = async (
   });
 };
 const getKeyReferences = async (publicKey: string) => {
-  var client = getClient();
-  const accounts = await client.keys.getKeyReferences([publicKey]);
-  return accounts;
+  const cached = keyReferencesCache.get(publicKey);
+  if (cached !== undefined) return cached;
+
+  const client = getClient();
+
+  const normalizeSingleKeyRefs = (refs: any): string[] => {
+    if (!refs) return [];
+    // Most commonly: string[][], one entry per requested key
+    if (Array.isArray(refs)) {
+      const first = (refs as any)[0];
+      return Array.isArray(first) ? (first as string[]) : [];
+    }
+    // Sometimes: { [pubKey]: string[] }
+    const byKey = (refs as any)[publicKey];
+    return Array.isArray(byKey) ? (byKey as string[]) : [];
+  };
+
+  // 1) Preferred: dhive helper (usually hits account_by_key_api)
+  try {
+    const refs = await client.keys.getKeyReferences([publicKey]);
+    const accounts = normalizeSingleKeyRefs(refs);
+    keyReferencesCache.set(publicKey, accounts);
+    return accounts;
+  } catch {
+    // fall through
+  }
+
+  // 2) Direct: account_by_key_api.get_key_references
+  try {
+    const refs = await (client as any).call('account_by_key_api', 'get_key_references', {
+      keys: [publicKey],
+    });
+    const accounts = normalizeSingleKeyRefs(refs);
+    keyReferencesCache.set(publicKey, accounts);
+    return accounts;
+  } catch {
+    // fall through
+  }
+
+  // 3) Fallback: condenser_api.get_key_references
+  try {
+    const refs = await (client as any).call('condenser_api', 'get_key_references', [
+      [publicKey],
+    ]);
+    const accounts = normalizeSingleKeyRefs(refs);
+    keyReferencesCache.set(publicKey, accounts);
+    return accounts;
+  } catch {
+    const accounts: string[] = [];
+    keyReferencesCache.set(publicKey, accounts);
+    return accounts;
+  }
+};
+
+const getKeyReferencesBatch = async (publicKeys: string[]) => {
+  const client = getClient();
+  const unique = Array.from(
+    new Set((publicKeys ?? []).map((k) => String(k ?? '').trim()).filter(Boolean)),
+  );
+
+  const result: Record<string, string[]> = {};
+  const uncached: string[] = [];
+
+  for (const k of unique) {
+    const cached = keyReferencesCache.get(k);
+    if (cached !== undefined) {
+      result[k] = cached;
+    } else {
+      uncached.push(k);
+    }
+  }
+
+  if (uncached.length === 0) return result;
+
+  const applyArrayAligned = (refs: any) => {
+    if (!Array.isArray(refs)) return false;
+    // dhive typically returns string[][] aligned to requested keys
+    if (!Array.isArray(refs[0]) && refs.length === 0) return true;
+    for (let i = 0; i < uncached.length; i++) {
+      const accounts = Array.isArray(refs[i]) ? (refs[i] as string[]) : [];
+      const key = uncached[i];
+      result[key] = accounts;
+      keyReferencesCache.set(key, accounts);
+    }
+    return true;
+  };
+
+  // 1) Preferred: dhive helper
+  try {
+    const refs = await client.keys.getKeyReferences(uncached);
+    if (applyArrayAligned(refs)) return result;
+  } catch {
+    // fall through
+  }
+
+  // 2) Direct account_by_key_api.get_key_references
+  try {
+    const refs = await (client as any).call('account_by_key_api', 'get_key_references', {
+      keys: uncached,
+    });
+    if (applyArrayAligned(refs)) return result;
+  } catch {
+    // fall through
+  }
+
+  // 3) condenser_api fallback
+  try {
+    const refs = await (client as any).call('condenser_api', 'get_key_references', [
+      uncached,
+    ]);
+    if (applyArrayAligned(refs)) return result;
+  } catch {
+    // ignore
+  }
+
+  // Final fallback: mark unknowns as empty to avoid retry storms.
+  for (const key of uncached) {
+    const accounts: string[] = [];
+    result[key] = accounts;
+    keyReferencesCache.set(key, accounts);
+  }
+  return result;
 };
 
 const HiveUtils = {
@@ -454,6 +583,7 @@ const HiveUtils = {
   encodeMessage,
   encodeMessageWithKeys,
   getKeyReferences,
+  getKeyReferencesBatch,
 };
 
 export default HiveUtils;

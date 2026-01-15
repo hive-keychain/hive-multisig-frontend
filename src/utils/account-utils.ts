@@ -54,7 +54,6 @@ export const UpdateAuthorityWeight = (
       newAuthorities.owner = newAuthority;
       break;
   }
-  console.log('Update Weight: ', newAuthorities);
   return newAuthorities;
 };
 
