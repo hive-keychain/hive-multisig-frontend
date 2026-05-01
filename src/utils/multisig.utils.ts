@@ -13,6 +13,8 @@ import HiveTxUtils from './hivetx.utils';
 import { notifyError } from './notify';
 const defaultBot = process.env.TWOFA_BOT;
 
+const ONE_DAY_IN_MINUTES = 24 * 60;
+
 const getOptions = () => {
   return {
     apiAddress:
@@ -301,7 +303,7 @@ const accountUpdateWithActiveAuthority = async (
     const op = ['account_update', updatedAuthorities];
     const transaction = await HiveTxUtils.createTx([op], {
       date: undefined,
-      minutes: 60,
+      minutes: ONE_DAY_IN_MINUTES,
     } as IExpiration);
 
     const opName = 'Account Update';
@@ -347,7 +349,7 @@ const twoFAConfigBroadcast = async (
         [customJsonOp, updateAccountOp],
         {
           date: undefined,
-          minutes: 60,
+          minutes: ONE_DAY_IN_MINUTES,
         } as IExpiration,
       );
       broadcastTransaction(transaction, username, initiator)
