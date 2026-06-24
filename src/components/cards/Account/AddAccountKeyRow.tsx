@@ -44,9 +44,14 @@ export function AddAccountKeyRow({
     if (accountName !== '') {
       setNewAccount([accountName, weight]);
       setAccountName('');
-      setAccountWeight(1);
+      handleSetWeight(1);
     }
   };
+
+  const handleSetWeight = (weight: number) => {
+    if (weight > 0) setAccountWeight(weight);
+  };
+
   const handleNewKeyOnClick = () => {
     const pvtKey: Hive.PrivateKey = AccountUtils.getPrivateKeyFromSeed(
       user.data.username + Date.now() + Math.random(),
@@ -114,7 +119,7 @@ export function AddAccountKeyRow({
                   id="weightInput"
                   placeholder={'1'}
                   onChange={(e) => {
-                    setAccountWeight(parseInt(e.target.value));
+                    handleSetWeight(parseInt(e.target.value));
                   }}
                   value={weight}
                 />
